@@ -1,6 +1,6 @@
-# EAOS Commercial Readiness
+# OpenAegis Commercial Readiness
 
-EAOS is a vendor-neutral enterprise agent platform built for regulated environments. In practical terms, it lets a hospital or health system run AI-assisted workflows without giving the model free rein over data, tools, or outbound actions.
+OpenAegis is a vendor-neutral enterprise agent platform built for regulated environments. In practical terms, it lets a hospital or health system run AI-assisted workflows without giving the model free rein over data, tools, or outbound actions.
 
 The pilot in this repository centers on a real operating use case: a **Hospital Discharge Readiness Assistant**. It is not a chat demo. It is a controlled workflow that:
 
@@ -10,11 +10,11 @@ The pilot in this repository centers on a real operating use case: a **Hospital 
 - records evidence for every major decision
 - exposes audit and incident trails for review and replay
 
-## What EAOS Does
+## What OpenAegis Does
 
 ### For a layperson
 
-EAOS is the control system around an AI agent. It helps the organization answer four questions before anything sensitive happens:
+OpenAegis is the control system around an AI agent. It helps the organization answer four questions before anything sensitive happens:
 
 1. What is the agent trying to do?
 2. Is it allowed to do it?
@@ -25,7 +25,7 @@ That makes the difference between "an AI assistant that can act" and "an AI assi
 
 ### For IT and security buyers
 
-EAOS is an orchestration and trust layer with these properties:
+OpenAegis is an orchestration and trust layer with these properties:
 
 - policy is enforced outside the model
 - approval is required for high-risk actions
@@ -36,9 +36,9 @@ EAOS is an orchestration and trust layer with these properties:
 
 The design goal is not autonomy at all costs. The design goal is controlled automation that survives audit, incident review, and compliance scrutiny.
 
-## Why EAOS Is Different
+## Why OpenAegis Is Different
 
-Most "agent" products optimize for task completion inside the model loop. EAOS optimizes for enterprise control outside the model loop.
+Most "agent" products optimize for task completion inside the model loop. OpenAegis optimizes for enterprise control outside the model loop.
 
 That distinction matters because a regulated enterprise cannot delegate the following to a model prompt:
 
@@ -48,7 +48,7 @@ That distinction matters because a regulated enterprise cannot delegate the foll
 - whether a connector may write data back
 - whether a model provider is allowed to retain data
 
-EAOS treats those as control-plane decisions, not model opinions.
+OpenAegis treats those as control-plane decisions, not model opinions.
 
 ### Control-first differentiators
 
@@ -61,7 +61,7 @@ EAOS treats those as control-plane decisions, not model opinions.
 
 ## How We Prove the Claims
 
-EAOS does not ask buyers to trust slides. It ships with executable proof.
+OpenAegis does not ask buyers to trust slides. It ships with executable proof.
 
 The current pilot includes three forms of evidence:
 
@@ -156,7 +156,7 @@ Use this evaluation sequence:
 
 If those steps are not observable, the claim is not commercial-grade.
 
-## What EAOS Gives An Enterprise
+## What OpenAegis Gives An Enterprise
 
 ### Operational value
 
@@ -183,7 +183,7 @@ If those steps are not observable, the claim is not commercial-grade.
 
 ## Bottom Line
 
-EAOS is advanced because it treats enterprise agent behavior as a governed system, not a prompt experiment.
+OpenAegis is advanced because it treats enterprise agent behavior as a governed system, not a prompt experiment.
 
 It is commercial-ready when the buyer can see all three of these at once:
 
@@ -192,3 +192,4 @@ It is commercial-ready when the buyer can see all three of these at once:
 - the evidence proves what happened
 
 That is the bar this repository is designed to meet.
+

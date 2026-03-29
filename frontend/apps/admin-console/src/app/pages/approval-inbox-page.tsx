@@ -99,7 +99,7 @@ export const ApprovalInboxPage = () => {
                     type="button"
                     className="primary"
                     disabled={selectedApproval.status !== "pending" || isSyncing}
-                    onClick={() => void decideApproval(selectedApproval.approvalId, "approve", "Reviewer approved in EAOS approval inbox")}
+                    onClick={() => void decideApproval(selectedApproval.approvalId, "approve", "Reviewer approved in OpenAegis approval inbox")}
                   >
                     Approve
                   </button>
@@ -107,7 +107,7 @@ export const ApprovalInboxPage = () => {
                     type="button"
                     className="danger"
                     disabled={selectedApproval.status !== "pending" || isSyncing}
-                    onClick={() => void decideApproval(selectedApproval.approvalId, "reject", "Reviewer rejected in EAOS approval inbox")}
+                    onClick={() => void decideApproval(selectedApproval.approvalId, "reject", "Reviewer rejected in OpenAegis approval inbox")}
                   >
                     Reject
                   </button>
@@ -136,3 +136,4 @@ export const ApprovalInboxPage = () => {
     </div>
   );
 };
+

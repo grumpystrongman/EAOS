@@ -1,4 +1,4 @@
-# EAOS Pilot Runbook
+# OpenAegis Pilot Runbook
 
 ## Pilot Profile
 
@@ -20,21 +20,21 @@
 ```mermaid
 sequenceDiagram
     participant Clinician
-    participant EAOS
+    participant OpenAegis
     participant Policy
     participant Approval
     participant Model
     participant Audit
 
-    Clinician->>EAOS: Start live discharge workflow
-    EAOS->>Policy: Evaluate EPHI + high-risk action
-    Policy-->>EAOS: REQUIRE_APPROVAL
-    EAOS->>Approval: Create approval ticket
+    Clinician->>OpenAegis: Start live discharge workflow
+    OpenAegis->>Policy: Evaluate EPHI + high-risk action
+    Policy-->>OpenAegis: REQUIRE_APPROVAL
+    OpenAegis->>Approval: Create approval ticket
     Approval-->>Clinician: Approval needed
     Approver->>Approval: Approve
-    EAOS->>Model: Run policy-approved inference
-    EAOS->>Audit: Commit evidence envelope
-    EAOS-->>Clinician: Completed workflow + trace
+    OpenAegis->>Model: Run policy-approved inference
+    OpenAegis->>Audit: Commit evidence envelope
+    OpenAegis-->>Clinician: Completed workflow + trace
 ```
 
 ## Start the Pilot Locally
@@ -90,3 +90,4 @@ npm run screenshots:commercial
 - Approval changes run state to completed
 - Audit log includes workflow + approval events
 - Evidence references are present in audit output
+

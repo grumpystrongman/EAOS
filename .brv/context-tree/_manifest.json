@@ -14,37 +14,37 @@
     },
     {
       "order": 1,
-      "path": "architecture/eaos_overview/_index.md",
+      "path": "architecture/openaegis_overview/_index.md",
       "tokens": 254,
       "type": "summary"
     },
     {
       "order": 1,
-      "path": "architecture/eaos_pilot/_index.md",
+      "path": "architecture/openaegis_pilot/_index.md",
       "tokens": 293,
       "type": "summary"
     },
     {
       "order": 1,
-      "path": "architecture/eaos_security/_index.md",
+      "path": "architecture/openaegis_security/_index.md",
       "tokens": 185,
       "type": "summary"
     },
     {
       "importance": 50,
-      "path": "architecture/eaos_overview/eaos_architecture_blueprint.md",
+      "path": "architecture/openaegis_overview/openaegis_architecture_blueprint.md",
       "tokens": 262,
       "type": "context"
     },
     {
       "importance": 50,
-      "path": "architecture/eaos_pilot/eaos_pilot_overview.md",
+      "path": "architecture/openaegis_pilot/openaegis_pilot_overview.md",
       "tokens": 304,
       "type": "context"
     },
     {
       "importance": 50,
-      "path": "architecture/eaos_security/eaos_security_and_governance.md",
+      "path": "architecture/openaegis_security/openaegis_security_and_governance.md",
       "tokens": 231,
       "type": "context"
     }

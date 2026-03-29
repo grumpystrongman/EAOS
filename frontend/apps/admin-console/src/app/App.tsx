@@ -73,9 +73,11 @@ export const App = () => {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark">EAOS</div>
+          <div className="brand-mark">
+            <img src="/OpenAegisLogo.png" alt="OpenAegis logo" />
+          </div>
           <div>
-            <div className="brand-name">Enterprise Agent OS</div>
+            <div className="brand-name">OpenAegis</div>
             <div className="brand-subtitle">Vendor-neutral, policy-enforced, zero-trust pilot</div>
           </div>
         </div>
@@ -91,7 +93,7 @@ export const App = () => {
           </div>
         </section>
 
-        <nav className="sidebar-nav" aria-label="EAOS sections">
+        <nav className="sidebar-nav" aria-label="OpenAegis sections">
           {routeAccess.map(({ route, allowed }) =>
             allowed ? (
               <NavLink key={route.path} to={route.path} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
@@ -164,7 +166,7 @@ export const App = () => {
         {isSyncing ? <div className="banner info">Refreshing pilot data and evidence chain...</div> : null}
 
         <PageHeader
-          eyebrow="EAOS Pilot Console"
+          eyebrow="OpenAegis Pilot Console"
           title={PILOT_USE_CASE.title}
           subtitle={PILOT_USE_CASE.summary}
           actions={
@@ -198,3 +200,4 @@ export const App = () => {
     </div>
   );
 };
+

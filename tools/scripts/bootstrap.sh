@@ -3,4 +3,4 @@ set -euo pipefail
 
 npm install
 
-echo "EAOS local bootstrap complete."
+echo "OpenAegis local bootstrap complete."

@@ -1,3 +1,4 @@
 # mvp-plan
 
-See docs/eaos-blueprint.md section 10.
+See docs/openaegis-blueprint.md section 10.
+

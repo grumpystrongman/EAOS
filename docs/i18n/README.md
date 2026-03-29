@@ -1,15 +1,15 @@
-# EAOS i18n Documentation
+# OpenAegis i18n Documentation
 
 Top 20 language coverage generated for:
 
 - English (en)
 - ???? (zh-cn)
 - ?????? (hi)
-- Espa�ol (es)
-- Fran�ais (fr)
+- Espaï¿½ol (es)
+- Franï¿½ais (fr)
 - ??????? (ar)
 - ????? (bn)
-- Portugu�s (Brasil) (pt-br)
+- Portuguï¿½s (Brasil) (pt-br)
 - ??????? (ru)
 - ??? (ja)
 - ?????? (pa)
@@ -20,13 +20,14 @@ Top 20 language coverage generated for:
 - ?????? (te)
 - ????? (mr)
 - ????? (ta)
-- T�rk�e (tr)
+- Tï¿½rkï¿½e (tr)
 - ???? (ur)
 
 Each language folder includes:
-- EAOS-OPERATOR-MANUAL.md
-- EAOS-TRAINING-MANUAL.md
-- EAOS-FAQ.md
-- EAOS-SETUP-SUPPORT-GUIDE.md
+- OpenAegis-OPERATOR-MANUAL.md
+- OpenAegis-TRAINING-MANUAL.md
+- OpenAegis-FAQ.md
+- OpenAegis-SETUP-SUPPORT-GUIDE.md
 
 Note: These are starter localized editions for pilot adoption; community contributions are encouraged for deeper domain translation and regional terminology refinement.
+

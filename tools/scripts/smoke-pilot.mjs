@@ -2,7 +2,7 @@
 import { once } from "node:events";
 import { createAppServer } from "../../backend/services/api-gateway/src/index.ts";
 
-const port = Number(process.env.EAOS_SMOKE_PORT ?? 3901);
+const port = Number(process.env.OPENAEGIS_SMOKE_PORT ?? 3901);
 
 const request = async (path, options = {}) => {
   const response = await fetch(`http://127.0.0.1:${port}${path}`, options);
@@ -86,3 +86,4 @@ run().catch((error) => {
   console.error("SMOKE TEST FAILED", error);
   process.exitCode = 1;
 });
+

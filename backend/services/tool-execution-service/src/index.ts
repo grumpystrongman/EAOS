@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { URL } from "node:url";
-import type { ServiceDescriptor } from "@eaos/contracts";
+import type { ServiceDescriptor } from "@openaegis/contracts";
 import { enforceToolCallGuard, type ToolManifest } from "./runtime-policy.js";
 
 export const descriptor: ServiceDescriptor = {
@@ -130,7 +130,7 @@ const buildResult = (toolId: string, mode: RunMode, parameters: Record<string, u
       output: {
         issueKey: `LIN-${Math.floor(Math.random() * 900 + 100)}`,
         status: "created",
-        tags: ["eaos", "connector", "audit"]
+        tags: ["openaegis", "connector", "audit"]
       },
       echoedParameters: parameters
     };
@@ -279,3 +279,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(descriptor.serviceName + " listening on :" + descriptor.listeningPort);
   });
 }
+

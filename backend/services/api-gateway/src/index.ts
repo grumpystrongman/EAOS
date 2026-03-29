@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { readFile } from "node:fs/promises";
 import { URL } from "node:url";
-import type { ServiceDescriptor } from "@eaos/contracts";
+import type { ServiceDescriptor } from "@openaegis/contracts";
 import {
   createApproval,
   evaluatePolicy,
@@ -17,7 +17,7 @@ import {
   saveState,
   startDischargeAssistantExecution,
   type PilotMode
-} from "@eaos/pilot-core";
+} from "@openaegis/pilot-core";
 
 export const descriptor: ServiceDescriptor = {
   serviceName: "api-gateway",
@@ -654,3 +654,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(descriptor.serviceName + " listening on :" + descriptor.listeningPort);
   });
 }
+

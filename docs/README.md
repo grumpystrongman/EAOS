@@ -1,8 +1,8 @@
-# EAOS Documentation Index
+# OpenAegis Documentation Index
 
 ## Architecture and Security
 
-- [EAOS Blueprint](./eaos-blueprint.md)
+- [OpenAegis Blueprint](./openaegis-blueprint.md)
 - [Threat Model Pointer](./threat-model.md)
 - [Architecture Pointer](./architecture.md)
 
@@ -15,10 +15,10 @@
 
 ## Manuals
 
-- [Operator Manual](./manual/EAOS-OPERATOR-MANUAL.md)
-- [Training Manual](./manual/EAOS-TRAINING-MANUAL.md)
-- [FAQ](./manual/EAOS-FAQ.md)
-- [Setup & Support Guide](./manual/EAOS-SETUP-SUPPORT-GUIDE.md)
+- [Operator Manual](./manual/OpenAegis-OPERATOR-MANUAL.md)
+- [Training Manual](./manual/OpenAegis-TRAINING-MANUAL.md)
+- [FAQ](./manual/OpenAegis-FAQ.md)
+- [Setup & Support Guide](./manual/OpenAegis-SETUP-SUPPORT-GUIDE.md)
 
 ## Localization (Top 20 Languages)
 
@@ -27,3 +27,4 @@
 ## Visual Assets
 
 - `docs/assets/screenshots/`
+

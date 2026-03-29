@@ -1,5 +1,5 @@
 {
-  "name": "@eaos/policy-service",
+  "name": "@openaegis/policy-service",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,8 +11,8 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@eaos/contracts": "file:../../shared/contracts",
-    "@eaos/events": "file:../../shared/events"
+    "@openaegis/contracts": "file:../../shared/contracts",
+    "@openaegis/events": "file:../../shared/events"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

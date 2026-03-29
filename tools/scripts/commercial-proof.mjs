@@ -6,9 +6,9 @@ import { createAppServer as createToolRegistryServer } from "../../dist/services
 import { createAppServer as createToolExecutionServer } from "../../dist/services/tool-execution-service/src/index.js";
 
 const ports = {
-  gateway: Number(process.env.EAOS_PROOF_GATEWAY_PORT ?? 3920),
-  toolRegistry: Number(process.env.EAOS_PROOF_TOOL_REGISTRY_PORT ?? 3921),
-  toolExecution: Number(process.env.EAOS_PROOF_TOOL_EXECUTION_PORT ?? 3922)
+  gateway: Number(process.env.OPENAEGIS_PROOF_GATEWAY_PORT ?? 3920),
+  toolRegistry: Number(process.env.OPENAEGIS_PROOF_TOOL_REGISTRY_PORT ?? 3921),
+  toolExecution: Number(process.env.OPENAEGIS_PROOF_TOOL_EXECUTION_PORT ?? 3922)
 };
 
 const baseUrls = {
@@ -61,7 +61,7 @@ export const runCommercialProof = async () => {
     generatedAt: new Date().toISOString(),
     profile: "commercial-readiness",
     scope: {
-      product: "EAOS",
+      product: "OpenAegis",
       scenario: "Hospital Discharge Readiness Assistant",
       environment: "local-pilot"
     },
@@ -258,7 +258,7 @@ export const runCommercialProof = async () => {
       mode: "simulate",
       requestedNetworkProfile: "project-ops",
       stepBudgetRemaining: 2,
-      parameters: { project: "EAOS Commercial Ship", title: "commercial-proof-check" }
+      parameters: { project: "OpenAegis Commercial Ship", title: "commercial-proof-check" }
     };
 
     const firstLinearCall = await call(baseUrls.toolExecution, "/v1/tool-calls", "POST", {
@@ -330,3 +330,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       process.exitCode = 1;
     });
 }
+

@@ -1,5 +1,5 @@
 {
-  "name": "@eaos/tool-execution-service",
+  "name": "@openaegis/tool-execution-service",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,10 +11,11 @@
     "test": "npm run build && node --test ../../../dist/services/tool-execution-service/src/index.test.js"
   },
   "dependencies": {
-    "@eaos/contracts": "file:../../shared/contracts",
-    "@eaos/events": "file:../../shared/events"
+    "@openaegis/contracts": "file:../../shared/contracts",
+    "@openaegis/events": "file:../../shared/events"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
   }
 }
+

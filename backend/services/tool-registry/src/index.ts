@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { URL } from "node:url";
-import type { ServiceDescriptor } from "@eaos/contracts";
+import type { ServiceDescriptor } from "@openaegis/contracts";
 import {
   defaultRegistryState,
   type ConnectorTrustTier,
@@ -261,3 +261,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(descriptor.serviceName + " listening on :" + descriptor.listeningPort);
   });
 }
+

@@ -1,3 +1,4 @@
 # architecture
 
-See docs/eaos-blueprint.md sections 2 and 3.
+See docs/openaegis-blueprint.md sections 2 and 3.
+

@@ -1,3 +1,4 @@
 # api-contracts
 
-See docs/eaos-blueprint.md section 8.
+See docs/openaegis-blueprint.md section 8.
+

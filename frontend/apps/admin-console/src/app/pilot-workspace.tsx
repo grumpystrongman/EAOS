@@ -62,7 +62,7 @@ interface WorkspaceActions {
 
 export type PilotWorkspace = WorkspaceState & WorkspaceActions;
 
-const storageKey = "eaos.admin-console.workspace";
+const storageKey = "openaegis.admin-console.workspace";
 
 const toIso = () => new Date().toISOString();
 
@@ -369,3 +369,4 @@ export const usePilotWorkspaceSelectors = {
       lastSyncedAt: state.lastSyncedAt
     }))
 };
+

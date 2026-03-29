@@ -72,7 +72,7 @@ test("replays idempotent calls for matching idempotency key", async () => {
     mode: "simulate",
     requestedNetworkProfile: "project-ops",
     stepBudgetRemaining: 3,
-    parameters: { project: "EAOS Commercial Ship" }
+    parameters: { project: "OpenAegis Commercial Ship" }
   };
 
   const first = await fetch(`${baseUrl}/v1/tool-calls`, {
@@ -94,3 +94,4 @@ test("replays idempotent calls for matching idempotency key", async () => {
   assert.equal(secondBody.toolCallId, firstBody.toolCallId);
   assert.equal(secondBody.idempotentReplay, true);
 });
+

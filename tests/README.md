@@ -1,4 +1,4 @@
-# EAOS Test Suites
+# OpenAegis Test Suites
 
 - `contracts/`: API and event compatibility tests.
 - `security/`: tenant isolation, egress deny, policy bypass tests.

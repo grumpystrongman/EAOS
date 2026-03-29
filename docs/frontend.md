@@ -1,3 +1,4 @@
 # frontend
 
-See docs/eaos-blueprint.md section 6.
+See docs/openaegis-blueprint.md section 6.
+

@@ -1,3 +1,4 @@
 # monorepo-structure
 
-See docs/eaos-blueprint.md section 9.
+See docs/openaegis-blueprint.md section 9.
+

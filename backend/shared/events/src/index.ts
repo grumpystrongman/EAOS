@@ -4,9 +4,9 @@ import type {
   ModelInferenceRequest,
   PolicyDecision,
   ToolExecutionRequest
-} from "@eaos/contracts";
+} from "@openaegis/contracts";
 
-export type EAOSEventType =
+export type OpenAegisEventType =
   | "policy.decision.emitted"
   | "approval.requested"
   | "approval.decided"
@@ -21,7 +21,7 @@ export type EAOSEventType =
 
 export interface EventEnvelope<TPayload> {
   eventId: string;
-  eventType: EAOSEventType;
+  eventType: OpenAegisEventType;
   tenantId: string;
   correlationId: string;
   causationId?: string;

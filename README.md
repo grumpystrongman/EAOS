@@ -1,10 +1,12 @@
-# EAOS: Enterprise Agent Orchestration and Trust Platform
+# OpenAegis: Enterprise Agent Orchestration and Trust Platform
 
-EAOS is an open-source, vendor-neutral platform for running AI agents inside regulated enterprises with zero-trust controls, approval gates, and immutable evidence.
+![OpenAegis Logo](docs/assets/branding/OpenAegisLogo.png)
 
-## Why EAOS
+OpenAegis is an open-source, vendor-neutral platform for running AI agents inside regulated enterprises with zero-trust controls, approval gates, and immutable evidence.
 
-EAOS is built for healthcare and other high-regulation environments where data leakage is unacceptable.
+## Why OpenAegis
+
+OpenAegis is built for healthcare and other high-regulation environments where data leakage is unacceptable.
 
 - Vendor-agnostic model routing across OpenAI, Anthropic, Google, Azure, and self-hosted models
 - Policy and approvals enforced **outside** the model
@@ -88,16 +90,16 @@ The demo output is saved to:
 
 The full architecture and threat model are documented in:
 
-- `docs/eaos-blueprint.md`
+- `docs/openaegis-blueprint.md`
 
 ## Documentation Map
 
 - `docs/pilot/PILOT-RUNBOOK.md`
 - `docs/tests/SMOKE-AND-PILOT-TEST-REPORT.md`
-- `docs/manual/EAOS-OPERATOR-MANUAL.md`
-- `docs/manual/EAOS-TRAINING-MANUAL.md`
-- `docs/manual/EAOS-FAQ.md`
-- `docs/manual/EAOS-SETUP-SUPPORT-GUIDE.md`
+- `docs/manual/OpenAegis-OPERATOR-MANUAL.md`
+- `docs/manual/OpenAegis-TRAINING-MANUAL.md`
+- `docs/manual/OpenAegis-FAQ.md`
+- `docs/manual/OpenAegis-SETUP-SUPPORT-GUIDE.md`
 - `docs/i18n/` multilingual document packs (top 20 language coverage)
 
 ## Current Build Status
@@ -112,10 +114,14 @@ Validated in this repository:
 
 ## Contributing
 
-EAOS is early and evolving. Contributions are welcome for:
+OpenAegis is early and evolving. Contributions are welcome for:
 
 - additional enterprise connectors
 - hardened runtime isolation
 - policy packs for regulated workflows
 - observability and replay tooling
 - localization quality improvements
+
+
+
+

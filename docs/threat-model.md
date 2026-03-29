@@ -1,3 +1,4 @@
 # threat-model
 
-See docs/eaos-blueprint.md section 4.
+See docs/openaegis-blueprint.md section 4.
+

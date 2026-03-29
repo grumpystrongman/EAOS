@@ -53,7 +53,7 @@ export const CommercialReadinessPage = () => {
       <PageHeader
         eyebrow="Buyer proof"
         title="Commercial Readiness"
-        subtitle="A live, test-backed scorecard showing whether EAOS delivers its core enterprise claims."
+        subtitle="A live, test-backed scorecard showing whether OpenAegis delivers its core enterprise claims."
         actions={
           <>
             <button
@@ -78,7 +78,7 @@ export const CommercialReadinessPage = () => {
           </section>
 
           <section className="split-grid">
-            <Panel title="What EAOS does" subtitle="Layperson view: practical outcomes instead of framework jargon.">
+            <Panel title="What OpenAegis does" subtitle="Layperson view: practical outcomes instead of framework jargon.">
               <div className="stack">
                 <div className="session-card">
                   <div>
@@ -250,3 +250,4 @@ export const CommercialReadinessPage = () => {
     </div>
   );
 };
+

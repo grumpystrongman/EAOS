@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import type { ServiceDescriptor } from "@eaos/contracts";
+import type { ServiceDescriptor } from "@openaegis/contracts";
 
 export const descriptor: ServiceDescriptor = {
   serviceName: "kill-switch-service",

@@ -3,7 +3,7 @@ WORKDIR /workspace
 COPY package.json tsconfig.base.json ./
 COPY backend ./backend
 RUN npm install
-RUN npm run build --workspace @eaos/api-gateway
+RUN npm run build --workspace @openaegis/api-gateway
 
 FROM node:22-alpine
 WORKDIR /app

@@ -1,4 +1,4 @@
-package eaos.authz
+package openaegis.authz
 
 # Default deny. Policies must explicitly allow.
 default allow := false

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="EAOS Python Agent Runner", version="0.1.0")
+app = FastAPI(title="OpenAegis Python Agent Runner", version="0.1.0")
 
 
 class AgentRunRequest(BaseModel):

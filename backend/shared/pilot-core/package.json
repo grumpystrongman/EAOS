@@ -1,5 +1,5 @@
 {
-  "name": "@eaos/pilot-core",
+  "name": "@openaegis/pilot-core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,10 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@eaos/contracts": "file:../contracts"
+    "@openaegis/contracts": "file:../contracts"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
   }
 }
+

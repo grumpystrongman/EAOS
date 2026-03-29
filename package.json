@@ -1,5 +1,5 @@
 {
-  "name": "eaos",
+  "name": "openaegis",
   "version": "0.1.0",
   "private": true,
   "description": "Enterprise Agent Orchestration and Trust Platform",
@@ -27,3 +27,4 @@
     "node": ">=22"
   }
 }
+

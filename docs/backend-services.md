@@ -1,3 +1,4 @@
 # backend-services
 
-See docs/eaos-blueprint.md section 5.
+See docs/openaegis-blueprint.md section 5.
+

@@ -14,8 +14,8 @@ const repoRoot = path.resolve(scriptDir, "..", "..");
 const screenshotDir = path.join(repoRoot, "docs", "assets", "screenshots");
 
 const requestedPorts = {
-  gateway: Number(process.env.EAOS_SCREENSHOT_API_PORT ?? 4300),
-  frontend: Number(process.env.EAOS_SCREENSHOT_UI_PORT ?? 4700)
+  gateway: Number(process.env.OPENAEGIS_SCREENSHOT_API_PORT ?? 4300),
+  frontend: Number(process.env.OPENAEGIS_SCREENSHOT_UI_PORT ?? 4700)
 };
 
 const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -188,7 +188,7 @@ export const captureCommercialScreenshots = async () => {
   await rm(path.join(repoRoot, ".volumes", "tool-execution-state.json"), { force: true });
 
   log("Building admin-console preview bundle");
-  await runCommand(npmCmd, ["run", "--workspace", "@eaos/admin-console", "build"], {
+  await runCommand(npmCmd, ["run", "--workspace", "@openaegis/admin-console", "build"], {
     env: {
       ...process.env,
       VITE_API_URL: urls.api
@@ -207,7 +207,7 @@ export const captureCommercialScreenshots = async () => {
   const preview = startService(
     "preview",
     npmCmd,
-    ["exec", "--workspace", "@eaos/admin-console", "--", "vite", "preview", "--host", "127.0.0.1", "--port", String(ports.frontend), "--strictPort"]
+    ["exec", "--workspace", "@openaegis/admin-console", "--", "vite", "preview", "--host", "127.0.0.1", "--port", String(ports.frontend), "--strictPort"]
   );
 
   let browser;
@@ -284,3 +284,4 @@ if (invokedDirectly) {
     process.exitCode = 1;
   });
 }
+

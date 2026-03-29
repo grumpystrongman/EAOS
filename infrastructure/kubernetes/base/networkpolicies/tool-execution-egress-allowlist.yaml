@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: tool-execution-egress-allowlist
-  namespace: eaos
+  namespace: openaegis
 spec:
   podSelector:
     matchLabels:
@@ -13,7 +13,7 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              name: eaos
+              name: openaegis
       ports:
         - protocol: TCP
           port: 443

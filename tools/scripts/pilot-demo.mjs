@@ -3,7 +3,7 @@ import { once } from "node:events";
 import { writeFile, mkdir } from "node:fs/promises";
 import { createAppServer } from "../../backend/services/api-gateway/src/index.ts";
 
-const port = Number(process.env.EAOS_DEMO_PORT ?? 3950);
+const port = Number(process.env.OPENAEGIS_DEMO_PORT ?? 3950);
 const baseUrl = `http://127.0.0.1:${port}`;
 
 const call = async (path, method = "GET", token, body) => {

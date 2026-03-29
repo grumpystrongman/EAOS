@@ -5,9 +5,9 @@
     "moduleResolution": "NodeNext",
     "baseUrl": ".",
     "paths": {
-      "@eaos/contracts": ["backend/shared/contracts/src/index.ts"],
-      "@eaos/events": ["backend/shared/events/src/index.ts"],
-      "@eaos/pilot-core": ["backend/shared/pilot-core/src/index.ts"]
+      "@openaegis/contracts": ["backend/shared/contracts/src/index.ts"],
+      "@openaegis/events": ["backend/shared/events/src/index.ts"],
+      "@openaegis/pilot-core": ["backend/shared/pilot-core/src/index.ts"]
     },
     "types": ["node"],
     "strict": true,
@@ -21,3 +21,4 @@
     "outDir": "dist"
   }
 }
+
