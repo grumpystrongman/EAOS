@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tool-execution-egress-allowlist
+  namespace: eaos
+spec:
+  podSelector:
+    matchLabels:
+      app: tool-execution-service
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: eaos
+      ports:
+        - protocol: TCP
+          port: 443

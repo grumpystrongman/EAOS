@@ -1,0 +1,18 @@
+{
+    "connectorId":  "fhir",
+    "version":  "0.1.0",
+    "trustTier":  1,
+    "signature":  "REPLACE_WITH_SIGNED_DIGEST",
+    "allowedScopes":  [
+                          "READ_PATIENT",
+                          "READ_OBSERVATION",
+                          "WRITE_OBSERVATION"
+                      ],
+    "operationMode":  "read_write",
+    "rateLimit":  {
+                      "requestsPerMinute":  120,
+                      "burst":  20
+                  },
+    "requiresIdempotencyKeyForWrite":  true,
+    "supportsSimulationMock":  true
+}

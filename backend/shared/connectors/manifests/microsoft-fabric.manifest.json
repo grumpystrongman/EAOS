@@ -1,0 +1,17 @@
+{
+    "connectorId":  "microsoft-fabric",
+    "version":  "0.1.0",
+    "trustTier":  2,
+    "signature":  "REPLACE_WITH_SIGNED_DIGEST",
+    "allowedScopes":  [
+                          "READ_DATASET",
+                          "QUERY_LAKEHOUSE"
+                      ],
+    "operationMode":  "read",
+    "rateLimit":  {
+                      "requestsPerMinute":  120,
+                      "burst":  20
+                  },
+    "requiresIdempotencyKeyForWrite":  true,
+    "supportsSimulationMock":  true
+}

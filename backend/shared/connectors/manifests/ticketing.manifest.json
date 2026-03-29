@@ -1,0 +1,17 @@
+{
+    "connectorId":  "ticketing",
+    "version":  "0.1.0",
+    "trustTier":  2,
+    "signature":  "REPLACE_WITH_SIGNED_DIGEST",
+    "allowedScopes":  [
+                          "READ_TICKET",
+                          "WRITE_TICKET"
+                      ],
+    "operationMode":  "read_write",
+    "rateLimit":  {
+                      "requestsPerMinute":  120,
+                      "burst":  20
+                  },
+    "requiresIdempotencyKeyForWrite":  true,
+    "supportsSimulationMock":  true
+}

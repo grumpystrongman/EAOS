@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Go
+bin/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Local data
+.volumes/

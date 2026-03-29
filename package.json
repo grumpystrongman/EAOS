@@ -1,0 +1,25 @@
+{
+  "name": "eaos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Enterprise Agent Orchestration and Trust Platform",
+  "workspaces": [
+    "backend/services/*",
+    "backend/shared/*",
+    "frontend/apps/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces build",
+    "test": "npm run --workspaces test",
+    "lint": "npm run --workspaces lint",
+    "typecheck": "npm run --workspaces typecheck",
+    "smoke:pilot": "node tools/scripts/smoke-pilot.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

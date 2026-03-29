@@ -1,0 +1,18 @@
+{
+    "connectorId":  "linear",
+    "version":  "0.1.0",
+    "trustTier":  2,
+    "signature":  "REPLACE_WITH_SIGNED_DIGEST",
+    "allowedScopes":  [
+                          "READ_ISSUE",
+                          "WRITE_COMMENT",
+                          "CREATE_ISSUE"
+                      ],
+    "operationMode":  "read_write",
+    "rateLimit":  {
+                      "requestsPerMinute":  120,
+                      "burst":  20
+                  },
+    "requiresIdempotencyKeyForWrite":  true,
+    "supportsSimulationMock":  true
+}
