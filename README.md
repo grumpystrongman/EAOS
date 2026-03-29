@@ -24,31 +24,34 @@ The included pilot demonstrates a **Hospital Discharge Readiness Assistant**:
 
 ## Screenshots
 
-All screenshots below are captured from live route-specific pages in the running pilot app.
+All screenshots below are captured from live route-specific pages in the running pilot app after seeding real workflow state.
 
 ### KPI Dashboard
-![KPI Dashboard](docs/assets/screenshots/dashboard-pilot.png)
+![KPI Dashboard](docs/assets/screenshots/commercial-dashboard.png)
+
+### Commercial Readiness
+![Commercial Readiness](docs/assets/screenshots/commercial-readiness.png)
 
 ### Admin Console
-![Admin Console](docs/assets/screenshots/admin-console.png)
+![Admin Console](docs/assets/screenshots/commercial-admin.png)
 
 ### Workflow Designer
-![Workflow Designer](docs/assets/screenshots/workflow-designer.png)
+![Workflow Designer](docs/assets/screenshots/commercial-workflow.png)
 
 ### Approval Inbox
-![Approval Inbox](docs/assets/screenshots/approval-inbox.png)
+![Approval Inbox](docs/assets/screenshots/commercial-approvals.png)
 
 ### Incident Review Explorer
-![Incident Review Explorer](docs/assets/screenshots/incident-review.png)
+![Incident Review Explorer](docs/assets/screenshots/commercial-incidents.png)
 
 ### Audit Explorer
-![Audit Explorer](docs/assets/screenshots/audit-explorer.png)
+![Audit Explorer](docs/assets/screenshots/commercial-audit.png)
 
 ### Security Console
-![Security Console](docs/assets/screenshots/security-console.png)
+![Security Console](docs/assets/screenshots/commercial-security.png)
 
 ### Simulation Lab
-![Simulation Lab](docs/assets/screenshots/simulation-lab.png)
+![Simulation Lab](docs/assets/screenshots/commercial-simulation.png)
 
 ## Quick Start
 
@@ -64,6 +67,12 @@ Run the full pilot demo report:
 
 ```bash
 node tools/scripts/pilot-demo.mjs
+```
+
+Regenerate commercial screenshots:
+
+```bash
+npm run screenshots:commercial
 ```
 
 ### Connector Control APIs (Pilot)

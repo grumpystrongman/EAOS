@@ -10,6 +10,7 @@
 
 - [Pilot Runbook](./pilot/PILOT-RUNBOOK.md)
 - [Smoke and Pilot Test Report](./tests/SMOKE-AND-PILOT-TEST-REPORT.md)
+- [Commercial Readiness](./commercial/COMMERCIAL-READINESS.md)
 - Demo artifact: `docs/assets/demo/pilot-demo-output.json`
 
 ## Manuals

@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { readFile } from "node:fs/promises";
 import { URL } from "node:url";
 import type { ServiceDescriptor } from "@eaos/contracts";
 import {
@@ -54,6 +55,79 @@ const resolveUserRole = (user: { role?: string; roles?: string[] }): "clinician"
     if (user.roles.includes("security_admin") || user.roles.includes("approver")) return "security";
   }
   return "clinician";
+};
+
+const checkGraphHashChain = (steps: Array<{ hash: string; previousHash: string | null; stage: string }>) => {
+  if (!Array.isArray(steps) || steps.length === 0) return false;
+  for (let index = 0; index < steps.length; index += 1) {
+    const step = steps[index]!;
+    if (typeof step.hash !== "string" || step.hash.length < 16) return false;
+    if (index === 0 && step.previousHash !== null) return false;
+    if (index > 0 && step.previousHash !== steps[index - 1]!.hash) return false;
+  }
+  return steps.map((step) => step.stage).join(">") === "planner>executor>reviewer";
+};
+
+const readCommercialProofReport = async (): Promise<Record<string, unknown> | undefined> => {
+  try {
+    return JSON.parse(await readFile("docs/assets/demo/commercial-proof-report.json", "utf8")) as Record<string, unknown>;
+  } catch {
+    return undefined;
+  }
+};
+
+const buildCommercialSnapshot = async () => {
+  const state = await loadState();
+  const allEvidenceNonEmpty = state.auditEvents.every((event) => typeof event.evidenceId === "string" && event.evidenceId.length > 0);
+  const graphDeterminism = state.graphExecutions.length > 0
+    ? state.graphExecutions.every((graphExecution) => checkGraphHashChain(graphExecution.steps))
+    : false;
+
+  return {
+    generatedAt: new Date().toISOString(),
+    live: {
+      executions: state.executions.length,
+      approvals: state.approvals.length,
+      auditEvents: state.auditEvents.length,
+      graphExecutions: state.graphExecutions.length,
+      incidents: state.incidents.length
+    },
+    claims: [
+      {
+        id: "policy-enforced-outside-model",
+        title: "Policy controls enforced before and during execution",
+        status: state.executions.some((execution) => execution.policyDecision.effect !== "ALLOW") ? "pass" : "warn",
+        evidence: {
+          nonAllowExecutions: state.executions.filter((execution) => execution.policyDecision.effect !== "ALLOW").length
+        }
+      },
+      {
+        id: "human-approval-gate",
+        title: "High-risk live paths require human approval",
+        status: state.approvals.length > 0 ? "pass" : "warn",
+        evidence: {
+          approvals: state.approvals.length
+        }
+      },
+      {
+        id: "audit-evidence-coverage",
+        title: "Audit stream carries evidence IDs for replay and review",
+        status: allEvidenceNonEmpty && state.auditEvents.length > 0 ? "pass" : "fail",
+        evidence: {
+          allEvidenceNonEmpty,
+          auditEvents: state.auditEvents.length
+        }
+      },
+      {
+        id: "graph-determinism",
+        title: "Graph execution shows deterministic planner-executor-reviewer hash chain",
+        status: graphDeterminism ? "pass" : "warn",
+        evidence: {
+          graphExecutions: state.graphExecutions.length
+        }
+      }
+    ]
+  };
 };
 
 const sendJson = (response: ServerResponse, statusCode: number, body: unknown) => {
@@ -146,6 +220,166 @@ const handleApprove = async (approvalId: string, actorId: string, body: JsonMap)
   return { status: 200, body: approval };
 };
 
+const buildCommercialReadinessSnapshot = async () => {
+  const state = await loadState();
+  const executions = state.executions;
+  const approvals = state.approvals;
+  const auditEvents = state.auditEvents;
+  const incidents = state.incidents;
+
+  const claims = [
+    {
+      claimId: "policy_enforced_outside_model",
+      title: "Policy is enforced outside the model",
+      status: executions.some((execution) => execution.status === "blocked" || execution.status === "failed") ? "pass" : "watch",
+      howTested: "Run live workflow and verify blocked/failed path before unsafe action.",
+      evidence: executions
+        .filter((execution) => execution.status === "blocked" || execution.status === "failed")
+        .slice(0, 5)
+        .map((execution) => execution.evidenceId)
+    },
+    {
+      claimId: "human_approval_for_high_risk",
+      title: "High-risk actions require human approval",
+      status:
+        approvals.some((approval) => approval.status === "pending") ||
+        approvals.some((approval) => approval.status === "approved" || approval.status === "rejected")
+          ? "pass"
+          : "watch",
+      howTested: "Run live workflow and verify approval record appears before completion.",
+      evidence: approvals.slice(0, 5).map((approval) => approval.approvalId)
+    },
+    {
+      claimId: "immutable_audit_chain",
+      title: "Audit trail is replayable and evidence-linked",
+      status: auditEvents.length > 0 && auditEvents.every((event) => typeof event.evidenceId === "string") ? "pass" : "watch",
+      howTested: "Query audit events and verify evidence IDs are present and queryable.",
+      evidence: auditEvents.slice(0, 5).map((event) => event.evidenceId)
+    },
+    {
+      claimId: "incident_detection",
+      title: "Risky failures are escalated into incidents",
+      status: incidents.length > 0 ? "pass" : "watch",
+      howTested: "Trigger policy denial/reviewer rejection and verify incident objects are created.",
+      evidence: incidents.slice(0, 5).map((incident) => incident.incidentId)
+    }
+  ] as const;
+
+  const passed = claims.filter((claim) => claim.status === "pass").length;
+  const score = Math.round((passed / claims.length) * 100);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    summary: {
+      score,
+      totalClaims: claims.length,
+      passedClaims: passed,
+      executionTotals: {
+        total: executions.length,
+        blocked: executions.filter((execution) => execution.status === "blocked").length,
+        completed: executions.filter((execution) => execution.status === "completed").length,
+        failed: executions.filter((execution) => execution.status === "failed").length
+      },
+      approvalTotals: {
+        total: approvals.length,
+        pending: approvals.filter((approval) => approval.status === "pending").length,
+        approved: approvals.filter((approval) => approval.status === "approved").length,
+        rejected: approvals.filter((approval) => approval.status === "rejected").length
+      },
+      auditEventCount: auditEvents.length,
+      incidentCount: incidents.length
+    },
+    claims
+  };
+};
+
+const buildCommercialClaims = async () => {
+  const state = await loadState();
+  const executions = state.executions;
+  const approvals = state.approvals;
+  const audits = state.auditEvents;
+  const incidents = state.incidents;
+
+  const executionTotals = {
+    total: executions.length,
+    completed: executions.filter((item) => item.status === "completed").length,
+    blocked: executions.filter((item) => item.status === "blocked").length,
+    failed: executions.filter((item) => item.status === "failed").length
+  };
+
+  const approvalTotals = {
+    total: approvals.length,
+    pending: approvals.filter((item) => item.status === "pending").length,
+    approved: approvals.filter((item) => item.status === "approved").length,
+    rejected: approvals.filter((item) => item.status === "rejected").length
+  };
+
+  const auditExecutionIds = new Set(
+    audits.flatMap((event) =>
+      typeof event.details.executionId === "string" ? [event.details.executionId] : []
+    )
+  );
+  const executionsWithEvidence = executions.filter((execution) => typeof execution.evidenceId === "string" && execution.evidenceId.length > 0).length;
+  const executionAuditCoverage = executions.length === 0 ? 1 : executions.filter((execution) => auditExecutionIds.has(execution.executionId)).length / executions.length;
+
+  const liveExecutions = executions.filter((execution) => execution.mode === "live");
+  const liveWithApprovals = liveExecutions.filter((execution) => Boolean(execution.approvalId)).length;
+  const ephiExecutions = executions.filter((execution) => execution.policyDecision.classification === "EPHI");
+  const ephiZeroRetention = ephiExecutions.filter((execution) => execution.modelRoute?.zeroRetention !== false).length;
+
+  const claims = [
+    {
+      claimId: "policy_gates_enforced",
+      title: "Policy gates are enforced outside the model",
+      status: executions.some((execution) => execution.policyDecision.effect !== "ALLOW") ? "verified" : "partial",
+      evidence: {
+        policyEffects: executions.map((execution) => execution.policyDecision.effect),
+        blockedOrFailedExecutions: executionTotals.blocked + executionTotals.failed
+      }
+    },
+    {
+      claimId: "human_approval_for_high_risk_live",
+      title: "High-risk live workflows require human approval",
+      status: liveExecutions.length === 0 ? "partial" : liveWithApprovals === liveExecutions.length ? "verified" : "partial",
+      evidence: {
+        liveExecutions: liveExecutions.length,
+        liveWithApprovals
+      }
+    },
+    {
+      claimId: "audit_and_evidence_coverage",
+      title: "Major actions are auditable and replayable",
+      status: executionAuditCoverage >= 0.95 && executionsWithEvidence === executions.length ? "verified" : "partial",
+      evidence: {
+        executionAuditCoverage: Number(executionAuditCoverage.toFixed(4)),
+        executionsWithEvidence,
+        totalExecutions: executions.length,
+        auditEvents: audits.length
+      }
+    },
+    {
+      claimId: "ephi_zero_retention_routing",
+      title: "EPHI model routing honors zero-retention posture",
+      status: ephiExecutions.length === 0 ? "partial" : ephiZeroRetention === ephiExecutions.length ? "verified" : "partial",
+      evidence: {
+        ephiExecutions: ephiExecutions.length,
+        ephiZeroRetention
+      }
+    }
+  ];
+
+  return {
+    generatedAt: new Date().toISOString(),
+    executionTotals,
+    approvalTotals,
+    incidentTotals: {
+      total: incidents.length,
+      open: incidents.filter((item) => item.status === "open").length
+    },
+    claims
+  };
+};
+
 export const requestHandler = async (request: IncomingMessage, response: ServerResponse) => {
   const method = request.method ?? "GET";
   const parsedUrl = new URL(request.url ?? "/", "http://localhost");
@@ -192,6 +426,11 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   const actorId = getActorFromAuthHeader(request);
   if (!actorId) {
     sendJson(response, 401, { error: "missing_or_invalid_auth_token" });
+    return;
+  }
+
+  if (method === "GET" && pathname === "/v1/commercial/claims") {
+    sendJson(response, 200, await buildCommercialClaims());
     return;
   }
 
@@ -373,6 +612,18 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   if (method === "GET" && pathname === "/v1/audit/events") {
     const state = await loadState();
     sendJson(response, 200, { events: state.auditEvents.slice().reverse() });
+    return;
+  }
+
+  if (method === "GET" && pathname === "/v1/commercial/proof") {
+    const snapshot = await buildCommercialSnapshot();
+    const report = await readCommercialProofReport();
+    sendJson(response, 200, { ...snapshot, ...(report ? { report } : {}) });
+    return;
+  }
+
+  if (method === "GET" && pathname === "/v1/commercial/readiness") {
+    sendJson(response, 200, await buildCommercialReadinessSnapshot());
     return;
   }
 

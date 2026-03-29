@@ -18,6 +18,13 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: ["analyst"]
   },
   {
+    path: "/commercial",
+    title: "Commercial Readiness",
+    summary: "Live claim verification, buyer-facing value mapping, and proof status.",
+    accent: "indigo",
+    requiredRoles: ["security_admin"]
+  },
+  {
     path: "/admin",
     title: "Admin Console",
     summary: "Tenant, environment, and release controls for the pilot workspace.",

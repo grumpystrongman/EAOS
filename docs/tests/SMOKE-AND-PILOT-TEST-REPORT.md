@@ -6,7 +6,10 @@
 npm run typecheck
 npm run test
 npm run build
+npm run test:commercial
 npm run smoke:pilot
+npm run proof:commercial
+npm run screenshots:commercial
 node tools/scripts/pilot-demo.mjs
 ```
 
@@ -27,6 +30,28 @@ node tools/scripts/pilot-demo.mjs
 - Status: PASS
 - Script: `tools/scripts/pilot-demo.mjs`
 - Artifact: `docs/assets/demo/pilot-demo-output.json`
+
+## Commercial Proof Result
+
+- Status: PASS
+- Script: `tools/scripts/commercial-proof.mjs`
+- Test harness: `tests/commercial/commercial-proof.test.mjs`
+- Artifact: `docs/assets/demo/commercial-proof-report.json`
+
+## Screenshot Capture Result
+
+- Status: PASS
+- Script: `tools/scripts/capture-commercial-screenshots.mjs`
+- Artifacts:
+  - `docs/assets/screenshots/commercial-dashboard.png`
+  - `docs/assets/screenshots/commercial-readiness.png`
+  - `docs/assets/screenshots/commercial-admin.png`
+  - `docs/assets/screenshots/commercial-security.png`
+  - `docs/assets/screenshots/commercial-workflow.png`
+  - `docs/assets/screenshots/commercial-approvals.png`
+  - `docs/assets/screenshots/commercial-incidents.png`
+  - `docs/assets/screenshots/commercial-audit.png`
+  - `docs/assets/screenshots/commercial-simulation.png`
 
 ## Key Observations
 

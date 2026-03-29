@@ -1,0 +1,214 @@
+{
+  "generatedAt": "2026-03-29T23:14:35.024Z",
+  "profile": "commercial-readiness",
+  "scope": {
+    "product": "EAOS",
+    "scenario": "Hospital Discharge Readiness Assistant",
+    "environment": "local-pilot"
+  },
+  "commands": [
+    "npm run build",
+    "npm run proof:commercial",
+    "npm run smoke:pilot",
+    "node tools/scripts/pilot-demo.mjs"
+  ],
+  "endpoints": {
+    "gateway": "http://127.0.0.1:3920",
+    "toolRegistry": "http://127.0.0.1:3921",
+    "toolExecution": "http://127.0.0.1:3922"
+  },
+  "claims": [
+    {
+      "claimId": "policy_gate_enforced",
+      "title": "Policy gate blocks high-risk live path before completion",
+      "passed": true,
+      "whyItMatters": "Prevents unsafe autonomous execution on sensitive actions.",
+      "howTested": "Run live discharge workflow and assert blocked state with approval ticket.",
+      "evidence": {
+        "executionId": "ex-mncdmc2i-3p3wso",
+        "approvalId": "ap-mncdmc2i-qfzfd8",
+        "status": "blocked"
+      }
+    },
+    {
+      "claimId": "human_approval_control",
+      "title": "Human approval unlocks workflow continuation",
+      "passed": true,
+      "whyItMatters": "Demonstrates governance without disabling automation entirely.",
+      "howTested": "Approve pending ticket and verify workflow transitions to completed.",
+      "evidence": {
+        "approvalStatus": "approved",
+        "executionStatusAfterApproval": "completed",
+        "evidenceId": "ev-ex-mncdmc2i-3p3wso"
+      }
+    },
+    {
+      "claimId": "deterministic_graph_checkpoints",
+      "title": "Execution graph remains deterministic and replayable",
+      "passed": true,
+      "whyItMatters": "Allows post-incident replay and operational predictability.",
+      "howTested": "Query graph endpoint and verify stage chain.",
+      "evidence": {
+        "graphExecutionId": "gx-mncdmc2i-b1qjq3",
+        "stages": [
+          "planner",
+          "executor",
+          "reviewer"
+        ]
+      }
+    },
+    {
+      "claimId": "audit_evidence_chain",
+      "title": "Every major action is evidence-linked in audit trail",
+      "passed": true,
+      "whyItMatters": "Enables compliance review and forensic response.",
+      "howTested": "List audit events and verify evidence IDs are present.",
+      "evidence": {
+        "eventCount": 5,
+        "latestEvidenceId": "ev-mncdmc2n-yy4c6z"
+      }
+    },
+    {
+      "claimId": "signed_connector_registry",
+      "title": "Signed connector registry exposes enterprise connectors including Linear",
+      "passed": true,
+      "whyItMatters": "Validates enterprise integration depth and controlled connector onboarding.",
+      "howTested": "Query published manifests and assert required reference connectors exist.",
+      "evidence": {
+        "publishedCount": 9,
+        "sampleToolIds": [
+          "connector-ms-fabric-read",
+          "connector-powerbi-export",
+          "connector-sql-careplan",
+          "connector-fhir-read",
+          "connector-hl7-ingest",
+          "connector-sharepoint-docs"
+        ]
+      }
+    },
+    {
+      "claimId": "tool_runtime_guard",
+      "title": "Tool runtime guard blocks unauthorized execution paths",
+      "passed": true,
+      "whyItMatters": "Prevents direct tool bypass even when model output attempts unsafe actions.",
+      "howTested": "Invoke tool execution without required approval and assert blocked response.",
+      "evidence": {
+        "status": 403,
+        "guardReason": "approval_missing"
+      }
+    },
+    {
+      "claimId": "idempotency_protection",
+      "title": "Tool execution supports idempotent retries",
+      "passed": true,
+      "whyItMatters": "Improves reliability for enterprise automation retries and outage recovery.",
+      "howTested": "Submit duplicate tool call with same idempotency key and assert replay semantics.",
+      "evidence": {
+        "firstCallId": "tc-mncdmc3d-nrhzct",
+        "replayCallId": "tc-mncdmc3d-nrhzct",
+        "replayed": true
+      }
+    }
+  ],
+  "summary": {
+    "totalClaims": 7,
+    "passedClaims": 7,
+    "failedClaims": 0,
+    "score": 100,
+    "scorePercent": 100,
+    "status": "PASS"
+  },
+  "checks": [
+    {
+      "claimId": "policy_gate_enforced",
+      "title": "Policy gate blocks high-risk live path before completion",
+      "passed": true,
+      "whyItMatters": "Prevents unsafe autonomous execution on sensitive actions.",
+      "howTested": "Run live discharge workflow and assert blocked state with approval ticket.",
+      "evidence": {
+        "executionId": "ex-mncdmc2i-3p3wso",
+        "approvalId": "ap-mncdmc2i-qfzfd8",
+        "status": "blocked"
+      }
+    },
+    {
+      "claimId": "human_approval_control",
+      "title": "Human approval unlocks workflow continuation",
+      "passed": true,
+      "whyItMatters": "Demonstrates governance without disabling automation entirely.",
+      "howTested": "Approve pending ticket and verify workflow transitions to completed.",
+      "evidence": {
+        "approvalStatus": "approved",
+        "executionStatusAfterApproval": "completed",
+        "evidenceId": "ev-ex-mncdmc2i-3p3wso"
+      }
+    },
+    {
+      "claimId": "deterministic_graph_checkpoints",
+      "title": "Execution graph remains deterministic and replayable",
+      "passed": true,
+      "whyItMatters": "Allows post-incident replay and operational predictability.",
+      "howTested": "Query graph endpoint and verify stage chain.",
+      "evidence": {
+        "graphExecutionId": "gx-mncdmc2i-b1qjq3",
+        "stages": [
+          "planner",
+          "executor",
+          "reviewer"
+        ]
+      }
+    },
+    {
+      "claimId": "audit_evidence_chain",
+      "title": "Every major action is evidence-linked in audit trail",
+      "passed": true,
+      "whyItMatters": "Enables compliance review and forensic response.",
+      "howTested": "List audit events and verify evidence IDs are present.",
+      "evidence": {
+        "eventCount": 5,
+        "latestEvidenceId": "ev-mncdmc2n-yy4c6z"
+      }
+    },
+    {
+      "claimId": "signed_connector_registry",
+      "title": "Signed connector registry exposes enterprise connectors including Linear",
+      "passed": true,
+      "whyItMatters": "Validates enterprise integration depth and controlled connector onboarding.",
+      "howTested": "Query published manifests and assert required reference connectors exist.",
+      "evidence": {
+        "publishedCount": 9,
+        "sampleToolIds": [
+          "connector-ms-fabric-read",
+          "connector-powerbi-export",
+          "connector-sql-careplan",
+          "connector-fhir-read",
+          "connector-hl7-ingest",
+          "connector-sharepoint-docs"
+        ]
+      }
+    },
+    {
+      "claimId": "tool_runtime_guard",
+      "title": "Tool runtime guard blocks unauthorized execution paths",
+      "passed": true,
+      "whyItMatters": "Prevents direct tool bypass even when model output attempts unsafe actions.",
+      "howTested": "Invoke tool execution without required approval and assert blocked response.",
+      "evidence": {
+        "status": 403,
+        "guardReason": "approval_missing"
+      }
+    },
+    {
+      "claimId": "idempotency_protection",
+      "title": "Tool execution supports idempotent retries",
+      "passed": true,
+      "whyItMatters": "Improves reliability for enterprise automation retries and outage recovery.",
+      "howTested": "Submit duplicate tool call with same idempotency key and assert replay semantics.",
+      "evidence": {
+        "firstCallId": "tc-mncdmc3d-nrhzct",
+        "replayCallId": "tc-mncdmc3d-nrhzct",
+        "replayed": true
+      }
+    }
+  ]
+}

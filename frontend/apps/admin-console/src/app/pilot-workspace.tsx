@@ -1,6 +1,16 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { pilotApi, type ApprovalRecord, type AuditEvent, type ExecutionRecord, type LoginResponse, type ModelRoutePreview } from "../shared/api/pilot.js";
+import {
+  pilotApi,
+  type ApprovalRecord,
+  type AuditEvent,
+  type CommercialClaimsSnapshot,
+  type CommercialProofSnapshot,
+  type CommercialReadinessSnapshot,
+  type ExecutionRecord,
+  type LoginResponse,
+  type ModelRoutePreview
+} from "../shared/api/pilot.js";
 import { DEMO_PERSONAS, PILOT_USE_CASE, AGENT_BLUEPRINTS, CONNECTOR_BLUEPRINTS, EXECUTIVE_KPIS, POLICY_BLUEPRINTS, WORKFLOW_BLUEPRINTS } from "./pilot-data.js";
 
 type PersonaKey = "clinician" | "security";
@@ -31,6 +41,9 @@ interface WorkspaceState {
   approvals: ApprovalRecord[];
   auditEvents: AuditEvent[];
   incidents: IncidentRecord[];
+  commercialProof?: CommercialProofSnapshot;
+  commercialClaims?: CommercialClaimsSnapshot;
+  commercialReadiness?: CommercialReadinessSnapshot;
   modelPreview?: { selected: ModelRoutePreview; fallback: ModelRoutePreview[] };
   lastSyncedAt?: string;
   isBootstrapping: boolean;
@@ -214,10 +227,13 @@ export const usePilotWorkspace = create<PilotWorkspace>()(
 
         set({ isSyncing: true, error: undefined });
         try {
-          const [approvalsResponse, auditResponse, previewResponse] = await Promise.all([
+          const [approvalsResponse, auditResponse, previewResponse, commercialProof, commercialClaims, commercialReadiness] = await Promise.all([
             pilotApi.listApprovals(token),
             pilotApi.listAuditEvents(token),
-            pilotApi.previewModelRoute(token)
+            pilotApi.previewModelRoute(token),
+            pilotApi.getCommercialProof(token),
+            pilotApi.getCommercialClaims(token),
+            pilotApi.getCommercialReadiness(token)
           ]);
 
           const approvals = sortLatestFirst(approvalsResponse.approvals);
@@ -249,6 +265,9 @@ export const usePilotWorkspace = create<PilotWorkspace>()(
             auditEvents,
             executions: sortLatestFirst(executions),
             incidents: deriveIncidents(executions, approvals, auditEvents),
+            commercialProof,
+            commercialClaims,
+            commercialReadiness,
             modelPreview: previewResponse,
             trackedExecutionIds: executionIds,
             lastSyncedAt: toIso()

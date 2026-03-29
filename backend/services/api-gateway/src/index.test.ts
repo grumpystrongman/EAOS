@@ -208,3 +208,83 @@ test("policy violation creates an incident before tool execution", async () => {
   const incidentsBody = (await incidents.json()) as { incidents: Array<{ incidentId: string; category: string }> };
   assert.ok(incidentsBody.incidents.some((item) => item.incidentId === execution.incidentId && item.category === "policy_violation"));
 });
+
+test("commercial proof endpoint returns live claim snapshot", async () => {
+  const login = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  assert.equal(login.status, 200);
+  const authBody = (await login.json()) as { accessToken: string };
+
+  const proof = await fetch(`${baseUrl}/v1/commercial/proof`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  assert.equal(proof.status, 200);
+  const body = (await proof.json()) as {
+    live: { executions: number };
+    claims: Array<{ id: string; status: string }>;
+  };
+  assert.ok(typeof body.live.executions === "number");
+  assert.ok(body.claims.length >= 4);
+  assert.ok(body.claims.some((claim) => claim.id === "audit-evidence-coverage"));
+});
+
+test("commercial readiness endpoint returns claim scorecard", async () => {
+  const login = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  const authBody = (await login.json()) as { accessToken: string };
+
+  const readiness = await fetch(`${baseUrl}/v1/commercial/readiness`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  assert.equal(readiness.status, 200);
+  const body = (await readiness.json()) as {
+    generatedAt: string;
+    summary: { score: number; totalClaims: number; passedClaims: number };
+    claims: Array<{ claimId: string; status: string }>;
+  };
+  assert.ok(typeof body.generatedAt === "string");
+  assert.equal(body.summary.totalClaims, 4);
+  assert.ok(body.summary.score >= 0 && body.summary.score <= 100);
+  assert.equal(body.claims.length, 4);
+  assert.ok(body.claims.some((claim) => claim.claimId === "immutable_audit_chain"));
+});
+
+test("commercial claims endpoint returns verification summary", async () => {
+  const login = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  const authBody = (await login.json()) as { accessToken: string };
+
+  await fetch(`${baseUrl}/v1/executions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${authBody.accessToken}`
+    },
+    body: JSON.stringify({
+      mode: "simulation",
+      workflowId: "wf-discharge-assistant",
+      patientId: "patient-1001",
+      requestFollowupEmail: true
+    })
+  });
+
+  const claimsResponse = await fetch(`${baseUrl}/v1/commercial/claims`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  assert.equal(claimsResponse.status, 200);
+  const claims = (await claimsResponse.json()) as {
+    executionTotals: { total: number };
+    claims: Array<{ claimId: string; status: string }>;
+  };
+  assert.ok(claims.executionTotals.total >= 1);
+  assert.ok(claims.claims.some((claim) => claim.claimId === "policy_gates_enforced"));
+});

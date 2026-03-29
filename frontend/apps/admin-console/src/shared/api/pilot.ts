@@ -80,6 +80,86 @@ export interface ModelRoutePreview {
   };
 }
 
+export interface CommercialClaim {
+  id: string;
+  title: string;
+  status: "pass" | "warn" | "fail";
+  evidence: Record<string, unknown>;
+}
+
+export interface CommercialProofSnapshot {
+  generatedAt: string;
+  live: {
+    executions: number;
+    approvals: number;
+    auditEvents: number;
+    graphExecutions: number;
+    incidents: number;
+  };
+  claims: CommercialClaim[];
+  report?: Record<string, unknown>;
+}
+
+export interface CommercialReadinessClaim {
+  claimId: string;
+  title: string;
+  status: "pass" | "watch";
+  howTested: string;
+  evidence: string[];
+}
+
+export interface CommercialReadinessSnapshot {
+  generatedAt: string;
+  summary: {
+    score: number;
+    totalClaims: number;
+    passedClaims: number;
+    executionTotals: {
+      total: number;
+      blocked: number;
+      completed: number;
+      failed: number;
+    };
+    approvalTotals: {
+      total: number;
+      pending: number;
+      approved: number;
+      rejected: number;
+    };
+    auditEventCount: number;
+    incidentCount: number;
+  };
+  claims: CommercialReadinessClaim[];
+}
+
+export interface CommercialVerificationClaim {
+  claimId: string;
+  title: string;
+  status: "verified" | "partial";
+  evidence: Record<string, unknown>;
+}
+
+export interface CommercialClaimsSnapshot {
+  generatedAt: string;
+  executionTotals: {
+    total: number;
+    completed: number;
+    blocked: number;
+    failed: number;
+  };
+  approvalTotals: {
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  incidentTotals: {
+    total: number;
+    open: number;
+  };
+  claims: CommercialVerificationClaim[];
+}
+
 const baseUrl = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:3000";
 
 const jsonRequest = async <T>(
@@ -123,11 +203,17 @@ export const pilotApi = {
     jsonRequest<ApprovalRecord>(`/v1/approvals/${approvalId}/decide`, "POST", token, { decision, reason }),
   listAuditEvents: (token: string) =>
     jsonRequest<{ events: AuditEvent[] }>("/v1/audit/events", "GET", token),
+  getCommercialProof: (token: string) =>
+    jsonRequest<CommercialProofSnapshot>("/v1/commercial/proof", "GET", token),
+  getCommercialClaims: (token: string) =>
+    jsonRequest<CommercialClaimsSnapshot>("/v1/commercial/claims", "GET", token),
   previewModelRoute: (token: string) =>
     jsonRequest<{ selected: ModelRoutePreview; fallback: ModelRoutePreview[] }>(
       "/v1/model/route/preview",
       "POST",
       token,
       { classification: "EPHI", zeroRetentionRequired: true }
-    )
+    ),
+  getCommercialReadiness: (token: string) =>
+    jsonRequest<CommercialReadinessSnapshot>("/v1/commercial/readiness", "GET", token)
 };

@@ -11,12 +11,16 @@
   "scripts": {
     "build": "npm run --workspaces build",
     "test": "npm run --workspaces test",
+    "test:commercial": "npm run build && node --test tests/commercial/commercial-proof.test.mjs",
     "lint": "npm run --workspaces lint",
     "typecheck": "npm run --workspaces typecheck",
-    "smoke:pilot": "node tools/scripts/smoke-pilot.mjs"
+    "smoke:pilot": "node tools/scripts/smoke-pilot.mjs",
+    "proof:commercial": "npm run build && node tools/scripts/commercial-proof.mjs",
+    "screenshots:commercial": "node tools/scripts/capture-commercial-screenshots.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",
+    "playwright": "^1.58.2",
     "typescript": "^5.8.3"
   },
   "engines": {

@@ -51,14 +51,12 @@ Optional explicit demo output:
 node tools/scripts/pilot-demo.mjs
 ```
 
-## Regenerate Screenshots
-
-Use Playwright CLI with a running gateway (`:3000`) and admin console (`:4273`):
+Commercial proof and screenshots:
 
 ```bash
-npx --yes --package @playwright/cli playwright-cli -s=eaosshots open http://127.0.0.1:4273/dashboard
-# ...navigate route-by-route...
-npx --yes --package @playwright/cli playwright-cli -s=eaosshots screenshot --full-page --filename docs/assets/screenshots/dashboard-pilot.png
+npm run test:commercial
+npm run proof:commercial
+npm run screenshots:commercial
 ```
 
 ## Pilot UI Walkthrough
@@ -72,15 +70,15 @@ npx --yes --package @playwright/cli playwright-cli -s=eaosshots screenshot --ful
 
 ## Screenshot Gallery
 
-- Dashboard: `docs/assets/screenshots/dashboard-pilot.png`
-- Admin Console: `docs/assets/screenshots/admin-console.png`
-- Security Console: `docs/assets/screenshots/security-console.png`
-- Agent Builder: `docs/assets/screenshots/agent-builder.png`
-- Workflow Designer: `docs/assets/screenshots/workflow-designer.png`
-- Approval Inbox: `docs/assets/screenshots/approval-inbox.png`
-- Incident Review: `docs/assets/screenshots/incident-review.png`
-- Audit Explorer: `docs/assets/screenshots/audit-explorer.png`
-- Simulation Lab: `docs/assets/screenshots/simulation-lab.png`
+- Dashboard: `docs/assets/screenshots/commercial-dashboard.png`
+- Commercial Readiness: `docs/assets/screenshots/commercial-readiness.png`
+- Admin Console: `docs/assets/screenshots/commercial-admin.png`
+- Security Console: `docs/assets/screenshots/commercial-security.png`
+- Workflow Designer: `docs/assets/screenshots/commercial-workflow.png`
+- Approval Inbox: `docs/assets/screenshots/commercial-approvals.png`
+- Incident Review: `docs/assets/screenshots/commercial-incidents.png`
+- Audit Explorer: `docs/assets/screenshots/commercial-audit.png`
+- Simulation Lab: `docs/assets/screenshots/commercial-simulation.png`
 
 ## Demo Artifact
 

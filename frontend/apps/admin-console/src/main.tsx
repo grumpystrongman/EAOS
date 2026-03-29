@@ -6,6 +6,7 @@ import { ApprovalInboxPage } from "./app/pages/approval-inbox-page.js";
 import { AgentBuilderPage } from "./app/pages/agent-builder-page.js";
 import { AdminConsolePage } from "./app/pages/admin-console-page.js";
 import { AuditExplorerPage } from "./app/pages/audit-explorer-page.js";
+import { CommercialReadinessPage } from "./app/pages/commercial-readiness-page.js";
 import { DashboardPage } from "./app/pages/dashboard-page.js";
 import { IncidentReviewPage } from "./app/pages/incident-review-page.js";
 import { SecurityConsolePage } from "./app/pages/security-console-page.js";
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
+      { path: "commercial", element: <CommercialReadinessPage /> },
       { path: "admin", element: <AdminConsolePage /> },
       { path: "security", element: <SecurityConsolePage /> },
       { path: "agents", element: <AgentBuilderPage /> },
