@@ -23,3 +23,5 @@ bin/
 
 # Local data
 .volumes/
+.playwright-cli/
+output/playwright/*.log

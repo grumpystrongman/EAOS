@@ -30,7 +30,12 @@ interface JsonMap {
 }
 
 const sendJson = (response: ServerResponse, statusCode: number, body: unknown) => {
-  response.writeHead(statusCode, { "content-type": "application/json" });
+  response.writeHead(statusCode, {
+    "content-type": "application/json",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "content-type,authorization",
+    "access-control-allow-methods": "GET,POST,OPTIONS"
+  });
   response.end(JSON.stringify(body));
 };
 
@@ -253,6 +258,16 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   const method = request.method ?? "GET";
   const parsedUrl = new URL(request.url ?? "/", "http://localhost");
   const pathname = parsedUrl.pathname;
+
+  if (method === "OPTIONS") {
+    response.writeHead(204, {
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "content-type,authorization",
+      "access-control-allow-methods": "GET,POST,OPTIONS"
+    });
+    response.end();
+    return;
+  }
 
   if (pathname === "/healthz") {
     sendJson(response, 200, { status: "ok", service: descriptor.serviceName });
