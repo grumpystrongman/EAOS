@@ -2,16 +2,19 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { URL } from "node:url";
 import type { ServiceDescriptor } from "@eaos/contracts";
 import {
-  applyApprovalDecision,
-  buildDischargeSummary,
   createApproval,
-  createAuditEvent,
-  createToolCall,
   evaluatePolicy,
+  getAgentGraphDefinition,
+  getGraphExecution,
+  getGraphExecutionByExecutionId,
+  getIncident,
+  listAgentGraphDefinitions,
+  listIncidents,
   loadState,
   routeModel,
+  resolveApprovalAndAdvanceExecution,
   saveState,
-  type ApprovalRecord,
+  startDischargeAssistantExecution,
   type PilotMode
 } from "@eaos/pilot-core";
 
@@ -74,184 +77,49 @@ const createExecution = async (input: {
   workflowId: string;
   tenantId: string;
   requestFollowupEmail: boolean;
+  classification?: string;
+  zeroRetentionRequested?: boolean;
 }) => {
-  const state = await loadState();
-  const patient = state.fhirPatients.find((item) => item.patientId === input.patientId);
-  const plan = state.carePlans.find((item) => item.patientId === input.patientId);
-
-  if (!patient || !plan) {
-    return { status: 404, body: { error: "patient_or_care_plan_not_found" } };
-  }
-
-  const policy = evaluatePolicy({
-    action: "workflow.execute",
-    classification: "EPHI",
-    mode: input.mode,
-    riskLevel: input.requestFollowupEmail ? "high" : "medium",
-    zeroRetentionRequested: true
-  });
-
-  const executionId = `ex-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-  const now = new Date().toISOString();
-
-  const toolCallFhir = createToolCall({
-    executionId,
-    toolId: "fhir.read-patient",
-    action: "READ",
-    status: "completed",
-    classification: "EPHI",
-    resultRef: `obj://tenant-starlight-health/executions/${executionId}/fhir-patient.json`
-  });
-  state.toolCalls.push(toolCallFhir);
-
-  const toolCallSql = createToolCall({
-    executionId,
-    toolId: "sql.read-care-plan",
-    action: "READ",
-    status: "completed",
-    classification: "EPHI",
-    resultRef: `obj://tenant-starlight-health/executions/${executionId}/care-plan.json`
-  });
-  state.toolCalls.push(toolCallSql);
-
-  const modelRoute = routeModel({ classification: "EPHI", zeroRetentionRequired: true });
-  const output = buildDischargeSummary(patient, plan);
-
-  let status: "blocked" | "completed" = "completed";
-  let blockedReason: string | undefined;
-  let approvalId: string | undefined;
-
-  if (policy.effect === "REQUIRE_APPROVAL" && input.mode === "live") {
-    const approval = createApproval({
-      tenantId: input.tenantId,
-      requestedBy: input.actorId,
-      reason: "Send discharge follow-up email",
-      riskLevel: "high",
-      executionId
-    });
-    state.approvals.push(approval);
-    approvalId = approval.approvalId;
-    status = "blocked";
-    blockedReason = "approval_required_before_followup_email";
-  }
-
-  const execution: {
-    executionId: string;
-    workflowId: string;
-    mode: PilotMode;
-    tenantId: string;
-    actorId: string;
-    patientId: string;
-    status: "blocked" | "completed";
-    currentStep: string;
-    output: { summary: string; recommendation: string; riskFlags: string[] };
-    blockedReason?: string;
-    approvalId?: string;
-    modelRoute: ReturnType<typeof routeModel>;
-    toolCalls: string[];
-    evidenceId: string;
-    createdAt: string;
-    updatedAt: string;
-  } = {
-    executionId,
-    workflowId: input.workflowId,
-    mode: input.mode,
-    tenantId: input.tenantId,
+  const result = await startDischargeAssistantExecution({
     actorId: input.actorId,
     patientId: input.patientId,
-    status,
-    currentStep: status === "completed" ? "done" : "awaiting_approval",
-    output,
-    modelRoute,
-    toolCalls: [toolCallFhir.toolCallId, toolCallSql.toolCallId],
-    evidenceId: `ev-${executionId}`,
-    createdAt: now,
-    updatedAt: now
-  };
-  if (blockedReason) {
-    execution.blockedReason = blockedReason;
-  }
-  if (approvalId) {
-    execution.approvalId = approvalId;
+    mode: input.mode,
+    workflowId: input.workflowId,
+    tenantId: input.tenantId,
+    requestFollowupEmail: input.requestFollowupEmail,
+    ...(typeof input.classification === "string"
+      ? { classification: input.classification as "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET" }
+      : {}),
+    ...(typeof input.zeroRetentionRequested === "boolean" ? { zeroRetentionRequested: input.zeroRetentionRequested } : {})
+  });
+
+  if ("status" in result) {
+    return result;
   }
 
-  state.executions.push(execution);
-
-  state.auditEvents.push(
-    createAuditEvent({
-      tenantId: input.tenantId,
-      actorId: input.actorId,
-      category: "workflow",
-      action: "execution_created",
-      status: status === "completed" ? "success" : "blocked",
-      details: {
-        executionId,
-        workflowId: input.workflowId,
-        policyDecision: policy,
-        approvalId,
-        mode: input.mode
-      }
-    })
-  );
-
-  await saveState(state);
-  return { status: 201, body: execution };
+  return { status: 201, body: { ...result.execution, graphExecutionStatus: result.graphExecution.status, incidentId: result.incident?.incidentId } };
 };
 
 const handleApprove = async (approvalId: string, actorId: string, body: JsonMap) => {
+  const decision = (body.decision === "approve" ? "approved" : "rejected") as "approved" | "rejected";
+  const result = await resolveApprovalAndAdvanceExecution({
+    approvalId,
+    actorId,
+    decision,
+    ...(typeof body.reason === "string" ? { reason: body.reason } : {})
+  });
+
+  if ("status" in result) {
+    return result;
+  }
+
   const state = await loadState();
   const approval = state.approvals.find((item) => item.approvalId === approvalId);
   if (!approval) {
     return { status: 404, body: { error: "approval_not_found" } };
   }
 
-  const decision = (body.decision === "approve" ? "approved" : "rejected") as "approved" | "rejected";
-  const updated = applyApprovalDecision(approval, {
-    approverId: actorId,
-    decision,
-    ...(typeof body.reason === "string" ? { reason: body.reason } : {})
-  });
-
-  const index = state.approvals.findIndex((item) => item.approvalId === approvalId);
-  state.approvals[index] = updated;
-
-  if (updated.status === "approved" && updated.executionId) {
-    const execution = state.executions.find((item) => item.executionId === updated.executionId);
-    if (execution && execution.status === "blocked") {
-      const toolCall = createToolCall({
-        executionId: execution.executionId,
-        toolId: "email.send-followup",
-        action: "EXECUTE",
-        status: "completed",
-        classification: "PII",
-        resultRef: `obj://tenant-starlight-health/executions/${execution.executionId}/followup-email.json`
-      });
-      state.toolCalls.push(toolCall);
-      execution.toolCalls.push(toolCall.toolCallId);
-      execution.status = "completed";
-      execution.currentStep = "done";
-      delete execution.blockedReason;
-      execution.updatedAt = new Date().toISOString();
-    }
-  }
-
-  state.auditEvents.push(
-    createAuditEvent({
-      tenantId: updated.tenantId,
-      actorId,
-      category: "approval",
-      action: "approval_decided",
-      status: updated.status === "rejected" ? "blocked" : "success",
-      details: {
-        approvalId: updated.approvalId,
-        executionId: updated.executionId,
-        decision: updated.status
-      }
-    })
-  );
-
-  await saveState(state);
-  return { status: 200, body: updated };
+  return { status: 200, body: approval };
 };
 
 export const requestHandler = async (request: IncomingMessage, response: ServerResponse) => {
@@ -300,12 +168,13 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/policy/evaluate") {
     const body = await readJson(request);
+    const classification = typeof body.classification === "string" ? body.classification : "EPHI";
     const result = evaluatePolicy({
       action: typeof body.action === "string" ? body.action : "unknown",
-      classification: (body.classification as "EPHI") ?? "EPHI",
+      classification: classification as "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET",
       riskLevel: (body.riskLevel as "low" | "medium" | "high" | "critical") ?? "low",
       mode: (body.mode as PilotMode) ?? "simulation",
-      zeroRetentionRequested: body.zeroRetentionRequested === true
+      zeroRetentionRequested: body.zeroRetentionRequested !== false
     });
     sendJson(response, 200, result);
     return;
@@ -343,8 +212,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/model/route/preview") {
     const body = await readJson(request);
+    const classification = typeof body.classification === "string" ? body.classification : "EPHI";
     const decision = routeModel({
-      classification: (body.classification as "EPHI") ?? "EPHI",
+      classification: classification as "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET",
       zeroRetentionRequired: body.zeroRetentionRequired !== false
     });
     sendJson(response, 200, { selected: decision, fallback: [{ provider: "anthropic", modelId: "claude-3.5-sonnet", zeroRetention: true }] });
@@ -369,6 +239,53 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     return;
   }
 
+  if (method === "GET" && pathname === "/v1/agent-graphs") {
+    const state = await loadState();
+    const graphs = await listAgentGraphDefinitions();
+    sendJson(response, 200, {
+      graphs: graphs.map((graph) => ({
+        ...graph,
+        executionCount: state.graphExecutions.filter((item) => item.graphId === graph.graphId).length,
+        incidentCount: state.incidents.filter((item) => item.graphId === graph.graphId).length
+      }))
+    });
+    return;
+  }
+
+  if (method === "GET" && /^\/v1\/agent-graphs\/[^/]+$/.test(pathname)) {
+    const graphId = pathname.split("/")[3] ?? "";
+    const graph = await getAgentGraphDefinition(graphId);
+    if (!graph) {
+      sendJson(response, 404, { error: "graph_not_found" });
+      return;
+    }
+
+    const state = await loadState();
+    sendJson(response, 200, {
+      graph,
+      executions: state.graphExecutions.filter((item) => item.graphId === graphId),
+      incidents: state.incidents.filter((item) => item.graphId === graphId)
+    });
+    return;
+  }
+
+  if (method === "GET" && /^\/v1\/agent-graphs\/[^/]+\/executions\/[^/]+$/.test(pathname)) {
+    const parts = pathname.split("/");
+    const graphId = parts[3] ?? "";
+    const executionId = parts[5] ?? "";
+    const graphExecution = await getGraphExecution(graphId, executionId);
+    const executionBundle = await getGraphExecutionByExecutionId(executionId);
+    if (!graphExecution || !executionBundle) {
+      sendJson(response, 404, { error: "graph_execution_not_found" });
+      return;
+    }
+    sendJson(response, 200, {
+      graphExecution,
+      execution: executionBundle.execution
+    });
+    return;
+  }
+
   if (method === "POST" && pathname === "/v1/executions") {
     const body = await readJson(request);
     const result = await createExecution({
@@ -377,13 +294,26 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       mode: (body.mode as PilotMode) ?? "simulation",
       workflowId: typeof body.workflowId === "string" ? body.workflowId : "wf-discharge-assistant",
       tenantId: typeof body.tenantId === "string" ? body.tenantId : "tenant-starlight-health",
-      requestFollowupEmail: body.requestFollowupEmail !== false
+      requestFollowupEmail: body.requestFollowupEmail !== false,
+      ...(typeof body.classification === "string" ? { classification: body.classification } : {}),
+      ...(typeof body.zeroRetentionRequested === "boolean" ? { zeroRetentionRequested: body.zeroRetentionRequested } : {})
     });
     sendJson(response, result.status, result.body);
     return;
   }
 
-  if (method === "GET" && /^\/v1\/executions\/.+$/.test(pathname)) {
+  if (method === "GET" && /^\/v1\/executions\/[^/]+\/graph$/.test(pathname)) {
+    const executionId = pathname.split("/")[3] ?? "";
+    const bundle = await getGraphExecutionByExecutionId(executionId);
+    if (!bundle) {
+      sendJson(response, 404, { error: "graph_execution_not_found" });
+      return;
+    }
+    sendJson(response, 200, bundle);
+    return;
+  }
+
+  if (method === "GET" && /^\/v1\/executions\/[^/]+$/.test(pathname)) {
     const executionId = pathname.split("/")[3] ?? "";
     const state = await loadState();
     const execution = state.executions.find((item) => item.executionId === executionId);
@@ -392,6 +322,22 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       return;
     }
     sendJson(response, 200, execution);
+    return;
+  }
+
+  if (method === "GET" && pathname === "/v1/incidents") {
+    sendJson(response, 200, { incidents: await listIncidents() });
+    return;
+  }
+
+  if (method === "GET" && /^\/v1\/incidents\/[^/]+$/.test(pathname)) {
+    const incidentId = pathname.split("/")[3] ?? "";
+    const incident = await getIncident(incidentId);
+    if (!incident) {
+      sendJson(response, 404, { error: "incident_not_found" });
+      return;
+    }
+    sendJson(response, 200, incident);
     return;
   }
 

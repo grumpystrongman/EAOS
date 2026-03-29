@@ -72,6 +72,20 @@ test("pilot workflow requires approval in live mode and completes after approval
   assert.equal(finalExecution.status, "completed");
   assert.ok(finalExecution.toolCalls.length >= 3);
 
+  const graph = await fetch(`${baseUrl}/v1/executions/${execution.executionId}/graph`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  assert.equal(graph.status, 200);
+  const graphBody = (await graph.json()) as {
+    graphExecution: { status: string; steps: Array<{ stage: string; status: string }> };
+  };
+  assert.equal(graphBody.graphExecution.status, "completed");
+  assert.deepEqual(
+    graphBody.graphExecution.steps.map((step) => step.stage),
+    ["planner", "executor", "reviewer"]
+  );
+  assert.equal(graphBody.graphExecution.steps[2]?.status, "completed");
+
   const audit = await fetch(`${baseUrl}/v1/audit/events`, {
     headers: { authorization: `Bearer ${authBody.accessToken}` }
   });
@@ -106,4 +120,91 @@ test("simulation mode completes without approval", async () => {
   const execution = (await execute.json()) as { status: string; approvalId?: string };
   assert.equal(execution.status, "completed");
   assert.equal(execution.approvalId, undefined);
+});
+
+test("reviewer rejection creates an incident and records graph steps", async () => {
+  const login = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  const authBody = (await login.json()) as { accessToken: string };
+
+  const execute = await fetch(`${baseUrl}/v1/executions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${authBody.accessToken}`
+    },
+    body: JSON.stringify({
+      mode: "simulation",
+      workflowId: "wf-discharge-assistant",
+      patientId: "patient-2002",
+      requestFollowupEmail: true
+    })
+  });
+
+  assert.equal(execute.status, 201);
+  const execution = (await execute.json()) as { status: string; incidentId?: string; executionId: string };
+  assert.equal(execution.status, "failed");
+  assert.ok(execution.incidentId);
+
+  const graph = await fetch(`${baseUrl}/v1/executions/${execution.executionId}/graph`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  const graphBody = (await graph.json()) as {
+    graphExecution: { status: string; currentStage: string; steps: Array<{ stage: string; status: string }> };
+  };
+  assert.equal(graphBody.graphExecution.status, "failed");
+  assert.equal(graphBody.graphExecution.currentStage, "review_rejected");
+  assert.deepEqual(
+    graphBody.graphExecution.steps.map((step) => step.stage),
+    ["planner", "executor", "reviewer"]
+  );
+  assert.equal(graphBody.graphExecution.steps[2]?.status, "failed");
+
+  const incident = await fetch(`${baseUrl}/v1/incidents/${execution.incidentId}`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  assert.equal(incident.status, 200);
+  const incidentBody = (await incident.json()) as { category: string; executionId: string };
+  assert.equal(incidentBody.category, "review_rejection");
+  assert.equal(incidentBody.executionId, execution.executionId);
+});
+
+test("policy violation creates an incident before tool execution", async () => {
+  const login = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  const authBody = (await login.json()) as { accessToken: string };
+
+  const execute = await fetch(`${baseUrl}/v1/executions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${authBody.accessToken}`
+    },
+    body: JSON.stringify({
+      mode: "simulation",
+      workflowId: "wf-discharge-assistant",
+      patientId: "patient-1001",
+      requestFollowupEmail: true,
+      zeroRetentionRequested: false
+    })
+  });
+
+  assert.equal(execute.status, 201);
+  const execution = (await execute.json()) as { status: string; incidentId?: string; toolCalls: string[]; executionId: string };
+  assert.equal(execution.status, "failed");
+  assert.ok(execution.incidentId);
+  assert.equal(execution.toolCalls.length, 0);
+
+  const incidents = await fetch(`${baseUrl}/v1/incidents`, {
+    headers: { authorization: `Bearer ${authBody.accessToken}` }
+  });
+  assert.equal(incidents.status, 200);
+  const incidentsBody = (await incidents.json()) as { incidents: Array<{ incidentId: string; category: string }> };
+  assert.ok(incidentsBody.incidents.some((item) => item.incidentId === execution.incidentId && item.category === "policy_violation"));
 });

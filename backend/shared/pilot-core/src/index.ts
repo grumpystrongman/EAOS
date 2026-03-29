@@ -1,72 +1,77 @@
+import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 
 export type PilotMode = "simulation" | "live";
+export type DataClassification = "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET";
+export type PolicyEffect = "ALLOW" | "REQUIRE_APPROVAL" | "DENY";
 export type ApprovalStatus = "pending" | "approved" | "rejected";
-export type ExecutionStatus = "queued" | "running" | "blocked" | "completed" | "failed";
+export type GraphStageName = "planner" | "executor" | "reviewer";
+export type GraphStepStatus = "completed" | "blocked" | "failed";
+export type GraphExecutionStatus = "running" | "waiting_for_approval" | "completed" | "failed";
+export type IncidentCategory = "policy_violation" | "review_rejection";
+export type IncidentStatus = "open" | "triaged" | "resolved";
 
-export interface UserRecord {
+export interface ServiceUser {
   userId: string;
   email: string;
   displayName: string;
-  roles: string[];
-  assuranceLevel: "aal1" | "aal2" | "aal3";
+  role: string;
   tenantId: string;
 }
 
 export interface FhirPatient {
   patientId: string;
-  name: string;
   mrn: string;
+  displayName: string;
+  ward: string;
+  readinessScore: number;
   diagnosis: string;
-  attendingPhysician: string;
-  dischargeReadinessScore: number;
+  riskFlags: string[];
+  primaryCareProvider: string;
 }
 
-export interface CarePlanRecord {
+export interface CarePlan {
   patientId: string;
-  planId: string;
-  tasks: string[];
-  pendingLabs: string[];
-}
-
-export interface AuditEvent {
-  eventId: string;
-  timestamp: string;
-  tenantId: string;
-  actorId: string;
-  category: string;
-  action: string;
-  status: "success" | "blocked" | "failure";
-  details: Record<string, unknown>;
-  evidenceId: string;
+  summary: string;
+  dischargeTargetDate: string;
+  recommendedFollowupHours: number;
+  medicationChanges: string[];
+  supportNeeds: string[];
 }
 
 export interface ApprovalRecord {
   approvalId: string;
-  executionId?: string;
   tenantId: string;
   requestedBy: string;
   reason: string;
   riskLevel: "high" | "critical";
-  requiredApprovers: number;
-  approvers: Array<{ approverId: string; decision: "approved" | "rejected"; reason?: string; decidedAt: string }>;
   status: ApprovalStatus;
+  executionId?: string;
+  decidedBy?: string;
+  decisionReason?: string;
   createdAt: string;
-  expiresAt: string;
+  updatedAt: string;
 }
 
 export interface ModelRouteDecision {
-  provider: "openai" | "anthropic" | "google" | "azure" | "self_hosted";
+  provider: "self-hosted" | "azure-openai" | "anthropic" | "openai" | "google";
   modelId: string;
   zeroRetention: boolean;
-  reasonCodes: string[];
-  score: {
-    cost: number;
-    latency: number;
-    risk: number;
-    total: number;
-  };
+  riskScore: number;
+  latencyBudgetMs: number;
+  explanation: string;
+}
+
+export interface PolicyDecision {
+  effect: PolicyEffect;
+  action: string;
+  classification: DataClassification;
+  riskLevel: "low" | "medium" | "high" | "critical";
+  mode: PilotMode;
+  zeroRetentionRequested: boolean;
+  reasons: string[];
+  obligations: string[];
 }
 
 export interface ToolCallRecord {
@@ -75,27 +80,46 @@ export interface ToolCallRecord {
   toolId: string;
   action: "READ" | "WRITE" | "EXECUTE";
   status: "completed" | "blocked" | "failed";
-  resultRef?: string;
-  classification: "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET";
+  classification: DataClassification;
+  resultRef: string;
   createdAt: string;
 }
 
-export interface ExecutionRecord {
+export interface AuditEventRecord {
+  eventId: string;
+  evidenceId: string;
+  tenantId: string;
+  actorId: string;
+  category: "workflow" | "approval" | "incident" | "security";
+  action: string;
+  status: "success" | "blocked" | "failed";
+  details: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface ExecutionOutput {
+  summary: string;
+  recommendation: string;
+  riskFlags: string[];
+}
+
+export interface WorkflowExecutionRecord {
   executionId: string;
+  graphExecutionId: string;
+  graphId: string;
   workflowId: string;
-  mode: PilotMode;
   tenantId: string;
   actorId: string;
   patientId: string;
-  status: ExecutionStatus;
-  currentStep: string;
-  output?: {
-    summary: string;
-    recommendation: string;
-    riskFlags: string[];
-  };
+  mode: PilotMode;
+  status: "blocked" | "completed" | "failed";
+  currentStep: GraphStageName | "awaiting_approval" | "done" | "policy_denied" | "review_rejected";
+  output: ExecutionOutput;
   blockedReason?: string;
+  failureReason?: string;
   approvalId?: string;
+  incidentId?: string;
+  policyDecision: PolicyDecision;
   modelRoute?: ModelRouteDecision;
   toolCalls: string[];
   evidenceId: string;
@@ -103,262 +127,846 @@ export interface ExecutionRecord {
   updatedAt: string;
 }
 
-export interface PilotState {
-  users: UserRecord[];
-  fhirPatients: FhirPatient[];
-  carePlans: CarePlanRecord[];
-  approvals: ApprovalRecord[];
-  executions: ExecutionRecord[];
-  toolCalls: ToolCallRecord[];
-  auditEvents: AuditEvent[];
+export interface AgentGraphDefinition {
+  graphId: string;
+  workflowId: string;
+  name: string;
+  version: string;
+  description: string;
+  stages: Array<{
+    stage: GraphStageName;
+    purpose: string;
+    requiredCapabilities: string[];
+  }>;
 }
 
-const nowIso = () => new Date().toISOString();
+export interface AgentGraphStepRecord {
+  stepId: string;
+  graphExecutionId: string;
+  executionId: string;
+  stage: GraphStageName;
+  order: number;
+  status: GraphStepStatus;
+  startedAt: string;
+  completedAt: string;
+  inputs: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+  previousHash: string | null;
+  hash: string;
+}
 
-const makeId = (prefix: string) =>
-  `${prefix}-${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-4)}`;
+export interface AgentGraphExecutionRecord {
+  graphExecutionId: string;
+  graphId: string;
+  workflowId: string;
+  executionId: string;
+  tenantId: string;
+  actorId: string;
+  patientId: string;
+  mode: PilotMode;
+  status: GraphExecutionStatus;
+  currentStage: GraphStageName | "done" | "policy_denied" | "waiting_for_approval" | "review_rejected";
+  steps: AgentGraphStepRecord[];
+  policyDecision: PolicyDecision;
+  context: {
+    patientReadinessScore: number;
+    requestFollowupEmail: boolean;
+    classification: DataClassification;
+    zeroRetentionRequested: boolean;
+    riskLevel: "low" | "medium" | "high" | "critical";
+    modelRoute?: ModelRouteDecision;
+    toolCallIds: string[];
+    planSummary: string;
+    recommendation: string;
+    riskFlags: string[];
+  };
+  approvalId?: string;
+  incidentId?: string;
+  blockedReason?: string;
+  failureReason?: string;
+  evidenceId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export const defaultState = (): PilotState => ({
-  users: [
-    {
-      userId: "u-clinician-1",
-      email: "clinician@starlighthealth.org",
-      displayName: "Dr. Maya Chen",
-      roles: ["clinician", "workflow_operator"],
-      assuranceLevel: "aal2",
-      tenantId: "tenant-starlight-health"
-    },
-    {
-      userId: "u-security-1",
-      email: "security@starlighthealth.org",
-      displayName: "Avery Brooks",
-      roles: ["security_admin", "approver", "auditor"],
-      assuranceLevel: "aal3",
-      tenantId: "tenant-starlight-health"
-    }
-  ],
-  fhirPatients: [
-    {
-      patientId: "patient-1001",
-      name: "Jordan Lee",
-      mrn: "MRN-847120",
-      diagnosis: "Community-acquired pneumonia",
-      attendingPhysician: "Dr. Maya Chen",
-      dischargeReadinessScore: 78
-    }
-  ],
-  carePlans: [
-    {
-      patientId: "patient-1001",
-      planId: "cp-2201",
-      tasks: [
-        "Complete oral antibiotic transition",
-        "Schedule 48-hour telehealth follow-up",
-        "Provide discharge education packet"
-      ],
-      pendingLabs: ["CBC trend", "Pulse oximetry at ambulation"]
-    }
-  ],
+export interface IncidentRecord {
+  incidentId: string;
+  tenantId: string;
+  executionId: string;
+  graphExecutionId: string;
+  graphId: string;
+  category: IncidentCategory;
+  severity: "medium" | "high" | "critical";
+  status: IncidentStatus;
+  title: string;
+  summary: string;
+  sourceStage: GraphStageName | "planner";
+  relatedStepIds: string[];
+  evidenceId: string;
+  details: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PilotState {
+  version: number;
+  users: ServiceUser[];
+  fhirPatients: FhirPatient[];
+  carePlans: CarePlan[];
+  approvals: ApprovalRecord[];
+  executions: WorkflowExecutionRecord[];
+  toolCalls: ToolCallRecord[];
+  auditEvents: AuditEventRecord[];
+  graphDefinitions: AgentGraphDefinition[];
+  graphExecutions: AgentGraphExecutionRecord[];
+  incidents: IncidentRecord[];
+}
+
+interface WorkflowStartInput {
+  actorId: string;
+  patientId: string;
+  mode: PilotMode;
+  workflowId: string;
+  tenantId: string;
+  requestFollowupEmail: boolean;
+  classification: DataClassification;
+  zeroRetentionRequested: boolean;
+}
+
+interface WorkflowStartResult {
+  state: PilotState;
+  execution: WorkflowExecutionRecord;
+  graphExecution: AgentGraphExecutionRecord;
+  approval?: ApprovalRecord;
+  incident?: IncidentRecord;
+}
+
+interface ReviewResult {
+  approved: boolean;
+  reason: string;
+  incident?: IncidentRecord;
+  reviewerStep: AgentGraphStepRecord;
+}
+
+const STATE_FILE = resolve(process.cwd(), ".volumes", "pilot-state.json");
+const DEFAULT_GRAPH_ID = "discharge-assistant";
+const DEFAULT_WORKFLOW_ID = "wf-discharge-assistant";
+
+const defaultUsers: ServiceUser[] = [
+  { userId: "user-clinician", email: "clinician@starlighthealth.org", displayName: "Dr. Mira Patel", role: "clinician", tenantId: "tenant-starlight-health" },
+  { userId: "user-security", email: "security@starlighthealth.org", displayName: "Jordan Lee", role: "security", tenantId: "tenant-starlight-health" },
+  { userId: "user-admin", email: "admin@starlighthealth.org", displayName: "Operations Admin", role: "admin", tenantId: "tenant-starlight-health" }
+];
+
+const defaultPatients: FhirPatient[] = [
+  { patientId: "patient-1001", mrn: "MRN-1001", displayName: "Avery Johnson", ward: "Cardiology", readinessScore: 88, diagnosis: "Congestive heart failure", riskFlags: ["medication_reconciliation_complete"], primaryCareProvider: "Dr. Chen" },
+  { patientId: "patient-2002", mrn: "MRN-2002", displayName: "Samir Khan", ward: "Internal Medicine", readinessScore: 46, diagnosis: "Pneumonia recovery", riskFlags: ["pending_lab_review", "needs_nursing_followup"], primaryCareProvider: "Dr. Rivera" }
+];
+
+const defaultCarePlans: CarePlan[] = [
+  { patientId: "patient-1001", summary: "Discharge with heart failure action plan, daily weights, and cardiology follow-up.", dischargeTargetDate: "2026-04-02", recommendedFollowupHours: 48, medicationChanges: ["Increase furosemide to 40mg", "Continue carvedilol"], supportNeeds: ["home scale", "telehealth follow-up"] },
+  { patientId: "patient-2002", summary: "Discharge deferred until pending labs and respiratory follow-up are complete.", dischargeTargetDate: "2026-04-05", recommendedFollowupHours: 24, medicationChanges: ["Complete antibiotic course", "Review oxygen need"], supportNeeds: ["family education", "lab result review"] }
+];
+
+const defaultGraphDefinitions = (): AgentGraphDefinition[] => [
+  {
+    graphId: DEFAULT_GRAPH_ID,
+    workflowId: DEFAULT_WORKFLOW_ID,
+    name: "Hospital Discharge Assistant",
+    version: "1.0.0",
+    description: "Planner -> executor -> reviewer discharge workflow with policy gates and incident handling.",
+    stages: [
+      { stage: "planner", purpose: "Assemble the plan, policy context, and patient readiness profile.", requiredCapabilities: ["fhir.read", "sql.read", "policy.evaluate"] },
+      { stage: "executor", purpose: "Execute approved read-only retrieval and draft the discharge summary.", requiredCapabilities: ["fhir.read", "sql.read", "model.infer"] },
+      { stage: "reviewer", purpose: "Validate discharge readiness, create follow-up actions, and finalize disposition.", requiredCapabilities: ["policy.evaluate", "tool.write", "approval.handle"] }
+    ]
+  }
+];
+
+const stableSerialize = (value: unknown): string => {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map((item) => stableSerialize(item)).join(",")}]`;
+  return `{${Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => `${JSON.stringify(key)}:${stableSerialize(item)}`).join(",")}}`;
+};
+
+const hashRecord = (value: unknown): string => createHash("sha256").update(stableSerialize(value)).digest("hex");
+const now = () => new Date().toISOString();
+const createId = (prefix: string): string => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+const emptyState = (): PilotState => ({
+  version: 1,
+  users: defaultUsers,
+  fhirPatients: defaultPatients,
+  carePlans: defaultCarePlans,
   approvals: [],
   executions: [],
   toolCalls: [],
-  auditEvents: []
+  auditEvents: [],
+  graphDefinitions: defaultGraphDefinitions(),
+  graphExecutions: [],
+  incidents: []
 });
 
-export const stateFilePath = () => resolve(".volumes", "pilot-state.json");
-
-const ensureStateDir = async (path: string) => {
-  await mkdir(dirname(path), { recursive: true });
+const normalizeState = (state: Partial<PilotState> | undefined): PilotState => {
+  const base = emptyState();
+  return {
+    ...base,
+    ...(state ?? {}),
+    users: state?.users ?? base.users,
+    fhirPatients: state?.fhirPatients ?? base.fhirPatients,
+    carePlans: state?.carePlans ?? base.carePlans,
+    approvals: state?.approvals ?? base.approvals,
+    executions: state?.executions ?? base.executions,
+    toolCalls: state?.toolCalls ?? base.toolCalls,
+    auditEvents: state?.auditEvents ?? base.auditEvents,
+    graphDefinitions: state?.graphDefinitions ?? base.graphDefinitions,
+    graphExecutions: state?.graphExecutions ?? base.graphExecutions,
+    incidents: state?.incidents ?? base.incidents
+  };
 };
 
+export const defaultState = (): PilotState => normalizeState(undefined);
+
 export const loadState = async (): Promise<PilotState> => {
-  const path = stateFilePath();
   try {
-    const raw = await readFile(path, "utf8");
-    return JSON.parse(raw) as PilotState;
+    return normalizeState(JSON.parse(await readFile(STATE_FILE, "utf8")) as Partial<PilotState>);
   } catch {
-    const initial = defaultState();
-    await ensureStateDir(path);
-    await writeFile(path, JSON.stringify(initial, null, 2), "utf8");
-    return initial;
+    return defaultState();
   }
 };
 
 export const saveState = async (state: PilotState): Promise<void> => {
-  const path = stateFilePath();
-  await ensureStateDir(path);
-  await writeFile(path, JSON.stringify(state, null, 2), "utf8");
+  await mkdir(dirname(STATE_FILE), { recursive: true });
+  await writeFile(STATE_FILE, `${JSON.stringify(normalizeState(state), null, 2)}\n`, "utf8");
 };
 
-export interface PolicyEvaluationInput {
+export const evaluatePolicy = (input: {
   action: string;
-  classification: "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET";
+  classification: DataClassification;
   riskLevel: "low" | "medium" | "high" | "critical";
   mode: PilotMode;
-  zeroRetentionRequested?: boolean;
-}
-
-export interface PolicyEvaluationResult {
-  decisionId: string;
-  effect: "ALLOW" | "DENY" | "REQUIRE_APPROVAL";
-  reasons: string[];
-  obligations: string[];
-  ttlSeconds: number;
-}
-
-export const evaluatePolicy = (input: PolicyEvaluationInput): PolicyEvaluationResult => {
-  const decisionId = makeId("pd");
+  zeroRetentionRequested: boolean;
+}): PolicyDecision => {
+  const reasons: string[] = [];
+  const obligations: string[] = ["log_audit_event", "classify_output"];
+  let effect: PolicyEffect = "ALLOW";
 
   if (input.classification === "SECRET") {
-    return {
-      decisionId,
-      effect: "DENY",
-      reasons: ["secret_data_cannot_be_processed_by_agent_workflow"],
-      obligations: [],
-      ttlSeconds: 300
-    };
+    effect = "DENY";
+    reasons.push("secret_data_must_not_leave_trusted_boundary");
+  }
+  if ((input.classification === "PHI" || input.classification === "EPHI") && input.zeroRetentionRequested === false) {
+    effect = "DENY";
+    reasons.push("phi_or_ephi_requires_zero_retention_for_external_model_routing");
+  }
+  if (effect !== "DENY" && input.mode === "live" && (input.riskLevel === "high" || input.riskLevel === "critical")) {
+    effect = "REQUIRE_APPROVAL";
+    reasons.push("high_risk_live_action_requires_human_approval");
+    obligations.push("human_approval");
+  }
+  if (effect === "ALLOW" && input.mode === "live" && input.classification === "EPHI") {
+    obligations.push("zero_retention_enforced");
   }
 
-  if ((input.classification === "PHI" || input.classification === "EPHI") && !input.zeroRetentionRequested) {
-    return {
-      decisionId,
-      effect: "DENY",
-      reasons: ["zero_retention_required_for_phi_or_ephi"],
-      obligations: [],
-      ttlSeconds: 300
-    };
-  }
-
-  if (input.riskLevel === "high" || input.riskLevel === "critical") {
-    return {
-      decisionId,
-      effect: "REQUIRE_APPROVAL",
-      reasons: ["high_risk_action_requires_human_approval"],
-      obligations: ["dual_approval", "audit_envelope_required"],
-      ttlSeconds: 300
-    };
-  }
-
-  return {
-    decisionId,
-    effect: "ALLOW",
-    reasons: ["policy_conditions_satisfied"],
-    obligations: ["audit_envelope_required"],
-    ttlSeconds: 300
-  };
+  return { effect, action: input.action, classification: input.classification, riskLevel: input.riskLevel, mode: input.mode, zeroRetentionRequested: input.zeroRetentionRequested, reasons, obligations };
 };
 
-export const createApproval = (input: {
-  tenantId: string;
-  requestedBy: string;
-  reason: string;
-  riskLevel: "high" | "critical";
-  executionId?: string;
-}): ApprovalRecord => {
-  const approval: ApprovalRecord = {
-    approvalId: makeId("ap"),
+export const routeModel = (input: { classification: DataClassification; zeroRetentionRequired: boolean; }): ModelRouteDecision =>
+  input.zeroRetentionRequired
+    ? { provider: "self-hosted", modelId: "llama-3.1-70b-instruct", zeroRetention: true, riskScore: 0.12, latencyBudgetMs: 3500, explanation: "Prefer self-hosted route for sensitive or zero-retention workloads." }
+    : { provider: "anthropic", modelId: "claude-3.5-sonnet", zeroRetention: false, riskScore: 0.38, latencyBudgetMs: 3000, explanation: `Fallback vendor route selected for ${input.classification} workload.` };
+
+export const createApproval = (input: { tenantId: string; requestedBy: string; reason: string; riskLevel: "high" | "critical"; executionId?: string; }): ApprovalRecord => {
+  const timestamp = now();
+  return {
+    approvalId: createId("ap"),
     tenantId: input.tenantId,
     requestedBy: input.requestedBy,
     reason: input.reason,
     riskLevel: input.riskLevel,
-    requiredApprovers: input.riskLevel === "critical" ? 2 : 1,
-    approvers: [],
     status: "pending",
-    createdAt: nowIso(),
-    expiresAt: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
-  };
-  if (input.executionId) {
-    approval.executionId = input.executionId;
-  }
-  return approval;
-};
-
-export const applyApprovalDecision = (
-  approval: ApprovalRecord,
-  input: { approverId: string; decision: "approved" | "rejected"; reason?: string }
-): ApprovalRecord => {
-  const decisionRecord: { approverId: string; decision: "approved" | "rejected"; reason?: string; decidedAt: string } = {
-    approverId: input.approverId,
-    decision: input.decision,
-    decidedAt: nowIso()
-  };
-  if (input.reason) {
-    decisionRecord.reason = input.reason;
-  }
-
-  const updated: ApprovalRecord = {
-    ...approval,
-    approvers: [...approval.approvers, decisionRecord]
-  };
-
-  const approvals = updated.approvers.filter((item) => item.decision === "approved").length;
-  const rejects = updated.approvers.filter((item) => item.decision === "rejected").length;
-
-  if (rejects > 0) {
-    updated.status = "rejected";
-  } else if (approvals >= updated.requiredApprovers) {
-    updated.status = "approved";
-  }
-
-  return updated;
-};
-
-export const routeModel = (input: {
-  classification: "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET";
-  zeroRetentionRequired: boolean;
-}): ModelRouteDecision => {
-  if (input.classification === "EPHI" || input.classification === "SECRET") {
-    return {
-      provider: "self_hosted",
-      modelId: "llama-3.1-70b-instruct",
-      zeroRetention: true,
-      reasonCodes: ["highest_sensitivity_prefers_self_hosted"],
-      score: { cost: 0.61, latency: 0.66, risk: 0.98, total: 0.81 }
-    };
-  }
-
-  return {
-    provider: "azure",
-    modelId: "gpt-4.1-mini",
-    zeroRetention: input.zeroRetentionRequired,
-    reasonCodes: ["policy_allowed", "balanced_cost_latency_risk"],
-    score: { cost: 0.72, latency: 0.84, risk: 0.92, total: 0.86 }
+    ...(input.executionId ? { executionId: input.executionId } : {}),
+    createdAt: timestamp,
+    updatedAt: timestamp
   };
 };
 
-export const createToolCall = (input: {
-  executionId: string;
-  toolId: string;
-  action: "READ" | "WRITE" | "EXECUTE";
-  status: "completed" | "blocked" | "failed";
-  classification: "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "PII" | "PHI" | "EPHI" | "SECRET";
-  resultRef?: string;
-}): ToolCallRecord => {
-  const toolCall: ToolCallRecord = {
-    toolCallId: makeId("tc"),
-    executionId: input.executionId,
-    toolId: input.toolId,
-    action: input.action,
-    status: input.status,
-    classification: input.classification,
-    createdAt: nowIso()
-  };
-  if (input.resultRef) {
-    toolCall.resultRef = input.resultRef;
-  }
-  return toolCall;
-};
-
-export const createAuditEvent = (input: Omit<AuditEvent, "eventId" | "timestamp" | "evidenceId">): AuditEvent => ({
-  eventId: makeId("ae"),
-  timestamp: nowIso(),
-  evidenceId: makeId("ev"),
-  ...input
+export const applyApprovalDecision = (approval: ApprovalRecord, input: { approverId: string; decision: ApprovalStatus; reason?: string; }): ApprovalRecord => ({
+  ...approval,
+  status: input.decision,
+  decidedBy: input.approverId,
+  ...(input.reason ? { decisionReason: input.reason } : {}),
+  updatedAt: now()
 });
 
-export const buildDischargeSummary = (patient: FhirPatient, plan: CarePlanRecord) => {
-  const summary = `Patient ${patient.name} (${patient.mrn}) is at discharge readiness score ${patient.dischargeReadinessScore}. Diagnosis: ${patient.diagnosis}.`;
-  const recommendation = `Proceed with discharge once pending labs are reviewed. Complete tasks: ${plan.tasks.join("; ")}.`;
-  const riskFlags = patient.dischargeReadinessScore < 75 ? ["readiness_below_threshold"] : ["standard_monitoring"];
-  return { summary, recommendation, riskFlags };
+export const createToolCall = (input: { executionId: string; toolId: string; action: "READ" | "WRITE" | "EXECUTE"; status: "completed" | "blocked" | "failed"; classification: DataClassification; resultRef: string; }): ToolCallRecord => ({
+  toolCallId: createId("tc"),
+  executionId: input.executionId,
+  toolId: input.toolId,
+  action: input.action,
+  status: input.status,
+  classification: input.classification,
+  resultRef: input.resultRef,
+  createdAt: now()
+});
+
+export const createAuditEvent = (input: { tenantId: string; actorId: string; category: "workflow" | "approval" | "incident" | "security"; action: string; status: "success" | "blocked" | "failed"; details: Record<string, unknown>; }): AuditEventRecord => ({
+  eventId: createId("ae"),
+  evidenceId: createId("ev"),
+  tenantId: input.tenantId,
+  actorId: input.actorId,
+  category: input.category,
+  action: input.action,
+  status: input.status,
+  details: input.details,
+  createdAt: now()
+});
+
+export const buildDischargeSummary = (patient: FhirPatient, carePlan: CarePlan): ExecutionOutput => {
+  const riskFlags = [...patient.riskFlags];
+  if (patient.readinessScore < 70) riskFlags.push("low_readiness");
+  return {
+    summary: `${patient.displayName} (${patient.mrn}) in ${patient.ward} can follow the plan: ${carePlan.summary}`,
+    recommendation: patient.readinessScore >= 70 ? "Discharge is recommended with follow-up instructions and monitoring." : "Discharge should wait for reviewer approval and additional clinical review.",
+    riskFlags
+  };
 };
+
+const buildGraphStep = (input: {
+  graphExecutionId: string;
+  executionId: string;
+  stage: GraphStageName;
+  order: number;
+  status: GraphStepStatus;
+  inputs: Record<string, unknown>;
+  outputs: Record<string, unknown>;
+  previousHash: string | null;
+  startedAt?: string;
+  completedAt?: string;
+}): AgentGraphStepRecord => {
+  const startedAt = input.startedAt ?? now();
+  const completedAt = input.completedAt ?? startedAt;
+  const hashPayload = {
+    graphExecutionId: input.graphExecutionId,
+    executionId: input.executionId,
+    stage: input.stage,
+    order: input.order,
+    status: input.status,
+    inputs: input.inputs,
+    outputs: input.outputs,
+    previousHash: input.previousHash
+  };
+  return {
+    stepId: createId(`step-${input.stage}`),
+    graphExecutionId: input.graphExecutionId,
+    executionId: input.executionId,
+    stage: input.stage,
+    order: input.order,
+    status: input.status,
+    startedAt,
+    completedAt,
+    inputs: input.inputs,
+    outputs: input.outputs,
+    previousHash: input.previousHash,
+    hash: hashRecord(hashPayload)
+  };
+};
+
+const createIncident = (input: {
+  tenantId: string;
+  executionId: string;
+  graphExecutionId: string;
+  graphId: string;
+  category: IncidentCategory;
+  severity: "medium" | "high" | "critical";
+  title: string;
+  summary: string;
+  sourceStage: GraphStageName | "planner";
+  relatedStepIds: string[];
+  evidenceId: string;
+  details: Record<string, unknown>;
+}): IncidentRecord => {
+  const timestamp = now();
+  return {
+    incidentId: createId("inc"),
+    tenantId: input.tenantId,
+    executionId: input.executionId,
+    graphExecutionId: input.graphExecutionId,
+    graphId: input.graphId,
+    category: input.category,
+    severity: input.severity,
+    status: "open",
+    title: input.title,
+    summary: input.summary,
+    sourceStage: input.sourceStage,
+    relatedStepIds: input.relatedStepIds,
+    evidenceId: input.evidenceId,
+    details: input.details,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+};
+
+const getGraphDefinition = (state: PilotState, graphId: string): AgentGraphDefinition | undefined =>
+  state.graphDefinitions.find((item) => item.graphId === graphId);
+
+const getPatientBundle = (state: PilotState, patientId: string) => ({
+  patient: state.fhirPatients.find((item) => item.patientId === patientId),
+  carePlan: state.carePlans.find((item) => item.patientId === patientId)
+});
+
+const persistState = async (state: PilotState): Promise<PilotState> => {
+  await saveState(state);
+  return state;
+};
+
+const addExecutionAndGraph = (state: PilotState, execution: WorkflowExecutionRecord, graphExecution: AgentGraphExecutionRecord): void => {
+  state.executions.push(execution);
+  state.graphExecutions.push(graphExecution);
+};
+
+const getExecutionAndGraph = (state: PilotState, executionId: string) => ({
+  execution: state.executions.find((item) => item.executionId === executionId),
+  graphExecution: state.graphExecutions.find((item) => item.executionId === executionId)
+});
+
+const createPolicyViolationIncident = (state: PilotState, input: {
+  tenantId: string;
+  actorId: string;
+  executionId: string;
+  graphExecutionId: string;
+  graphId: string;
+  evidenceId: string;
+  policyDecision: PolicyDecision;
+  plannerStepId: string;
+}): IncidentRecord => {
+  const incident = createIncident({
+    tenantId: input.tenantId,
+    executionId: input.executionId,
+    graphExecutionId: input.graphExecutionId,
+    graphId: input.graphId,
+    category: "policy_violation",
+    severity: "critical",
+    title: "Policy violation blocked agent graph",
+    summary: input.policyDecision.reasons.join("; ") || "Policy denied execution.",
+    sourceStage: "planner",
+    relatedStepIds: [input.plannerStepId],
+    evidenceId: input.evidenceId,
+    details: { policyDecision: input.policyDecision }
+  });
+  state.incidents.push(incident);
+  state.auditEvents.push(createAuditEvent({
+    tenantId: input.tenantId,
+    actorId: input.actorId,
+    category: "incident",
+    action: "incident_created",
+    status: "blocked",
+    details: { incidentId: incident.incidentId, category: incident.category, executionId: incident.executionId }
+  }));
+  return incident;
+};
+
+const createReviewerRejectionIncident = (state: PilotState, input: {
+  tenantId: string;
+  actorId: string;
+  executionId: string;
+  graphExecutionId: string;
+  graphId: string;
+  evidenceId: string;
+  reviewerStepId: string;
+  reason: string;
+  details: Record<string, unknown>;
+}): IncidentRecord => {
+  const incident = createIncident({
+    tenantId: input.tenantId,
+    executionId: input.executionId,
+    graphExecutionId: input.graphExecutionId,
+    graphId: input.graphId,
+    category: "review_rejection",
+    severity: "high",
+    title: "Reviewer rejected discharge workflow",
+    summary: input.reason,
+    sourceStage: "reviewer",
+    relatedStepIds: [input.reviewerStepId],
+    evidenceId: input.evidenceId,
+    details: input.details
+  });
+  state.incidents.push(incident);
+  state.auditEvents.push(createAuditEvent({
+    tenantId: input.tenantId,
+    actorId: input.actorId,
+    category: "incident",
+    action: "incident_created",
+    status: "blocked",
+    details: { incidentId: incident.incidentId, category: incident.category, executionId: incident.executionId }
+  }));
+  return incident;
+};
+
+const buildPlannerStep = (input: {
+  graphExecutionId: string;
+  executionId: string;
+  patient: FhirPatient;
+  carePlan: CarePlan;
+  policyDecision: PolicyDecision;
+}): AgentGraphStepRecord => buildGraphStep({
+  graphExecutionId: input.graphExecutionId,
+  executionId: input.executionId,
+  stage: "planner",
+  order: 1,
+  status: input.policyDecision.effect === "DENY" ? "blocked" : "completed",
+  inputs: {
+    patientId: input.patient.patientId,
+    readinessScore: input.patient.readinessScore,
+    diagnosis: input.patient.diagnosis,
+    carePlan: input.carePlan.summary,
+    mode: input.policyDecision.mode,
+    classification: input.policyDecision.classification
+  },
+  outputs: {
+    nextStage: "executor",
+    planSummary: `Planner accepted ${input.patient.displayName} discharge review and queued retrievals.`,
+    policyEffect: input.policyDecision.effect
+  },
+  previousHash: null
+});
+
+const buildExecutorStep = (input: {
+  graphExecutionId: string;
+  executionId: string;
+  patient: FhirPatient;
+  carePlan: CarePlan;
+  output: ExecutionOutput;
+  modelRoute: ModelRouteDecision;
+  toolCalls: string[];
+}): AgentGraphStepRecord => buildGraphStep({
+  graphExecutionId: input.graphExecutionId,
+  executionId: input.executionId,
+  stage: "executor",
+  order: 2,
+  status: "completed",
+  inputs: { patientId: input.patient.patientId, toolIds: ["fhir.read-patient", "sql.read-care-plan", "model.generate-discharge-summary"] },
+  outputs: { toolCalls: input.toolCalls, modelRoute: input.modelRoute, output: input.output, carePlanSummary: input.carePlan.summary },
+  previousHash: null
+});
+
+const buildReviewerStep = (input: {
+  graphExecutionId: string;
+  executionId: string;
+  output: ExecutionOutput;
+  patient: FhirPatient;
+  previousHash: string | null;
+  approvalId?: string;
+}): ReviewResult => {
+  const approved = input.patient.readinessScore >= 70 && !input.output.riskFlags.includes("low_readiness");
+  const reason = approved ? "Reviewer approved discharge workflow." : "Reviewer rejected discharge workflow due to low readiness or active risk flags.";
+  const reviewerStep = buildGraphStep({
+    graphExecutionId: input.graphExecutionId,
+    executionId: input.executionId,
+    stage: "reviewer",
+    order: 3,
+    status: approved ? "completed" : "failed",
+    inputs: { patientId: input.patient.patientId, readinessScore: input.patient.readinessScore, riskFlags: input.output.riskFlags, approvalId: input.approvalId ?? null },
+    outputs: { decision: approved ? "approved" : "rejected", reason },
+    previousHash: input.previousHash
+  });
+  return { approved, reason, reviewerStep };
+};
+
+const finalizeApprovedExecution = (state: PilotState, input: {
+  execution: WorkflowExecutionRecord;
+  graphExecution: AgentGraphExecutionRecord;
+  patient: FhirPatient;
+  carePlan: CarePlan;
+  actorId: string;
+  tenantId: string;
+  requestFollowupEmail: boolean;
+  policyDecision: PolicyDecision;
+  approvalId?: string;
+}): ReviewResult => {
+  const previousHash = input.graphExecution.steps.length > 0 ? input.graphExecution.steps[input.graphExecution.steps.length - 1]!.hash : null;
+  const review = buildReviewerStep({
+    graphExecutionId: input.graphExecution.graphExecutionId,
+    executionId: input.execution.executionId,
+    output: input.execution.output,
+    patient: input.patient,
+    previousHash,
+    ...(input.approvalId ? { approvalId: input.approvalId } : {})
+  });
+  input.graphExecution.steps.push(review.reviewerStep);
+  input.graphExecution.updatedAt = now();
+
+  if (review.approved) {
+    if (input.requestFollowupEmail) {
+      const emailToolCall = createToolCall({
+        executionId: input.execution.executionId,
+        toolId: "email.send-followup",
+        action: "EXECUTE",
+        status: "completed",
+        classification: "PII",
+        resultRef: `obj://tenant-starlight-health/executions/${input.execution.executionId}/followup-email.json`
+      });
+      state.toolCalls.push(emailToolCall);
+      input.execution.toolCalls.push(emailToolCall.toolCallId);
+    }
+    input.execution.status = "completed";
+    input.execution.currentStep = "done";
+    delete input.execution.blockedReason;
+    delete input.execution.failureReason;
+    input.execution.updatedAt = now();
+    input.graphExecution.status = "completed";
+    input.graphExecution.currentStage = "done";
+    delete input.graphExecution.blockedReason;
+    delete input.graphExecution.failureReason;
+    input.graphExecution.updatedAt = now();
+    state.auditEvents.push(createAuditEvent({
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      category: "workflow",
+      action: "graph_reviewer_completed",
+      status: "success",
+      details: { executionId: input.execution.executionId, graphExecutionId: input.graphExecution.graphExecutionId, approved: true }
+    }));
+    return review;
+  }
+
+  const incident = createReviewerRejectionIncident(state, {
+    tenantId: input.tenantId,
+    actorId: input.actorId,
+    executionId: input.execution.executionId,
+    graphExecutionId: input.graphExecution.graphExecutionId,
+    graphId: input.graphExecution.graphId,
+    evidenceId: input.execution.evidenceId,
+    reviewerStepId: review.reviewerStep.stepId,
+    reason: review.reason,
+    details: { patientReadinessScore: input.patient.readinessScore, riskFlags: input.execution.output.riskFlags, approvalId: input.approvalId ?? null }
+  });
+  input.execution.status = "failed";
+  input.execution.currentStep = "review_rejected";
+  input.execution.failureReason = review.reason;
+  input.execution.incidentId = incident.incidentId;
+  input.execution.updatedAt = now();
+  input.graphExecution.status = "failed";
+  input.graphExecution.currentStage = "review_rejected";
+  input.graphExecution.failureReason = review.reason;
+  input.graphExecution.incidentId = incident.incidentId;
+  input.graphExecution.updatedAt = now();
+  return { ...review, incident };
+};
+
+const startWorkflowExecutionInternal = async (input: WorkflowStartInput): Promise<WorkflowStartResult | { status: number; body: { error: string } }> => {
+  const state = await loadState();
+  const graphDefinition = getGraphDefinition(state, DEFAULT_GRAPH_ID);
+  if (!graphDefinition) return { status: 500, body: { error: "graph_definition_not_found" } };
+  const { patient, carePlan } = getPatientBundle(state, input.patientId);
+  if (!patient || !carePlan) return { status: 404, body: { error: "patient_or_care_plan_not_found" } };
+
+  const policyDecision = evaluatePolicy({
+    action: "workflow.execute",
+    classification: input.classification,
+    mode: input.mode,
+    riskLevel: input.requestFollowupEmail ? "high" : "medium",
+    zeroRetentionRequested: input.zeroRetentionRequested
+  });
+
+  const executionId = createId("ex");
+  const graphExecutionId = createId("gx");
+  const evidenceId = `ev-${executionId}`;
+  const timestamp = now();
+  const plannerStep = buildPlannerStep({ graphExecutionId, executionId, patient, carePlan, policyDecision });
+
+  const execution: WorkflowExecutionRecord = {
+    executionId,
+    graphExecutionId,
+    graphId: graphDefinition.graphId,
+    workflowId: input.workflowId,
+    tenantId: input.tenantId,
+    actorId: input.actorId,
+    patientId: input.patientId,
+    mode: input.mode,
+    status: policyDecision.effect === "DENY" ? "failed" : "blocked",
+    currentStep: policyDecision.effect === "DENY" ? "policy_denied" : "awaiting_approval",
+    output: { summary: "", recommendation: "", riskFlags: [] },
+    policyDecision,
+    toolCalls: [],
+    evidenceId,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+
+  const graphExecution: AgentGraphExecutionRecord = {
+    graphExecutionId,
+    graphId: graphDefinition.graphId,
+    workflowId: input.workflowId,
+    executionId,
+    tenantId: input.tenantId,
+    actorId: input.actorId,
+    patientId: input.patientId,
+    mode: input.mode,
+    status: policyDecision.effect === "DENY" ? "failed" : "waiting_for_approval",
+    currentStage: policyDecision.effect === "DENY" ? "policy_denied" : "waiting_for_approval",
+    steps: [plannerStep],
+    policyDecision,
+    context: {
+      patientReadinessScore: patient.readinessScore,
+      requestFollowupEmail: input.requestFollowupEmail,
+      classification: input.classification,
+      zeroRetentionRequested: input.zeroRetentionRequested,
+      riskLevel: input.requestFollowupEmail ? "high" : "medium",
+      toolCallIds: [],
+      planSummary: `Planner prepared discharge plan for ${patient.displayName}.`,
+      recommendation: "",
+      riskFlags: []
+    },
+    evidenceId,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+
+  if (policyDecision.effect === "DENY") {
+    const incident = createPolicyViolationIncident(state, { tenantId: input.tenantId, actorId: input.actorId, executionId, graphExecutionId, graphId: graphDefinition.graphId, evidenceId, policyDecision, plannerStepId: plannerStep.stepId });
+    execution.incidentId = incident.incidentId;
+    execution.failureReason = policyDecision.reasons.join("; ") || "policy_violation";
+    execution.output = { summary: `Execution denied before tool use for ${patient.displayName}.`, recommendation: "Do not route data externally until policy requirements are satisfied.", riskFlags: ["policy_violation"] };
+    graphExecution.incidentId = incident.incidentId;
+    graphExecution.failureReason = execution.failureReason;
+    graphExecution.context.recommendation = execution.output.recommendation;
+    graphExecution.context.riskFlags = execution.output.riskFlags;
+    graphExecution.steps[0] = buildGraphStep({
+      graphExecutionId,
+      executionId,
+      stage: "planner",
+      order: 1,
+      status: "blocked",
+      inputs: plannerStep.inputs,
+      outputs: { policyDecision, incidentId: incident.incidentId, reason: execution.failureReason },
+      previousHash: null,
+      startedAt: plannerStep.startedAt,
+      completedAt: plannerStep.completedAt
+    });
+    addExecutionAndGraph(state, execution, graphExecution);
+    state.auditEvents.push(createAuditEvent({ tenantId: input.tenantId, actorId: input.actorId, category: "workflow", action: "execution_denied", status: "blocked", details: { executionId, graphExecutionId, policyDecision, incidentId: incident.incidentId } }));
+    await persistState(state);
+    return { state, execution, graphExecution, incident };
+  }
+
+  const modelRoute = routeModel({ classification: input.classification, zeroRetentionRequired: input.zeroRetentionRequested });
+  const fhirToolCall = createToolCall({ executionId, toolId: "fhir.read-patient", action: "READ", status: "completed", classification: input.classification, resultRef: `obj://tenant-starlight-health/executions/${executionId}/fhir-patient.json` });
+  const sqlToolCall = createToolCall({ executionId, toolId: "sql.read-care-plan", action: "READ", status: "completed", classification: input.classification, resultRef: `obj://tenant-starlight-health/executions/${executionId}/care-plan.json` });
+  const modelToolCall = createToolCall({ executionId, toolId: "model.generate-discharge-summary", action: "EXECUTE", status: "completed", classification: input.classification, resultRef: `obj://tenant-starlight-health/executions/${executionId}/summary.json` });
+  state.toolCalls.push(fhirToolCall, sqlToolCall, modelToolCall);
+  execution.toolCalls.push(fhirToolCall.toolCallId, sqlToolCall.toolCallId, modelToolCall.toolCallId);
+  const output = buildDischargeSummary(patient, carePlan);
+  execution.output = output;
+  execution.modelRoute = modelRoute;
+  graphExecution.context.toolCallIds = execution.toolCalls.slice();
+  graphExecution.context.modelRoute = modelRoute;
+  graphExecution.context.planSummary = `Planner prepared discharge plan for ${patient.displayName}.`;
+  graphExecution.context.recommendation = output.recommendation;
+  graphExecution.context.riskFlags = output.riskFlags.slice();
+  graphExecution.steps.push(buildExecutorStep({ graphExecutionId, executionId, patient, carePlan, output, modelRoute, toolCalls: execution.toolCalls.slice() }));
+
+  if (policyDecision.effect === "REQUIRE_APPROVAL" && input.mode === "live") {
+    const approval = createApproval({ tenantId: input.tenantId, requestedBy: input.actorId, reason: "Approve discharge follow-up email and reviewer handoff", riskLevel: "high", executionId });
+    state.approvals.push(approval);
+    execution.approvalId = approval.approvalId;
+    graphExecution.approvalId = approval.approvalId;
+    execution.blockedReason = "approval_required_before_reviewer_stage";
+    graphExecution.blockedReason = execution.blockedReason;
+    state.auditEvents.push(createAuditEvent({ tenantId: input.tenantId, actorId: input.actorId, category: "approval", action: "approval_requested", status: "blocked", details: { approvalId: approval.approvalId, executionId, graphExecutionId, riskLevel: approval.riskLevel } }));
+    addExecutionAndGraph(state, execution, graphExecution);
+    state.auditEvents.push(createAuditEvent({ tenantId: input.tenantId, actorId: input.actorId, category: "workflow", action: "execution_blocked_waiting_for_approval", status: "blocked", details: { executionId, graphExecutionId, approvalId: approval.approvalId } }));
+    await persistState(state);
+    return { state, execution, graphExecution, approval };
+  }
+
+  const review = finalizeApprovedExecution(state, { execution, graphExecution, patient, carePlan, actorId: input.actorId, tenantId: input.tenantId, requestFollowupEmail: input.requestFollowupEmail, policyDecision });
+  if (review.incident) {
+    execution.incidentId = review.incident.incidentId;
+    graphExecution.incidentId = review.incident.incidentId;
+  }
+  addExecutionAndGraph(state, execution, graphExecution);
+  state.auditEvents.push(createAuditEvent({ tenantId: input.tenantId, actorId: input.actorId, category: "workflow", action: review.approved ? "execution_completed" : "execution_failed", status: review.approved ? "success" : "blocked", details: { executionId, graphExecutionId, approved: review.approved, reason: review.reason } }));
+  await persistState(state);
+  return review.incident ? { state, execution, graphExecution, incident: review.incident } : { state, execution, graphExecution };
+};
+
+export const startDischargeAssistantExecution = async (input: {
+  actorId: string;
+  patientId: string;
+  mode: PilotMode;
+  workflowId: string;
+  tenantId: string;
+  requestFollowupEmail: boolean;
+  classification?: DataClassification;
+  zeroRetentionRequested?: boolean;
+}): Promise<WorkflowStartResult | { status: number; body: { error: string } }> => startWorkflowExecutionInternal({
+  actorId: input.actorId,
+  patientId: input.patientId,
+  mode: input.mode,
+  workflowId: input.workflowId,
+  tenantId: input.tenantId,
+  requestFollowupEmail: input.requestFollowupEmail,
+  classification: input.classification ?? "EPHI",
+  zeroRetentionRequested: input.zeroRetentionRequested ?? true
+});
+
+export const resolveApprovalAndAdvanceExecution = async (input: { approvalId: string; actorId: string; decision: "approved" | "rejected"; reason?: string; }): Promise<WorkflowStartResult | { status: number; body: { error: string } }> => {
+  const state = await loadState();
+  const approvalIndex = state.approvals.findIndex((item) => item.approvalId === input.approvalId);
+  if (approvalIndex === -1) return { status: 404, body: { error: "approval_not_found" } };
+  const approval = state.approvals[approvalIndex]!;
+  const updatedApproval = applyApprovalDecision(approval, {
+    approverId: input.actorId,
+    decision: input.decision,
+    ...(input.reason ? { reason: input.reason } : {})
+  });
+  state.approvals[approvalIndex] = updatedApproval;
+  state.auditEvents.push(createAuditEvent({ tenantId: updatedApproval.tenantId, actorId: input.actorId, category: "approval", action: "approval_decided", status: updatedApproval.status === "rejected" ? "blocked" : "success", details: { approvalId: updatedApproval.approvalId, executionId: updatedApproval.executionId, decision: updatedApproval.status, reason: updatedApproval.decisionReason } }));
+
+  if (updatedApproval.status === "rejected" || !updatedApproval.executionId) {
+    await persistState(state);
+    return { state, execution: undefined as never, graphExecution: undefined as never };
+  }
+
+  const { execution, graphExecution } = getExecutionAndGraph(state, updatedApproval.executionId);
+  if (!execution || !graphExecution) return { status: 404, body: { error: "execution_not_found" } };
+  if (execution.status !== "blocked" || graphExecution.status !== "waiting_for_approval") {
+    await persistState(state);
+    return { state, execution, graphExecution };
+  }
+
+  execution.approvalId = updatedApproval.approvalId;
+  graphExecution.approvalId = updatedApproval.approvalId;
+  const patient = state.fhirPatients.find((item) => item.patientId === execution.patientId);
+  const carePlan = state.carePlans.find((item) => item.patientId === execution.patientId);
+  if (!patient || !carePlan) {
+    await persistState(state);
+    return { status: 404, body: { error: "patient_or_care_plan_not_found" } };
+  }
+  const review = finalizeApprovedExecution(state, { execution, graphExecution, patient, carePlan, actorId: input.actorId, tenantId: updatedApproval.tenantId, requestFollowupEmail: true, policyDecision: execution.policyDecision, approvalId: updatedApproval.approvalId });
+  if (review.incident) {
+    execution.incidentId = review.incident.incidentId;
+    graphExecution.incidentId = review.incident.incidentId;
+  }
+  state.auditEvents.push(createAuditEvent({ tenantId: updatedApproval.tenantId, actorId: input.actorId, category: "workflow", action: review.approved ? "execution_completed" : "execution_failed", status: review.approved ? "success" : "blocked", details: { executionId: execution.executionId, graphExecutionId: graphExecution.graphExecutionId, approved: review.approved, reason: review.reason } }));
+  await persistState(state);
+  return review.incident ? { state, execution, graphExecution, incident: review.incident } : { state, execution, graphExecution };
+};
+
+export const listAgentGraphDefinitions = async (): Promise<AgentGraphDefinition[]> => (await loadState()).graphDefinitions;
+export const getAgentGraphDefinition = async (graphId: string): Promise<AgentGraphDefinition | undefined> => getGraphDefinition(await loadState(), graphId);
+export const getGraphExecutionByExecutionId = async (executionId: string): Promise<{ graphExecution: AgentGraphExecutionRecord; execution: WorkflowExecutionRecord; } | undefined> => {
+  const state = await loadState();
+  const execution = state.executions.find((item) => item.executionId === executionId);
+  const graphExecution = state.graphExecutions.find((item) => item.executionId === executionId);
+  return execution && graphExecution ? { graphExecution, execution } : undefined;
+};
+export const getGraphExecution = async (graphId: string, executionId: string): Promise<AgentGraphExecutionRecord | undefined> => {
+  const state = await loadState();
+  return state.graphExecutions.find((item) => item.graphId === graphId && item.executionId === executionId);
+};
+export const listIncidents = async (): Promise<IncidentRecord[]> => (await loadState()).incidents.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export const getIncident = async (incidentId: string): Promise<IncidentRecord | undefined> => (await loadState()).incidents.find((item) => item.incidentId === incidentId);
+export const listExecutions = async (): Promise<WorkflowExecutionRecord[]> => (await loadState()).executions.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export const listApprovals = async (): Promise<ApprovalRecord[]> => (await loadState()).approvals.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
