@@ -11,6 +11,7 @@ EAOS is built for healthcare and other high-regulation environments where data l
 - Per-action audit evidence with replay-ready event history
 - Multi-tenant isolation and deny-by-default runtime controls
 - Simulation mode before live execution
+- Signed connector registry with reference manifests (FHIR, HL7, SQL, Fabric, Power BI, SharePoint, Email, Ticketing, Linear)
 
 ## Pilot Use Case (Live Today)
 
@@ -64,6 +65,11 @@ Run the full pilot demo report:
 ```bash
 node tools/scripts/pilot-demo.mjs
 ```
+
+### Connector Control APIs (Pilot)
+
+- `tool-registry`: `GET /v1/tools`, `POST /v1/tools`, `POST /v1/tools/{id}/publish`
+- `tool-execution-service`: `POST /v1/tool-calls`, `GET /v1/tool-calls`, `GET /v1/tool-calls/{toolCallId}`
 
 The demo output is saved to:
 

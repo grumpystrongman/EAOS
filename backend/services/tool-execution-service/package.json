@@ -8,7 +8,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test"
+    "test": "npm run build && node --test ../../../dist/services/tool-execution-service/src/index.test.js"
   },
   "dependencies": {
     "@eaos/contracts": "file:../../shared/contracts",

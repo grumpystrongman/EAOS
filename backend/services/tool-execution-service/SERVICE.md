@@ -6,21 +6,24 @@ Sandboxed tool dispatch and evidence collection
 
 ## API Contracts
 
-- POST /v1/tools/{id}/execute
-- POST /v1/tools/{id}/simulate
-- GET /v1/tool-calls/{id}
+- GET /healthz
+- GET /v1/tool-calls
+- GET /v1/tool-calls/{toolCallId}
+- POST /v1/tool-calls
 
 ## Main Entities
 
-- request
-- decision
-- execution
-- evidence
+- tool call
+- runtime guard decision
+- idempotency replay
+- execution result envelope
 
 ## Storage
 
-Object storage, Kafka/NATS
+`.volumes/tool-execution-state.json` for the pilot (replace with queue + durable storage in production)
 
 ## Security Requirements
 
-Sandboxing, deny-by-default egress
+- Sandboxing, deny-by-default egress
+- Runtime guard enforcement for action, network profile, step budget, and approval obligations
+- Idempotency-key replay protection for safe retries
