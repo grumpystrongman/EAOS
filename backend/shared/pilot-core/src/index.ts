@@ -1719,6 +1719,9 @@ export const resolveApprovalAndAdvanceExecution = async (input: { approvalId: st
   const approvalIndex = state.approvals.findIndex((item) => item.approvalId === input.approvalId);
   if (approvalIndex === -1) return { status: 404, body: { error: "approval_not_found" } };
   const approval = state.approvals[approvalIndex]!;
+  if (approval.status !== "pending") {
+    return { status: 409, body: { error: "approval_already_decided" } };
+  }
   const updatedApproval = applyApprovalDecision(approval, {
     approverId: input.actorId,
     decision: input.decision,

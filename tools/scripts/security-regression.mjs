@@ -222,6 +222,10 @@ export const runSecurityRegression = async () => {
       headers: { authorization: `Bearer ${securityAccessToken}` },
       body: { decision: "approve", reason: "authorized security approval" }
     });
+    const replayedDecision = await callTimed(baseUrls.gateway, `/v1/approvals/${approvalId}/decide`, "POST", {
+      headers: { authorization: `Bearer ${securityAccessToken}` },
+      body: { decision: "reject", reason: "replay attempt should fail" }
+    });
 
     checks.push({
       checkId: "approval_decision_enforces_tenant_scope",
@@ -230,13 +234,17 @@ export const runSecurityRegression = async () => {
         crossTenantDecisionDenied.status === 403 &&
         normalizeError(crossTenantDecisionDenied.payload) === "tenant_scope_mismatch" &&
         securityDecision.status === 200 &&
-        securityDecision.payload.status === "approved",
+        securityDecision.payload.status === "approved" &&
+        replayedDecision.status === 409 &&
+        normalizeError(replayedDecision.payload) === "approval_already_decided",
       details: {
         crossTenantTokenStatus: crossTenantApproverToken.status,
         crossTenantDeniedStatus: crossTenantDecisionDenied.status,
         crossTenantDeniedError: normalizeError(crossTenantDecisionDenied.payload),
         authorizedDecisionStatus: securityDecision.status,
-        authorizedDecisionState: securityDecision.payload.status
+        authorizedDecisionState: securityDecision.payload.status,
+        replayDecisionStatus: replayedDecision.status,
+        replayDecisionError: normalizeError(replayedDecision.payload)
       }
     });
 

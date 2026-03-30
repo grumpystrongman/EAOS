@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T19:52:02.144Z",
+  "generatedAt": "2026-03-30T20:01:20.199Z",
   "suite": "security-regression",
   "endpoints": {
     "gateway": "http://127.0.0.1:3970",
@@ -12,7 +12,7 @@
       "details": {
         "status": 404,
         "error": "demo_auth_disabled",
-        "latencyMs": 42
+        "latencyMs": 29
       }
     },
     {
@@ -21,7 +21,7 @@
       "details": {
         "status": 401,
         "error": "missing_or_invalid_auth_token",
-        "latencyMs": 7
+        "latencyMs": 5
       }
     },
     {
@@ -39,8 +39,8 @@
       "passed": true,
       "details": {
         "status": 201,
-        "executionId": "ex-mndltpft-boxy2i",
-        "latencyMs": 25
+        "executionId": "ex-mndm5o1p-4110ff",
+        "latencyMs": 20
       }
     },
     {
@@ -58,7 +58,7 @@
       "details": {
         "executionStatus": 201,
         "workflowStatus": "blocked",
-        "approvalId": "ap-mndltpgm-mgsdb0",
+        "approvalId": "ap-mndm5o2d-32zbc7",
         "deniedStatus": 403,
         "deniedError": "insufficient_role_for_approval_decision"
       }
@@ -71,7 +71,9 @@
         "crossTenantDeniedStatus": 403,
         "crossTenantDeniedError": "tenant_scope_mismatch",
         "authorizedDecisionStatus": 200,
-        "authorizedDecisionState": "approved"
+        "authorizedDecisionState": "approved",
+        "replayDecisionStatus": 409,
+        "replayDecisionError": "approval_already_decided"
       }
     },
     {
@@ -81,7 +83,7 @@
         "clinicianStatus": 403,
         "clinicianError": "insufficient_role_for_approval_list",
         "securityStatus": 200,
-        "approvalCount": 2
+        "approvalCount": 1
       }
     },
     {

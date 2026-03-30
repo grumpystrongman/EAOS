@@ -1,6 +1,6 @@
 {
-  "packageId": "2026-03-30T19-53-09-629Z",
-  "generatedAt": "2026-03-30T19:53:09.707Z",
+  "packageId": "2026-03-30T20-02-15-654Z",
+  "generatedAt": "2026-03-30T20:02:15.728Z",
   "requiredFiles": [
     "docs/compliance/CONTROL-CROSSWALK.json",
     "docs/compliance/ENTERPRISE-TRUST-PACK.md",
@@ -54,8 +54,8 @@
     },
     {
       "file": "docs/security/HARDENING-CONTROLS-MATRIX.md",
-      "sha256": "bab6210298032eb0d28e9bd00560d26443cf4175acbd565c14f5d3003f3c0fdd",
-      "sizeBytes": 6570
+      "sha256": "8e8cb71fdd4aba46d3f1e4c383ed02edf71393a090ce14d6e462eeeffccfdc1a",
+      "sizeBytes": 6941
     },
     {
       "file": "docs/threat-model.md",
@@ -69,32 +69,32 @@
     },
     {
       "file": "docs/assets/demo/readiness-gate-report.json",
-      "sha256": "67e4fcfe8c903ee6d12f6435d505a2846e37aabb998ea872352e466db52bb1da",
-      "sizeBytes": 47533
+      "sha256": "8cdfa790840d2587457b1e20b594d98c496664e256aad203ed54a7f267529e60",
+      "sizeBytes": 48913
     },
     {
       "file": "docs/assets/demo/commercial-proof-report.json",
-      "sha256": "34ea324a48a37e89a02f9e13b0103bc7ea9490702d03f01d6de625873707f041",
+      "sha256": "deba0911a565cb5328f991827207e612ae788b6330327daf431cd4cad17686f8",
       "sizeBytes": 7607
     },
     {
       "file": "docs/assets/demo/trust-layer-proof-report.json",
-      "sha256": "46834ef88f3a8f4f9a0cbf810a447e3ae47beabfb31fd6c59479bc2e3319b547",
-      "sizeBytes": 6966
+      "sha256": "41decbb9f0f023862e8b296e8f075d4d15be5dba05155077d957051429f3aa36",
+      "sizeBytes": 6964
     },
     {
       "file": "docs/assets/demo/commercial-audit-report.json",
-      "sha256": "a77907863bb8afebda9196ef714eb96e01137ff961bc0843170d3ccd56a114ba",
+      "sha256": "fa814cb711eada7ea35902d36c698f25086ae45133bb379f1bfa2ca8f76d19ca",
       "sizeBytes": 1541
     },
     {
       "file": "docs/assets/demo/security-regression-report.json",
-      "sha256": "aedfa70fb842bf2b97f3210ebbc5aed7707aef4433c2e80404d8d0ca3cd692cc",
-      "sizeBytes": 2963
+      "sha256": "a8e8ed6a78099429b35958f267942efd27d62d64f78b99dcff0f108576c1be49",
+      "sizeBytes": 3059
     },
     {
       "file": "docs/assets/demo/codebase-line-audit-report.json",
-      "sha256": "cb8f0222b66e348ba9c22068beb34344440bb02dbe2688c1dfdf912e7504e4b4",
+      "sha256": "a64238a733c91c4705e552f7a0c5f6ded14c2404a4f623b7ef02a8f86aa42c3e",
       "sizeBytes": 383
     },
     {
@@ -104,13 +104,13 @@
     },
     {
       "file": "docs/assets/demo/chaos-report.json",
-      "sha256": "11d4df84e1280ffb0b399892ce01b10a956015e895a8efeb90957e1d463b360e",
+      "sha256": "3211fe3f0dce30598d013061745adc84a181700783ee0256abe663b8d785a587",
       "sizeBytes": 3878
     },
     {
       "file": "docs/assets/demo/load-test-report.json",
-      "sha256": "e9d4c5e1535315c4252b595cc13f92b672f01fd169e8e14db5e5a43db918302d",
-      "sizeBytes": 599
+      "sha256": "7aed5430c017ce0bcdbac8dfa934400cdfeac24fdcdc1253e5d69396c1104014",
+      "sizeBytes": 600
     }
   ],
   "summary": {

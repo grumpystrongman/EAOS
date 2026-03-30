@@ -13,11 +13,11 @@ The point of the matrix is traceability:
 | Control | Implemented service or endpoint | What it does | Validation |
 | --- | --- | --- | --- |
 | SSO and session assurance | `auth-service` - `POST /v1/auth/token`, `POST /v1/auth/introspect`, `POST /v1/auth/revoke` | Issues, validates, and revokes signed sessions with assurance checks | Token/introspection/revocation flow returns deterministic status |
-| Gateway authn and tenant binding | `api-gateway` - demo token + auth-service introspection (`OPENAEGIS_AUTH_INTROSPECTION_URL`) | Rejects unauthenticated requests and enforces tenant scope from token claims | Requests without a valid token are denied; cross-tenant writes fail with `tenant_scope_mismatch` |
+| Gateway authn and tenant binding | `api-gateway` - auth-service introspection (`OPENAEGIS_AUTH_INTROSPECTION_URL`) + optional insecure demo auth toggle (`OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH`) | Rejects unauthenticated requests, enforces tenant scope from token claims, and disables demo auth unless explicitly enabled | Requests without a valid token are denied; cross-tenant writes fail with `tenant_scope_mismatch`; demo login returns `demo_auth_disabled` by default |
 | Tenant isolation | `tenant-service` - `PATCH /v1/tenants/{id}/isolation`, `GET /v1/tenants/{id}/policy` | Enforces tenant boundary validation and posture state | Cross-tenant access is denied without platform admin role |
 | Policy enforcement outside the model | `policy-service` - `POST /v1/policies/evaluate` | Evaluates allow, require-approval, or deny decisions | Policy result is produced before execution continues |
 | Policy pre-checks in the gateway | `api-gateway` - `POST /v1/policy/evaluate` | Allows fast pre-checks at ingress | Gateway rejects unsafe requests before workflow work begins |
-| Approval workflow and dual control | `approval-service` - `POST /v1/approvals`, `POST /v1/approvals/{id}/decide`, `GET /v1/approvals` | Creates and resolves human approvals | Live workflows pause until approval is granted |
+| Approval workflow and dual control | `approval-service` + `api-gateway` - `POST /v1/approvals`, `POST /v1/approvals/{id}/decide`, `GET /v1/approvals` | Creates and resolves human approvals with role and tenant checks at ingress | Live workflows pause until approval is granted; non-approvers and cross-tenant decision attempts are denied |
 | Workflow determinism and checkpoints | `workflow-orchestrator` - `POST /v1/executions`, `POST /v1/executions/{id}/checkpoints`, `GET /v1/executions/{id}` | Runs deterministic state transitions | Execution checkpoints and transitions remain replayable |
 | Vendor-neutral model routing | `model-broker` - `POST /v1/model-broker/routes/evaluate`, `GET /v1/model-broker/providers/capabilities` | Selects provider and model by policy | Route evaluation returns selected provider and fallback options |
 | Zero-retention enforcement | `model-broker` and `api-gateway` route previews | Restricts sensitive requests to providers that support the required posture | EPHI routes must stay on zero-retention paths |
@@ -40,6 +40,7 @@ The point of the matrix is traceability:
 - `OPENAEGIS_AUTH_INTROSPECTION_URL`
 - `OPENAEGIS_REQUIRE_INTROSPECTION=true`
 - optional: `OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID`, `OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID`, `OPENAEGIS_AUTH_INTROSPECTION_TIMEOUT_MS`
+- secure default: keep `OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH` unset in non-demo environments
 
 ### Policy and approval
 

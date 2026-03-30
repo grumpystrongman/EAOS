@@ -155,6 +155,61 @@ test("approval decision is limited to privileged roles", async () => {
   assert.equal(securityDecision.status, 200);
 });
 
+test("approval cannot be decided more than once", async () => {
+  const clinicianLogin = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  const clinician = (await clinicianLogin.json()) as { accessToken: string };
+
+  const securityLogin = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
+  });
+  const security = (await securityLogin.json()) as { accessToken: string };
+
+  const execute = await fetch(`${baseUrl}/v1/executions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${clinician.accessToken}`
+    },
+    body: JSON.stringify({
+      mode: "live",
+      workflowId: "wf-discharge-assistant",
+      patientId: "patient-1001",
+      requestFollowupEmail: true
+    })
+  });
+  assert.equal(execute.status, 201);
+  const execution = (await execute.json()) as { approvalId?: string };
+  assert.ok(execution.approvalId);
+
+  const firstDecision = await fetch(`${baseUrl}/v1/approvals/${execution.approvalId}/decide`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`
+    },
+    body: JSON.stringify({ decision: "approve", reason: "first decision" })
+  });
+  assert.equal(firstDecision.status, 200);
+
+  const secondDecision = await fetch(`${baseUrl}/v1/approvals/${execution.approvalId}/decide`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`
+    },
+    body: JSON.stringify({ decision: "reject", reason: "second decision should fail" })
+  });
+  assert.equal(secondDecision.status, 409);
+  const secondBody = (await secondDecision.json()) as { error: string };
+  assert.equal(secondBody.error, "approval_already_decided");
+});
+
 test("simulation mode completes without approval", async () => {
   const login = await fetch(`${baseUrl}/v1/auth/login`, {
     method: "POST",
