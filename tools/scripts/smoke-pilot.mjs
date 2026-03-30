@@ -11,6 +11,7 @@ const request = async (path, options = {}) => {
 };
 
 const run = async () => {
+  process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
   const server = createAppServer();
   server.listen(port);
   await once(server, "listening");

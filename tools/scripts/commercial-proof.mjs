@@ -39,6 +39,7 @@ const makeClaim = (input) => ({
 });
 
 export const runCommercialProof = async () => {
+  process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
   await rm(".volumes/pilot-state.json", { force: true });
   await rm(".volumes/tool-registry-state.json", { force: true });
   await rm(".volumes/tool-execution-state.json", { force: true });

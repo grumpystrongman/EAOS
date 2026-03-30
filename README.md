@@ -48,6 +48,10 @@ Set:
 - `OPENAEGIS_AUTH_INTROSPECTION_URL`
 - `OPENAEGIS_REQUIRE_INTROSPECTION=true`
 
+Secure default:
+
+- Insecure demo login/token mode is disabled unless explicitly enabled with `OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH=true`.
+
 In this mode, bearer tokens are introspected and write operations enforce tenant scope from token claims.
 
 ## Trust Layer Proof (3 End-to-End Examples)

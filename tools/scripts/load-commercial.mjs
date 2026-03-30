@@ -71,6 +71,7 @@ const evaluateScore = (metrics, thresholds) => {
 };
 
 export const runCommercialLoadTest = async () => {
+  process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
   await rm(".volumes/pilot-state.json", { force: true });
 
   const server = createAppServer();

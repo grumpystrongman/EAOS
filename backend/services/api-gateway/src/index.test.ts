@@ -10,6 +10,7 @@ let server: ReturnType<typeof createAppServer>;
 
 beforeEach(async () => {
   await rm(".volumes/pilot-state.json", { force: true });
+  process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
   server = createAppServer();
   server.listen(3900);
   await once(server, "listening");
@@ -18,6 +19,7 @@ beforeEach(async () => {
 test.afterEach(async () => {
   server.close();
   await once(server, "close");
+  delete process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH;
 });
 
 test("pilot workflow requires approval in live mode and completes after approval", async () => {
@@ -94,6 +96,63 @@ test("pilot workflow requires approval in live mode and completes after approval
   const auditBody = (await audit.json()) as { events: Array<{ category: string }> };
   assert.ok(auditBody.events.some((event) => event.category === "workflow"));
   assert.ok(auditBody.events.some((event) => event.category === "approval"));
+});
+
+test("approval decision is limited to privileged roles", async () => {
+  const clinicianLogin = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  assert.equal(clinicianLogin.status, 200);
+  const clinician = (await clinicianLogin.json()) as { accessToken: string };
+
+  const securityLogin = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
+  });
+  assert.equal(securityLogin.status, 200);
+  const security = (await securityLogin.json()) as { accessToken: string };
+
+  const execute = await fetch(`${baseUrl}/v1/executions`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${clinician.accessToken}`
+    },
+    body: JSON.stringify({
+      mode: "live",
+      workflowId: "wf-discharge-assistant",
+      patientId: "patient-1001",
+      requestFollowupEmail: true
+    })
+  });
+  assert.equal(execute.status, 201);
+  const execution = (await execute.json()) as { approvalId?: string };
+  assert.ok(execution.approvalId);
+
+  const clinicianDecision = await fetch(`${baseUrl}/v1/approvals/${execution.approvalId}/decide`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${clinician.accessToken}`
+    },
+    body: JSON.stringify({ decision: "approve", reason: "self-approval attempt" })
+  });
+  assert.equal(clinicianDecision.status, 403);
+  const clinicianBody = (await clinicianDecision.json()) as { error: string };
+  assert.equal(clinicianBody.error, "insufficient_role_for_approval_decision");
+
+  const securityDecision = await fetch(`${baseUrl}/v1/approvals/${execution.approvalId}/decide`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`
+    },
+    body: JSON.stringify({ decision: "approve", reason: "authorized approval" })
+  });
+  assert.equal(securityDecision.status, 200);
 });
 
 test("simulation mode completes without approval", async () => {
@@ -522,6 +581,48 @@ test("gateway supports auth-service token introspection and enforces tenant scop
       return;
     }
 
+    if (payload.token === "oidc-clinician-good") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          active: true,
+          sub: "user-clinician",
+          tenantId: "tenant-starlight-health",
+          roles: ["workflow_operator", "analyst"],
+          assuranceLevel: "aal2"
+        })
+      );
+      return;
+    }
+
+    if (payload.token === "oidc-approver-same-tenant") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          active: true,
+          sub: "user-security",
+          tenantId: "tenant-starlight-health",
+          roles: ["approver"],
+          assuranceLevel: "aal3"
+        })
+      );
+      return;
+    }
+
+    if (payload.token === "oidc-approver-cross-tenant") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          active: true,
+          sub: "user-security",
+          tenantId: "tenant-other",
+          roles: ["approver"],
+          assuranceLevel: "aal3"
+        })
+      );
+      return;
+    }
+
     if (payload.token === "oidc-cross-tenant") {
       response.writeHead(200, { "content-type": "application/json" });
       response.end(
@@ -569,6 +670,46 @@ test("gateway supports auth-service token introspection and enforces tenant scop
     const crossBody = (await crossTenantDenied.json()) as { error: string };
     assert.equal(crossBody.error, "tenant_scope_mismatch");
 
+    const approvalExecution = await fetch(`${baseUrl}/v1/executions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer oidc-clinician-good"
+      },
+      body: JSON.stringify({
+        mode: "live",
+        workflowId: "wf-discharge-assistant",
+        patientId: "patient-1001",
+        tenantId: "tenant-starlight-health"
+      })
+    });
+    assert.equal(approvalExecution.status, 201);
+    const approvalExecutionBody = (await approvalExecution.json()) as { approvalId?: string; status: string };
+    assert.equal(approvalExecutionBody.status, "blocked");
+    assert.ok(approvalExecutionBody.approvalId);
+
+    const crossTenantDecision = await fetch(`${baseUrl}/v1/approvals/${approvalExecutionBody.approvalId}/decide`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer oidc-approver-cross-tenant"
+      },
+      body: JSON.stringify({ decision: "approve", reason: "cross-tenant attempt" })
+    });
+    assert.equal(crossTenantDecision.status, 403);
+    const crossTenantDecisionBody = (await crossTenantDecision.json()) as { error: string };
+    assert.equal(crossTenantDecisionBody.error, "tenant_scope_mismatch");
+
+    const sameTenantDecision = await fetch(`${baseUrl}/v1/approvals/${approvalExecutionBody.approvalId}/decide`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer oidc-approver-same-tenant"
+      },
+      body: JSON.stringify({ decision: "approve", reason: "authorized approver" })
+    });
+    assert.equal(sameTenantDecision.status, 200);
+
     const inactive = await fetch(`${baseUrl}/v1/policies/profile`, {
       headers: { authorization: "Bearer unknown-token" }
     });
@@ -600,4 +741,26 @@ test("rejects oversized payloads", async () => {
   });
 
   assert.equal(response.status, 413);
+});
+
+test("demo login endpoint is disabled when insecure demo auth flag is not enabled", async () => {
+  delete process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH;
+  const disabledServer = createAppServer();
+  disabledServer.listen(3902);
+  await once(disabledServer, "listening");
+
+  try {
+    const response = await fetch("http://127.0.0.1:3902/v1/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+    });
+    assert.equal(response.status, 404);
+    const body = (await response.json()) as { error: string };
+    assert.equal(body.error, "demo_auth_disabled");
+  } finally {
+    disabledServer.close();
+    await once(disabledServer, "close");
+    process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
+  }
 });

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T19:32:15.218Z",
+  "generatedAt": "2026-03-30T19:52:02.144Z",
   "suite": "security-regression",
   "endpoints": {
     "gateway": "http://127.0.0.1:3970",
@@ -7,12 +7,21 @@
   },
   "checks": [
     {
+      "checkId": "demo_login_disabled_by_default",
+      "passed": true,
+      "details": {
+        "status": 404,
+        "error": "demo_auth_disabled",
+        "latencyMs": 42
+      }
+    },
+    {
       "checkId": "demo_token_denied_when_introspection_required",
       "passed": true,
       "details": {
         "status": 401,
         "error": "missing_or_invalid_auth_token",
-        "latencyMs": 39
+        "latencyMs": 7
       }
     },
     {
@@ -30,8 +39,8 @@
       "passed": true,
       "details": {
         "status": 201,
-        "executionId": "ex-mndl49my-ms2v5o",
-        "latencyMs": 22
+        "executionId": "ex-mndltpft-boxy2i",
+        "latencyMs": 25
       }
     },
     {
@@ -41,6 +50,38 @@
         "status": 403,
         "error": "tenant_scope_mismatch",
         "latencyMs": 5
+      }
+    },
+    {
+      "checkId": "approval_decision_requires_approver_role",
+      "passed": true,
+      "details": {
+        "executionStatus": 201,
+        "workflowStatus": "blocked",
+        "approvalId": "ap-mndltpgm-mgsdb0",
+        "deniedStatus": 403,
+        "deniedError": "insufficient_role_for_approval_decision"
+      }
+    },
+    {
+      "checkId": "approval_decision_enforces_tenant_scope",
+      "passed": true,
+      "details": {
+        "crossTenantTokenStatus": 200,
+        "crossTenantDeniedStatus": 403,
+        "crossTenantDeniedError": "tenant_scope_mismatch",
+        "authorizedDecisionStatus": 200,
+        "authorizedDecisionState": "approved"
+      }
+    },
+    {
+      "checkId": "approval_list_requires_privileged_roles",
+      "passed": true,
+      "details": {
+        "clinicianStatus": 403,
+        "clinicianError": "insufficient_role_for_approval_list",
+        "securityStatus": 200,
+        "approvalCount": 2
       }
     },
     {
@@ -65,8 +106,8 @@
     }
   ],
   "summary": {
-    "totalChecks": 6,
-    "passedChecks": 6,
+    "totalChecks": 10,
+    "passedChecks": 10,
     "failedChecks": 0,
     "scorePercent": 100,
     "status": "PASS"

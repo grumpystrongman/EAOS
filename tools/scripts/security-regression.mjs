@@ -46,7 +46,8 @@ export const runSecurityRegression = async () => {
     OPENAEGIS_AUTH_INTROSPECTION_URL: process.env.OPENAEGIS_AUTH_INTROSPECTION_URL,
     OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID: process.env.OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID,
     OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID: process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID,
-    OPENAEGIS_AUTH_ISSUER: process.env.OPENAEGIS_AUTH_ISSUER
+    OPENAEGIS_AUTH_ISSUER: process.env.OPENAEGIS_AUTH_ISSUER,
+    OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH: process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH
   };
 
   process.env.OPENAEGIS_REQUIRE_INTROSPECTION = "true";
@@ -54,6 +55,7 @@ export const runSecurityRegression = async () => {
   process.env.OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID = "service-gateway";
   process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID = "tenant-platform";
   process.env.OPENAEGIS_AUTH_ISSUER = baseUrls.auth;
+  process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "false";
 
   const servers = {
     auth: createAuthServer(),
@@ -67,6 +69,19 @@ export const runSecurityRegression = async () => {
   const checks = [];
 
   try {
+    const demoLoginDisabled = await callTimed(baseUrls.gateway, "/v1/auth/login", "POST", {
+      body: { email: "clinician@starlighthealth.org" }
+    });
+    checks.push({
+      checkId: "demo_login_disabled_by_default",
+      passed: demoLoginDisabled.status === 404 && normalizeError(demoLoginDisabled.payload) === "demo_auth_disabled",
+      details: {
+        status: demoLoginDisabled.status,
+        error: normalizeError(demoLoginDisabled.payload),
+        latencyMs: demoLoginDisabled.elapsedMs
+      }
+    });
+
     const demoTokenDenied = await callTimed(baseUrls.gateway, "/v1/executions", "POST", {
       headers: { authorization: "Bearer demo-token-user-security" },
       body: {
@@ -143,6 +158,108 @@ export const runSecurityRegression = async () => {
         status: crossTenantExecution.status,
         error: normalizeError(crossTenantExecution.payload),
         latencyMs: crossTenantExecution.elapsedMs
+      }
+    });
+
+    const liveExecution = await callTimed(baseUrls.gateway, "/v1/executions", "POST", {
+      headers: { authorization: `Bearer ${clinicianAccessToken}` },
+      body: {
+        tenantId: "tenant-starlight-health",
+        mode: "live",
+        workflowId: "wf-discharge-assistant",
+        patientId: "patient-1001",
+        requestFollowupEmail: true
+      }
+    });
+    const approvalId = typeof liveExecution.payload.approvalId === "string" ? liveExecution.payload.approvalId : "";
+
+    const clinicianDecisionDenied = await callTimed(
+      baseUrls.gateway,
+      `/v1/approvals/${approvalId}/decide`,
+      "POST",
+      {
+        headers: { authorization: `Bearer ${clinicianAccessToken}` },
+        body: { decision: "approve", reason: "malicious self-approval attempt" }
+      }
+    );
+    checks.push({
+      checkId: "approval_decision_requires_approver_role",
+      passed:
+        liveExecution.status === 201 &&
+        liveExecution.payload.status === "blocked" &&
+        approvalId.length > 0 &&
+        clinicianDecisionDenied.status === 403 &&
+        normalizeError(clinicianDecisionDenied.payload) === "insufficient_role_for_approval_decision",
+      details: {
+        executionStatus: liveExecution.status,
+        workflowStatus: liveExecution.payload.status,
+        approvalId,
+        deniedStatus: clinicianDecisionDenied.status,
+        deniedError: normalizeError(clinicianDecisionDenied.payload)
+      }
+    });
+
+    const crossTenantApproverToken = await callTimed(baseUrls.auth, "/v1/auth/token", "POST", {
+      body: {
+        subject: "user-other-approver",
+        tenantId: "tenant-other-health",
+        roles: ["approver"]
+      }
+    });
+    const crossTenantApproverAccessToken =
+      typeof crossTenantApproverToken.payload.accessToken === "string" ? crossTenantApproverToken.payload.accessToken : "";
+
+    const crossTenantDecisionDenied = await callTimed(
+      baseUrls.gateway,
+      `/v1/approvals/${approvalId}/decide`,
+      "POST",
+      {
+        headers: { authorization: `Bearer ${crossTenantApproverAccessToken}` },
+        body: { decision: "approve", reason: "cross-tenant decision attempt" }
+      }
+    );
+    const securityDecision = await callTimed(baseUrls.gateway, `/v1/approvals/${approvalId}/decide`, "POST", {
+      headers: { authorization: `Bearer ${securityAccessToken}` },
+      body: { decision: "approve", reason: "authorized security approval" }
+    });
+
+    checks.push({
+      checkId: "approval_decision_enforces_tenant_scope",
+      passed:
+        crossTenantApproverToken.status === 200 &&
+        crossTenantDecisionDenied.status === 403 &&
+        normalizeError(crossTenantDecisionDenied.payload) === "tenant_scope_mismatch" &&
+        securityDecision.status === 200 &&
+        securityDecision.payload.status === "approved",
+      details: {
+        crossTenantTokenStatus: crossTenantApproverToken.status,
+        crossTenantDeniedStatus: crossTenantDecisionDenied.status,
+        crossTenantDeniedError: normalizeError(crossTenantDecisionDenied.payload),
+        authorizedDecisionStatus: securityDecision.status,
+        authorizedDecisionState: securityDecision.payload.status
+      }
+    });
+
+    const clinicianApprovalListDenied = await callTimed(baseUrls.gateway, "/v1/approvals", "GET", {
+      headers: { authorization: `Bearer ${clinicianAccessToken}` }
+    });
+    const securityApprovalList = await callTimed(baseUrls.gateway, "/v1/approvals", "GET", {
+      headers: { authorization: `Bearer ${securityAccessToken}` }
+    });
+    checks.push({
+      checkId: "approval_list_requires_privileged_roles",
+      passed:
+        clinicianApprovalListDenied.status === 403 &&
+        normalizeError(clinicianApprovalListDenied.payload) === "insufficient_role_for_approval_list" &&
+        securityApprovalList.status === 200 &&
+        Array.isArray(securityApprovalList.payload.approvals),
+      details: {
+        clinicianStatus: clinicianApprovalListDenied.status,
+        clinicianError: normalizeError(clinicianApprovalListDenied.payload),
+        securityStatus: securityApprovalList.status,
+        approvalCount: Array.isArray(securityApprovalList.payload.approvals)
+          ? securityApprovalList.payload.approvals.length
+          : 0
       }
     });
 

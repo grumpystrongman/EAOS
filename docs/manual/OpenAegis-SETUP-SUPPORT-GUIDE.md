@@ -22,6 +22,7 @@ npm run smoke:pilot
 Terminal A:
 
 ```bash
+OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH=true
 PORT=4300 node tools/scripts/run-gateway.mjs
 ```
 
@@ -35,7 +36,7 @@ Open `http://127.0.0.1:4273`.
 
 ## 4. Policy Studio Demo Steps
 
-1. Connect demo sessions.
+1. Connect demo sessions (only when `OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH=true`).
 2. Open Security Console.
 3. Change one policy control.
 4. Click Preview impact.
@@ -79,6 +80,10 @@ When enabled:
 - non-demo bearer tokens are validated via introspection
 - tenant claims are enforced on write paths
 - cross-tenant writes return `tenant_scope_mismatch`
+
+Secure default:
+
+- if `OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH` is not set to `true`, `/v1/auth/login` is disabled and demo tokens are rejected.
 ## 7. Generate Demo Artifacts
 
 ```bash

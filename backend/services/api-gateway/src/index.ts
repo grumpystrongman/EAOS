@@ -46,6 +46,10 @@ const roleToPrivileges: Record<string, string[]> = {
   admin: ["platform_admin", "security_admin", "auditor", "workflow_operator", "approver", "analyst"]
 };
 
+const approvalViewRoles = ["approver", "security_admin", "auditor", "platform_admin"] as const;
+const approvalCreateRoles = ["approver", "security_admin", "platform_admin"] as const;
+const approvalDecisionRoles = ["approver", "security_admin", "platform_admin"] as const;
+
 const gatewayRateLimiter = new InMemoryRateLimiter(250, 60_000);
 
 const roleToAssurance: Record<string, "aal1" | "aal2" | "aal3"> = {
@@ -65,6 +69,12 @@ const resolveUserRole = (user: { role?: string; roles?: string[] }): "clinician"
   }
   return "clinician";
 };
+
+const hasAnyRole = (session: AuthSession, roles: readonly string[]): boolean =>
+  roles.some((role) => session.roles.includes(role));
+
+const isInsecureDemoAuthEnabled = (): boolean =>
+  process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH === "true";
 
 const checkGraphHashChain = (steps: Array<{ hash: string; previousHash: string | null; stage: string }>) => {
   if (!Array.isArray(steps) || steps.length === 0) return false;
@@ -189,13 +199,24 @@ const getBearerToken = (request: IncomingMessage): string | undefined => {
   return typeof token === "string" && token.length > 0 ? token : undefined;
 };
 
-const parseDemoSession = (token: string): AuthSession | undefined => {
+const parseDemoActorId = (token: string): string | undefined => {
   if (!token.startsWith("demo-token-")) return undefined;
   const actorId = token.replace("demo-token-", "");
-  if (actorId.length === 0) return undefined;
+  return actorId.length > 0 ? actorId : undefined;
+};
+
+const loadDemoSession = async (actorId: string): Promise<AuthSession | undefined> => {
+  const state = await loadState();
+  const user = state.users.find((item) => item.userId === actorId);
+  if (!user) return undefined;
+  const resolvedRole = resolveUserRole({ role: user.role });
+  const roles = roleToPrivileges[resolvedRole] ?? ["workflow_operator"];
+  const assuranceLevel = roleToAssurance[resolvedRole] ?? "aal2";
   return {
     actorId,
-    roles: [],
+    tenantId: user.tenantId,
+    roles,
+    assuranceLevel,
     source: "demo"
   };
 };
@@ -254,23 +275,44 @@ const resolveAuthSession = async (request: IncomingMessage): Promise<AuthSession
   if (!token) return undefined;
   const introspectionRequired = process.env.OPENAEGIS_REQUIRE_INTROSPECTION === "true";
 
-  const demo = parseDemoSession(token);
-  if (demo && !introspectionRequired) return demo;
+  const demoActorId = parseDemoActorId(token);
+  if (demoActorId) {
+    if (introspectionRequired || !isInsecureDemoAuthEnabled()) return undefined;
+    return loadDemoSession(demoActorId);
+  }
 
   const introspected = await introspectAuthToken(token);
   if (introspected) return introspected;
-
-  return demo && introspectionRequired ? undefined : demo;
+  return undefined;
 };
 
 const resolveTenantOrReject = (
   auth: AuthSession,
   requestedTenant: string
 ): { allowed: true; tenantId: string } | { allowed: false } => {
-  if (!auth.tenantId || auth.tenantId === requestedTenant || auth.roles.includes("platform_admin")) {
+  if (auth.roles.includes("platform_admin")) {
     return { allowed: true, tenantId: requestedTenant };
   }
-  return { allowed: false };
+  if (!auth.tenantId || auth.tenantId !== requestedTenant) {
+    return { allowed: false };
+  }
+  return { allowed: true, tenantId: requestedTenant };
+};
+
+const canAccessTenant = (auth: AuthSession, tenantId: string): boolean => {
+  if (auth.roles.includes("platform_admin")) return true;
+  return Boolean(auth.tenantId) && auth.tenantId === tenantId;
+};
+
+const requireRole = (
+  response: ServerResponse,
+  auth: AuthSession,
+  roles: readonly string[],
+  error: string
+): boolean => {
+  if (hasAnyRole(auth, roles)) return true;
+  sendJson(response, 403, { error });
+  return false;
 };
 
 const toString = (value: unknown, fallback: string): string =>
@@ -576,6 +618,10 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && pathname === "/v1/auth/login") {
+    if (!isInsecureDemoAuthEnabled()) {
+      sendJson(response, 404, { error: "demo_auth_disabled" });
+      return;
+    }
     const body = await readJson(request);
     const email = typeof body.email === "string" ? body.email : "";
     const state = await loadState();
@@ -802,6 +848,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && pathname === "/v1/approvals") {
+    if (!requireRole(response, authSession, approvalCreateRoles, "insufficient_role_for_approval_create")) {
+      return;
+    }
     const body = await readJson(request);
     const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
@@ -824,14 +873,33 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "GET" && pathname === "/v1/approvals") {
+    if (!requireRole(response, authSession, approvalViewRoles, "insufficient_role_for_approval_list")) {
+      return;
+    }
     const state = await loadState();
-    sendJson(response, 200, { approvals: state.approvals });
+    const approvals = authSession.roles.includes("platform_admin")
+      ? state.approvals
+      : state.approvals.filter((approval) => authSession.tenantId && approval.tenantId === authSession.tenantId);
+    sendJson(response, 200, { approvals });
     return;
   }
 
   if (method === "POST" && /^\/v1\/approvals\/.+\/decide$/.test(pathname)) {
+    if (!requireRole(response, authSession, approvalDecisionRoles, "insufficient_role_for_approval_decision")) {
+      return;
+    }
     const body = await readJson(request);
     const approvalId = pathname.split("/")[3] ?? "";
+    const state = await loadState();
+    const approval = state.approvals.find((item) => item.approvalId === approvalId);
+    if (!approval) {
+      sendJson(response, 404, { error: "approval_not_found" });
+      return;
+    }
+    if (!canAccessTenant(authSession, approval.tenantId)) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const result = await handleApprove(approvalId, actorId, body);
     sendJson(response, result.status, result.body);
     return;
