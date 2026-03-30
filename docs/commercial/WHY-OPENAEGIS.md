@@ -40,6 +40,9 @@ npm run proof:commercial
 npm run load:commercial
 npm run chaos:commercial
 npm run audit:codebase
+npm run trust:pack
+npm run trust:audit
+npm run audit:commercial
 npm run readiness:gate
 ```
 
@@ -48,6 +51,7 @@ Expected results:
 - all commands exit `0`
 - `docs/assets/demo/commercial-proof-report.json` has `summary.status = PASS`
 - `docs/assets/demo/codebase-line-audit-report.json` has `summary.status = PASS`
+- `docs/assets/demo/enterprise-trust-pack-audit-report.json` has `summary.status = PASS`
 - `docs/assets/demo/readiness-gate-report.json` has `summary.scorePercent >= 98`
 
 ## How Non-Experts Can Operate It Safely

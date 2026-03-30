@@ -53,10 +53,13 @@ jobs:
             docs/assets/demo/trust-layer-proof-report.json
             docs/assets/demo/codebase-line-audit-report.json
             docs/assets/demo/commercial-audit-report.json
+            docs/assets/demo/enterprise-trust-pack-audit-report.json
             docs/assets/demo/design-partner-kpis.json
             docs/assets/demo/load-test-report.json
             docs/assets/demo/chaos-report.json
             docs/assets/demo/readiness-gate-report.json
+            docs/assets/enterprise-trust-pack/latest/manifest.json
+            docs/assets/enterprise-trust-pack/latest/EXECUTIVE-BRIEF.md
             docs/assets/security-evidence-pack/latest/manifest.json
             docs/assets/security-evidence-pack/latest/EXECUTIVE-SUMMARY.md
 

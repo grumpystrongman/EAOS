@@ -38,6 +38,7 @@ Most products only solve part of this.
 | Three distinct trust-layer examples pass end-to-end | Proven now | `docs/assets/demo/trust-layer-proof-report.json` | Run `npm run proof:trust-layer` |
 | Codebase line audit reports zero skeleton markers across auditable code | Proven now | `docs/assets/demo/codebase-line-audit-report.json` | Run `npm run audit:codebase` |
 | Repository-level commercial audit has no placeholder gaps | Proven now | `docs/assets/demo/commercial-audit-report.json` | Run `npm run audit:commercial` |
+| Enterprise trust pack is framework-mapped and machine-audited | Proven now | `docs/assets/demo/enterprise-trust-pack-audit-report.json` | Run `npm run trust:pack && npm run trust:audit` |
 | One-command local pilot produces readiness + KPI + security evidence pack | Proven now | `docs/assets/security-evidence-pack/latest/manifest.json` | Run `npm run pilot:local` |
 | Full enterprise connector depth and formal certifications | Roadmap | n/a | Not claimed as complete in this MVP |
 
@@ -66,6 +67,8 @@ This is intentionally explicit so a non-expert can operate safely.
 - `docs/assets/demo/trust-layer-proof-report.json`
 - `docs/assets/demo/codebase-line-audit-report.json`
 - `docs/assets/demo/commercial-audit-report.json`
+- `docs/assets/demo/enterprise-trust-pack-audit-report.json`
+- `docs/assets/enterprise-trust-pack/latest/manifest.json`
 - `docs/assets/demo/design-partner-kpis.json`
 - `docs/assets/security-evidence-pack/latest/EXECUTIVE-SUMMARY.md`
 

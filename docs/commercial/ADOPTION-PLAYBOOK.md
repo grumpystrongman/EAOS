@@ -24,12 +24,16 @@ Success signal:
 
 ```bash
 npm run evidence:security-pack
+npm run trust:pack
+npm run trust:audit
 ```
 
 Primary outputs:
 
 - `docs/assets/security-evidence-pack/latest/EXECUTIVE-SUMMARY.md`
 - `docs/assets/security-evidence-pack/latest/manifest.json`
+- `docs/assets/enterprise-trust-pack/latest/EXECUTIVE-BRIEF.md`
+- `docs/assets/demo/enterprise-trust-pack-audit-report.json`
 
 Success signal:
 

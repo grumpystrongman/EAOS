@@ -44,6 +44,8 @@ const run = async () => {
     outputs: {
       readinessGate: "docs/assets/demo/readiness-gate-report.json",
       designPartnerKpis: "docs/assets/demo/design-partner-kpis.json",
+      enterpriseTrustPackAudit: "docs/assets/demo/enterprise-trust-pack-audit-report.json",
+      enterpriseTrustPackPointer: "docs/assets/enterprise-trust-pack/latest.json",
       securityEvidencePackPointer: "docs/assets/security-evidence-pack/latest.json"
     }
   };

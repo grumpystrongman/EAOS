@@ -63,6 +63,7 @@ const run = async () => {
   const commercialProof = await readJson("docs/assets/demo/commercial-proof-report.json", null);
   const trustProof = await readJson("docs/assets/demo/trust-layer-proof-report.json", null);
   const codebaseAudit = await readJson("docs/assets/demo/codebase-line-audit-report.json", null);
+  const trustPackAudit = await readJson("docs/assets/demo/enterprise-trust-pack-audit-report.json", null);
   const placeholderFindings = await detectPlaceholders();
 
   const checks = [
@@ -113,6 +114,15 @@ const run = async () => {
         totalFindings: Number(codebaseAudit?.summary?.totalFindings ?? -1),
         filesReviewed: Number(codebaseAudit?.scope?.filesReviewed ?? 0),
         linesReviewed: Number(codebaseAudit?.scope?.linesReviewed ?? 0)
+      }
+    },
+    {
+      checkId: "enterprise_trust_pack_audit_passed",
+      passed: String(trustPackAudit?.summary?.status ?? "FAIL") === "PASS",
+      details: {
+        status: trustPackAudit?.summary?.status ?? "MISSING",
+        scorePercent: Number(trustPackAudit?.summary?.scorePercent ?? 0),
+        failedChecks: Number(trustPackAudit?.summary?.failedChecks ?? 0)
       }
     }
   ];

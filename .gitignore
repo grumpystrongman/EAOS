@@ -31,5 +31,9 @@ docs/assets/security-evidence-pack/*
 !docs/assets/security-evidence-pack/latest/
 !docs/assets/security-evidence-pack/latest/**
 !docs/assets/security-evidence-pack/latest.json
+docs/assets/enterprise-trust-pack/*
+!docs/assets/enterprise-trust-pack/latest/
+!docs/assets/enterprise-trust-pack/latest/**
+!docs/assets/enterprise-trust-pack/latest.json
 .tmp-test/
 frontend/apps/admin-console/.tmp-test/

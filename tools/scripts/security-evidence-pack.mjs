@@ -13,10 +13,13 @@ const requiredFiles = [
   "docs/assets/demo/trust-layer-proof-report.json",
   "docs/assets/demo/codebase-line-audit-report.json",
   "docs/assets/demo/commercial-audit-report.json",
+  "docs/assets/demo/enterprise-trust-pack-audit-report.json",
   "docs/assets/demo/load-test-report.json",
   "docs/assets/demo/chaos-report.json",
   "docs/assets/demo/test-surface-report.json",
   "docs/assets/demo/design-partner-kpis.json",
+  "docs/assets/enterprise-trust-pack/latest/manifest.json",
+  "docs/assets/enterprise-trust-pack/latest/EXECUTIVE-BRIEF.md",
   "docs/threat-model.md",
   "docs/data-governance.md",
   "docs/readiness/HOSPITAL-PRODUCTION-GATE.md",
@@ -57,6 +60,9 @@ const run = async () => {
   const trust = JSON.parse(await readFile(resolve("docs/assets/demo/trust-layer-proof-report.json"), "utf8"));
   const commercial = JSON.parse(await readFile(resolve("docs/assets/demo/commercial-proof-report.json"), "utf8"));
   const kpis = JSON.parse(await readFile(resolve("docs/assets/demo/design-partner-kpis.json"), "utf8"));
+  const trustPackAudit = JSON.parse(
+    await readFile(resolve("docs/assets/demo/enterprise-trust-pack-audit-report.json"), "utf8")
+  );
 
   const execSummary = [
     "# OpenAegis Security Evidence Pack",
@@ -69,6 +75,7 @@ const run = async () => {
     `- Trust proof: ${trust.summary?.status ?? "UNKNOWN"} (${trust.summary?.passedExamples ?? 0}/${trust.summary?.totalExamples ?? 0} examples passed)`,
     `- Commercial proof: ${commercial.summary?.status ?? "UNKNOWN"} (${commercial.summary?.passedClaims ?? 0}/${commercial.summary?.totalClaims ?? 0} claims passed)`,
     `- Design partner KPI gate: ${kpis.summary?.status ?? "UNKNOWN"}`,
+    `- Enterprise trust pack audit: ${trustPackAudit.summary?.status ?? "UNKNOWN"} (${trustPackAudit.summary?.scorePercent ?? 0}%)`,
     "",
     "## KPI Snapshot",
     `- Approval latency (healthcare): ${kpis.pilots?.global?.approvalLatencyMs ?? "n/a"} ms`,
@@ -95,7 +102,8 @@ const run = async () => {
       readiness: readiness.summary,
       trust: trust.summary,
       commercial: commercial.summary,
-      designPartnerKpis: kpis.summary
+      designPartnerKpis: kpis.summary,
+      enterpriseTrustPackAudit: trustPackAudit.summary
     }
   };
   await writeFile(resolve(packageRoot, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");

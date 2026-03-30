@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-03-30T18:02:54.795Z",
+  "suite": "enterprise-trust-pack-audit",
+  "checks": [
+    {
+      "checkId": "required_files_present",
+      "passed": true,
+      "details": [
+        {
+          "file": "docs/assets/enterprise-trust-pack/latest/manifest.json",
+          "passed": true,
+          "sizeBytes": 4350
+        },
+        {
+          "file": "docs/assets/enterprise-trust-pack/latest/EXECUTIVE-BRIEF.md",
+          "passed": true,
+          "sizeBytes": 668
+        },
+        {
+          "file": "docs/assets/enterprise-trust-pack/latest/compliance/CONTROL-CROSSWALK.json",
+          "passed": true,
+          "sizeBytes": 8317
+        },
+        {
+          "file": "docs/assets/enterprise-trust-pack/latest/compliance/EXTERNAL-PENTEST-READY-CHECKLIST.md",
+          "passed": true,
+          "sizeBytes": 1965
+        },
+        {
+          "file": "docs/assets/demo/readiness-gate-report.json",
+          "passed": true,
+          "sizeBytes": 42843
+        },
+        {
+          "file": "docs/assets/demo/commercial-audit-report.json",
+          "passed": true,
+          "sizeBytes": 1153
+        }
+      ]
+    },
+    {
+      "checkId": "trust_pack_manifest_status",
+      "passed": true,
+      "details": {
+        "status": "PASS",
+        "controlCount": 20,
+        "frameworks": [
+          "SOC2",
+          "ISO27001",
+          "HIPAA"
+        ]
+      }
+    },
+    {
+      "checkId": "framework_coverage_complete",
+      "passed": true,
+      "details": {
+        "frameworks": [
+          "SOC2",
+          "ISO27001",
+          "HIPAA"
+        ]
+      }
+    },
+    {
+      "checkId": "control_count_threshold",
+      "passed": true,
+      "details": {
+        "controlCount": 20,
+        "threshold": 18
+      }
+    },
+    {
+      "checkId": "readiness_gate_still_passed",
+      "passed": true,
+      "details": {
+        "status": "PASS",
+        "scorePercent": 100
+      }
+    },
+    {
+      "checkId": "commercial_audit_still_passed",
+      "passed": true,
+      "details": {
+        "status": "PASS",
+        "scorePercent": 100
+      }
+    }
+  ],
+  "summary": {
+    "totalChecks": 6,
+    "passedChecks": 6,
+    "failedChecks": 0,
+    "scorePercent": 100,
+    "status": "PASS"
+  }
+}

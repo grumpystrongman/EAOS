@@ -20,6 +20,8 @@
     "smoke:pilot": "node tools/scripts/smoke-pilot.mjs",
     "proof:commercial": "npm run build && node tools/scripts/commercial-proof.mjs",
     "proof:trust-layer": "npm run build && node tools/scripts/prove-trust-layer.mjs",
+    "trust:pack": "node tools/scripts/generate-enterprise-trust-pack.mjs",
+    "trust:audit": "node tools/scripts/audit-enterprise-trust-pack.mjs",
     "audit:codebase": "node tools/scripts/codebase-line-audit.mjs",
     "audit:commercial": "node tools/scripts/commercial-audit.mjs",
     "pilot:local": "node tools/scripts/local-pilot.mjs",

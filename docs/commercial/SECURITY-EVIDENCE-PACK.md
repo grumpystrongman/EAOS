@@ -5,6 +5,8 @@ This is the CTO/CISO-facing artifact bundle for security and compliance review.
 ## Generate
 
 ```bash
+npm run trust:pack
+npm run trust:audit
 npm run evidence:security-pack
 ```
 
@@ -23,6 +25,7 @@ Generated outputs:
 - commercial proof and audit reports
 - load and chaos reports
 - design-partner KPI report
+- enterprise trust pack audit report
 - threat model and data governance docs
 - hardening controls matrix
 

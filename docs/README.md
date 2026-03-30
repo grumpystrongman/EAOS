@@ -19,6 +19,9 @@
 - [Security Evidence Pack](./commercial/SECURITY-EVIDENCE-PACK.md)
 - [Licensing Model](./commercial/LICENSING.md)
 - [Trademark Policy](./commercial/TRADEMARK-POLICY.md)
+- [Enterprise Trust Pack](./compliance/ENTERPRISE-TRUST-PACK.md)
+- [Control Crosswalk](./compliance/CONTROL-CROSSWALK.json)
+- [External Pentest Checklist](./compliance/EXTERNAL-PENTEST-READY-CHECKLIST.md)
 - [Policy Studio Guide](./policy-studio.md)
 - Demo artifact: `docs/assets/demo/pilot-demo-output.json`
 

@@ -1,0 +1,244 @@
+{
+  "version": "2026-03-30",
+  "frameworks": [
+    "SOC2",
+    "ISO27001",
+    "HIPAA"
+  ],
+  "controls": [
+    {
+      "controlId": "OA-IDENTITY-001",
+      "title": "Federated authentication and session assurance",
+      "soc2": ["CC6.1", "CC6.2"],
+      "iso27001": ["A.5.15", "A.5.16"],
+      "hipaa": ["164.308(a)(4)", "164.312(d)"],
+      "evidence": [
+        "backend/services/auth-service/src/index.ts",
+        "backend/services/auth-service/src/index.test.ts",
+        "docs/security/HARDENING-CONTROLS-MATRIX.md"
+      ]
+    },
+    {
+      "controlId": "OA-IDENTITY-002",
+      "title": "Tenant-bound request authorization",
+      "soc2": ["CC6.1", "CC6.6"],
+      "iso27001": ["A.5.15", "A.8.3"],
+      "hipaa": ["164.312(a)(1)", "164.308(a)(4)"],
+      "evidence": [
+        "backend/services/api-gateway/src/index.ts",
+        "backend/services/tenant-service/src/index.ts",
+        "backend/services/tenant-service/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-POLICY-001",
+      "title": "Policy enforced outside model path",
+      "soc2": ["CC7.2", "CC7.3"],
+      "iso27001": ["A.5.1", "A.8.9"],
+      "hipaa": ["164.308(a)(1)", "164.312(a)(1)"],
+      "evidence": [
+        "backend/services/policy-service/src/index.ts",
+        "backend/services/api-gateway/src/index.ts",
+        "backend/shared/pilot-core/src/index.ts"
+      ]
+    },
+    {
+      "controlId": "OA-POLICY-002",
+      "title": "High-risk actions require explicit approval",
+      "soc2": ["CC6.3", "CC7.2"],
+      "iso27001": ["A.5.3", "A.8.25"],
+      "hipaa": ["164.308(a)(3)", "164.312(a)(1)"],
+      "evidence": [
+        "backend/services/approval-service/src/index.ts",
+        "backend/services/api-gateway/src/index.test.ts",
+        "docs/policy-studio.md"
+      ]
+    },
+    {
+      "controlId": "OA-POLICY-003",
+      "title": "Break-glass required for risky policy downgrades",
+      "soc2": ["CC8.1", "CC8.2"],
+      "iso27001": ["A.5.37", "A.8.32"],
+      "hipaa": ["164.308(a)(1)(ii)(D)", "164.312(b)"],
+      "evidence": [
+        "backend/services/api-gateway/src/index.ts",
+        "backend/services/api-gateway/src/index.test.ts",
+        "docs/commercial/CISO-DECISION-BRIEF.md"
+      ]
+    },
+    {
+      "controlId": "OA-DATA-001",
+      "title": "PHI/PII classification before egress",
+      "soc2": ["CC6.7", "CC7.2"],
+      "iso27001": ["A.5.12", "A.8.12"],
+      "hipaa": ["164.312(a)(1)", "164.312(e)(1)"],
+      "evidence": [
+        "backend/services/classification-service/src/index.ts",
+        "backend/services/classification-service/src/index.test.ts",
+        "docs/data-governance.md"
+      ]
+    },
+    {
+      "controlId": "OA-DATA-002",
+      "title": "Short-lived secrets with revocation",
+      "soc2": ["CC6.1", "CC6.6"],
+      "iso27001": ["A.8.24", "A.8.16"],
+      "hipaa": ["164.312(a)(2)(iii)", "164.308(a)(3)"],
+      "evidence": [
+        "backend/services/secrets-broker/src/index.ts",
+        "backend/services/secrets-broker/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-DATA-003",
+      "title": "Sensitive route requires zero-retention-compatible providers",
+      "soc2": ["CC6.7", "CC7.2"],
+      "iso27001": ["A.8.10", "A.5.34"],
+      "hipaa": ["164.306(a)(3)", "164.312(e)(1)"],
+      "evidence": [
+        "backend/services/model-broker/src/router.ts",
+        "backend/services/model-broker/src/index.test.ts",
+        "docs/commercial/WHY-OPENAEGIS.md"
+      ]
+    },
+    {
+      "controlId": "OA-RUNTIME-001",
+      "title": "Tool execution deny-by-default with runtime guardrails",
+      "soc2": ["CC7.2", "CC7.3"],
+      "iso27001": ["A.8.20", "A.8.22"],
+      "hipaa": ["164.312(a)(1)", "164.312(c)(1)"],
+      "evidence": [
+        "backend/services/tool-execution-service/src/index.ts",
+        "backend/services/tool-execution-service/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-RUNTIME-002",
+      "title": "Signed tool manifests and controlled publish path",
+      "soc2": ["CC6.1", "CC8.1"],
+      "iso27001": ["A.8.19", "A.8.32"],
+      "hipaa": ["164.308(a)(1)(ii)(D)", "164.312(c)(1)"],
+      "evidence": [
+        "backend/services/tool-registry/src/index.ts",
+        "backend/services/tool-registry/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-WORKFLOW-001",
+      "title": "Deterministic workflow checkpoints and replayability",
+      "soc2": ["CC7.2", "CC7.4"],
+      "iso27001": ["A.8.15", "A.8.16"],
+      "hipaa": ["164.312(b)", "164.308(a)(1)(ii)(D)"],
+      "evidence": [
+        "backend/services/workflow-orchestrator/src/index.ts",
+        "backend/services/workflow-orchestrator/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-AUDIT-001",
+      "title": "Immutable evidence chain",
+      "soc2": ["CC7.2", "CC7.4"],
+      "iso27001": ["A.8.15", "A.8.16"],
+      "hipaa": ["164.312(b)", "164.312(c)(1)"],
+      "evidence": [
+        "backend/services/audit-ledger/src/index.ts",
+        "backend/services/audit-ledger/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-AUDIT-002",
+      "title": "Incident traceability and observability boundary checks",
+      "soc2": ["CC7.2", "CC7.3"],
+      "iso27001": ["A.5.25", "A.8.16"],
+      "hipaa": ["164.308(a)(6)", "164.312(b)"],
+      "evidence": [
+        "backend/services/observability-service/src/index.ts",
+        "backend/services/observability-service/src/index.test.ts"
+      ]
+    },
+    {
+      "controlId": "OA-IR-001",
+      "title": "Emergency containment kill-switch",
+      "soc2": ["CC7.3", "CC7.4"],
+      "iso27001": ["A.5.24", "A.5.26"],
+      "hipaa": ["164.308(a)(6)", "164.312(a)(1)"],
+      "evidence": [
+        "backend/services/kill-switch-service/src/index.ts",
+        "backend/services/kill-switch-service/src/index.test.ts",
+        "docs/assets/demo/chaos-report.json"
+      ]
+    },
+    {
+      "controlId": "OA-RESILIENCE-001",
+      "title": "Load/chaos/backup/restore release verification",
+      "soc2": ["CC7.1", "CC7.2"],
+      "iso27001": ["A.5.29", "A.5.30"],
+      "hipaa": ["164.308(a)(7)", "164.308(a)(1)(ii)(D)"],
+      "evidence": [
+        "tools/scripts/load-commercial.mjs",
+        "tools/scripts/chaos-commercial.mjs",
+        "tools/scripts/backup-state.mjs",
+        "tools/scripts/restore-state.mjs"
+      ]
+    },
+    {
+      "controlId": "OA-SDLC-001",
+      "title": "CI-enforced typecheck, test, and infrastructure validation",
+      "soc2": ["CC8.1", "CC8.2"],
+      "iso27001": ["A.8.25", "A.8.28"],
+      "hipaa": ["164.308(a)(1)", "164.308(a)(8)"],
+      "evidence": [
+        ".github/workflows/ci.yml",
+        "tools/scripts/readiness-gate.mjs",
+        "docs/readiness/HOSPITAL-PRODUCTION-GATE.md"
+      ]
+    },
+    {
+      "controlId": "OA-SDLC-002",
+      "title": "Line-level code audit for skeleton indicators",
+      "soc2": ["CC8.1", "CC8.2"],
+      "iso27001": ["A.8.8", "A.8.28"],
+      "hipaa": ["164.308(a)(1)", "164.308(a)(8)"],
+      "evidence": [
+        "tools/scripts/codebase-line-audit.mjs",
+        "docs/assets/demo/codebase-line-audit-report.json"
+      ]
+    },
+    {
+      "controlId": "OA-COMPLIANCE-001",
+      "title": "Exportable evidence package for review workflows",
+      "soc2": ["CC2.2", "CC7.4"],
+      "iso27001": ["A.5.35", "A.8.15"],
+      "hipaa": ["164.312(b)", "164.316(b)(1)"],
+      "evidence": [
+        "tools/scripts/export-evidence-package.mjs",
+        "tools/scripts/security-evidence-pack.mjs",
+        "docs/assets/security-evidence-pack/latest/manifest.json"
+      ]
+    },
+    {
+      "controlId": "OA-GOVERNANCE-001",
+      "title": "Role-aware security console and policy UX guardrails",
+      "soc2": ["CC2.1", "CC6.2"],
+      "iso27001": ["A.5.2", "A.5.15"],
+      "hipaa": ["164.308(a)(5)", "164.308(a)(4)"],
+      "evidence": [
+        "frontend/apps/admin-console/src/app/pages/SecurityConsolePage.tsx",
+        "frontend/apps/admin-console/src/app/routes.ts",
+        "docs/policy-studio.md"
+      ]
+    },
+    {
+      "controlId": "OA-LEGAL-001",
+      "title": "Open-core license and trademark governance",
+      "soc2": ["CC1.1", "CC1.2"],
+      "iso27001": ["A.5.1", "A.5.31"],
+      "hipaa": ["164.308(a)(1)", "164.316(a)"],
+      "evidence": [
+        "LICENSE",
+        "LICENSE-COMMERCIAL.md",
+        "docs/commercial/TRADEMARK-POLICY.md"
+      ]
+    }
+  ]
+}

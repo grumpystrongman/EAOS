@@ -44,6 +44,7 @@ Launch artifact:
 - `docs/assets/demo/trust-layer-proof-report.json`: `summary.status = PASS`
 - `docs/assets/demo/readiness-gate-report.json`: `summary.status = PASS` and `summary.scorePercent >= 98`
 - `docs/assets/demo/design-partner-kpis.json`: `summary.status = PASS`
+- `docs/assets/demo/enterprise-trust-pack-audit-report.json`: `summary.status = PASS`
 - `docs/assets/security-evidence-pack/latest/manifest.json`: `status = PASS`
 
 ## Scorecard Template
