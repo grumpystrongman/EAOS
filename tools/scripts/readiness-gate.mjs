@@ -9,6 +9,8 @@ const commandPlan = [
   { id: "typecheck", label: "Typecheck", command: "run typecheck", weight: 8, mandatory: true },
   { id: "build", label: "Build", command: "run build", weight: 8, mandatory: true },
   { id: "test", label: "Test", command: "run test", weight: 12, mandatory: true },
+  { id: "test-surface", label: "Test Surface Validation", command: "run validate:test-surface", weight: 6, mandatory: true },
+  { id: "infra", label: "Infra Validation", command: "run validate:infra", weight: 6, mandatory: true },
   { id: "smoke", label: "Smoke Pilot", command: "run smoke:pilot", weight: 8, mandatory: true },
   { id: "proof", label: "Commercial Proof", command: "run proof:commercial", weight: 8, mandatory: true },
   { id: "load", label: "Commercial Load", command: "run load:commercial", weight: 5, mandatory: true },

@@ -29,6 +29,8 @@ It does not replace security review, architecture review, or change management. 
 | Type correctness | `npm run typecheck` | Exit code 0 | No TypeScript errors |
 | Build integrity | `npm run build` | Exit code 0 | All workspaces compile successfully |
 | Test suite | `npm run test` | Exit code 0 | All tests pass |
+| Test surface validation | `npm run validate:test-surface` | Exit code 0 | Every workspace package has at least one executable test file |
+| Infrastructure packaging validation | `npm run validate:infra` | Exit code 0 | Docker/Kubernetes/Helm artifacts are complete and internally consistent |
 | Pilot smoke test | `npm run smoke:pilot` | Exit code 0 | Pilot flow boots and completes the smoke scenario |
 | Commercial proof | `npm run proof:commercial` | Exit code 0 | `docs/assets/demo/commercial-proof-report.json` is generated |
 | Load test | `npm run load:commercial` | Exit code 0 | `docs/assets/demo/load-test-report.json` is generated |
@@ -45,16 +47,18 @@ The release is only considered ready when all of the following are true:
 1. `npm run typecheck` passes.
 2. `npm run build` passes.
 3. `npm run test` passes.
-4. `npm run smoke:pilot` passes.
-5. `npm run proof:commercial` passes.
-6. `npm run load:commercial` passes.
-7. `npm run chaos:commercial` passes.
-8. `npm run readiness:gate` passes.
-9. The commercial proof report records `summary.status = PASS`.
-10. The commercial proof report records `summary.failedClaims = 0`.
-11. The commercial proof report records `summary.scorePercent = 100`.
-12. The readiness gate report records `summary.scorePercent >= 98`.
-13. The readiness gate report records `summary.status = PASS`.
+4. `npm run validate:test-surface` passes.
+5. `npm run validate:infra` passes.
+6. `npm run smoke:pilot` passes.
+7. `npm run proof:commercial` passes.
+8. `npm run load:commercial` passes.
+9. `npm run chaos:commercial` passes.
+10. `npm run readiness:gate` passes.
+11. The commercial proof report records `summary.status = PASS`.
+12. The commercial proof report records `summary.failedClaims = 0`.
+13. The commercial proof report records `summary.scorePercent = 100`.
+14. The readiness gate report records `summary.scorePercent >= 98`.
+15. The readiness gate report records `summary.status = PASS`.
 
 If any one of these checks fails, the gate is closed.
 
@@ -119,6 +123,7 @@ The expected evidence bundle for a gate review is:
 - `npm run typecheck` output
 - `npm run build` output
 - `npm run test` output
+- `npm run validate:test-surface` output
 - `npm run smoke:pilot` output
 - `npm run proof:commercial` output
 - `npm run load:commercial` output

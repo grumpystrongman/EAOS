@@ -1,0 +1,7 @@
+apiVersion: v2
+name: openaegis
+version: 0.2.0
+appVersion: "0.2.0"
+description: OpenAegis secure enterprise agent orchestration platform
+kubeVersion: ">=1.27.0"
+type: application

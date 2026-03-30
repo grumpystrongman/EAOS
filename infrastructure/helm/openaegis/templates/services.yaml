@@ -1,0 +1,17 @@
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "openaegis.labels" $ | nindent 4 }}
+    app: {{ .name }}
+spec:
+  selector:
+    app: {{ .name }}
+  ports:
+    - name: http
+      port: {{ .port }}
+      targetPort: http
+{{- end }}

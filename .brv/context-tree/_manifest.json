@@ -33,29 +33,29 @@
     {
       "importance": 50,
       "path": "architecture/openaegis_overview/openaegis_architecture_blueprint.md",
-      "tokens": 262,
+      "tokens": 269,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/openaegis_pilot/openaegis_pilot_overview.md",
-      "tokens": 304,
+      "tokens": 307,
       "type": "context"
     },
     {
       "importance": 50,
       "path": "architecture/openaegis_security/openaegis_security_and_governance.md",
-      "tokens": 231,
+      "tokens": 234,
       "type": "context"
     }
   ],
-  "generated_at": "2026-03-29T20:33:25.338Z",
+  "generated_at": "2026-03-30T15:25:10.011Z",
   "lane_tokens": {
-    "contexts": 797,
+    "contexts": 810,
     "stubs": 0,
     "summaries": 1626
   },
-  "source_fingerprint": "ba209db2babb1cad052c8ad4d6e70d3bfe49134e0224b504a75dba6ee4117aa0",
-  "total_tokens": 2423,
+  "source_fingerprint": "93db2776d5d307118c6186d8515aedf21503db0177944135ee0746678d2e4fd6",
+  "total_tokens": 2436,
   "version": 1
 }

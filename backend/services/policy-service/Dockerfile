@@ -1,12 +1,17 @@
 FROM node:22-alpine AS build
 WORKDIR /workspace
-COPY package.json tsconfig.base.json ./
+COPY package.json package-lock.json tsconfig.base.json ./
 COPY backend ./backend
-RUN npm install
+RUN npm ci
 RUN npm run build --workspace @openaegis/policy-service
+RUN npm prune --omit=dev
 
 FROM node:22-alpine
 WORKDIR /app
-COPY --from=build /workspace/backend/services/policy-service/dist ./dist
-COPY --from=build /workspace/backend/services/policy-service/package.json ./package.json
-CMD ["node", "dist/index.js"]
+ENV NODE_ENV=production
+COPY --from=build /workspace/package.json ./package.json
+COPY --from=build /workspace/package-lock.json ./package-lock.json
+COPY --from=build /workspace/node_modules ./node_modules
+COPY --from=build /workspace/dist ./dist
+EXPOSE 3003
+CMD ["node", "dist/services/policy-service/src/index.js"]

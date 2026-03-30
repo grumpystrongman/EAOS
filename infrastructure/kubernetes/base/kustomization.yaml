@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: openaegis
+resources:
+  - config/namespace.yaml
+  - config/service-account.yaml
+  - config/runtime-config.yaml
+  - networkpolicies/default-deny-all.yaml
+  - networkpolicies/allow-internal-mesh.yaml
+  - networkpolicies/allow-dns-egress.yaml
+  - networkpolicies/tool-execution-egress-allowlist.yaml
+  - deployments/agent-registry.yaml
+  - deployments/api-gateway.yaml
+  - deployments/approval-service.yaml
+  - deployments/audit-ledger.yaml
+  - deployments/auth-service.yaml
+  - deployments/classification-service.yaml
+  - deployments/context-retrieval-service.yaml
+  - deployments/kill-switch-service.yaml
+  - deployments/model-broker.yaml
+  - deployments/notification-service.yaml
+  - deployments/observability-service.yaml
+  - deployments/policy-service.yaml
+  - deployments/secrets-broker.yaml
+  - deployments/tenant-service.yaml
+  - deployments/tool-execution-service.yaml
+  - deployments/tool-registry.yaml
+  - deployments/workflow-orchestrator.yaml
+  - services/agent-registry.yaml
+  - services/api-gateway.yaml
+  - services/approval-service.yaml
+  - services/audit-ledger.yaml
+  - services/auth-service.yaml
+  - services/classification-service.yaml
+  - services/context-retrieval-service.yaml
+  - services/kill-switch-service.yaml
+  - services/model-broker.yaml
+  - services/notification-service.yaml
+  - services/observability-service.yaml
+  - services/policy-service.yaml
+  - services/secrets-broker.yaml
+  - services/tenant-service.yaml
+  - services/tool-execution-service.yaml
+  - services/tool-registry.yaml
+  - services/workflow-orchestrator.yaml

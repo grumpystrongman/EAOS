@@ -1,0 +1,149 @@
+{
+  "generatedAt": "2026-03-30T15:48:35.589Z",
+  "suite": "workspace-test-surface-validation",
+  "thresholds": {
+    "minTestFilesPerWorkspace": 1
+  },
+  "summary": {
+    "workspaceCount": 22,
+    "passingWorkspaces": 22,
+    "failingWorkspaces": 0,
+    "scorePercent": 100,
+    "status": "PASS"
+  },
+  "workspaces": [
+    {
+      "name": "@openaegis/agent-registry",
+      "path": "C:/Users/grump/EAOS/backend/services/agent-registry",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/api-gateway",
+      "path": "C:/Users/grump/EAOS/backend/services/api-gateway",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/approval-service",
+      "path": "C:/Users/grump/EAOS/backend/services/approval-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/audit-ledger",
+      "path": "C:/Users/grump/EAOS/backend/services/audit-ledger",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/auth-service",
+      "path": "C:/Users/grump/EAOS/backend/services/auth-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/classification-service",
+      "path": "C:/Users/grump/EAOS/backend/services/classification-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/context-retrieval-service",
+      "path": "C:/Users/grump/EAOS/backend/services/context-retrieval-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/kill-switch-service",
+      "path": "C:/Users/grump/EAOS/backend/services/kill-switch-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/model-broker",
+      "path": "C:/Users/grump/EAOS/backend/services/model-broker",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/notification-service",
+      "path": "C:/Users/grump/EAOS/backend/services/notification-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/observability-service",
+      "path": "C:/Users/grump/EAOS/backend/services/observability-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/policy-service",
+      "path": "C:/Users/grump/EAOS/backend/services/policy-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/secrets-broker",
+      "path": "C:/Users/grump/EAOS/backend/services/secrets-broker",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/tenant-service",
+      "path": "C:/Users/grump/EAOS/backend/services/tenant-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/tool-execution-service",
+      "path": "C:/Users/grump/EAOS/backend/services/tool-execution-service",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/tool-registry",
+      "path": "C:/Users/grump/EAOS/backend/services/tool-registry",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/workflow-orchestrator",
+      "path": "C:/Users/grump/EAOS/backend/services/workflow-orchestrator",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/contracts",
+      "path": "C:/Users/grump/EAOS/backend/shared/contracts",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/events",
+      "path": "C:/Users/grump/EAOS/backend/shared/events",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/pilot-core",
+      "path": "C:/Users/grump/EAOS/backend/shared/pilot-core",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/security-kit",
+      "path": "C:/Users/grump/EAOS/backend/shared/security-kit",
+      "hasTestScript": true,
+      "testFileCount": 1
+    },
+    {
+      "name": "@openaegis/admin-console",
+      "path": "C:/Users/grump/EAOS/frontend/apps/admin-console",
+      "hasTestScript": true,
+      "testFileCount": 2
+    }
+  ],
+  "failures": []
+}

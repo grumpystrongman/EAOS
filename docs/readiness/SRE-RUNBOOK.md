@@ -86,6 +86,8 @@ Use the current evidence-first checks:
 npm run typecheck
 npm run build
 npm run test
+npm run validate:test-surface
+npm run validate:infra
 npm run smoke:pilot
 npm run proof:commercial
 npm run load:commercial
@@ -201,11 +203,13 @@ After any deployment or configuration change:
 1. Run `npm run typecheck`.
 2. Run `npm run build`.
 3. Run `npm run test`.
-4. Run `npm run smoke:pilot`.
-5. Run `npm run proof:commercial`.
-6. Run `npm run load:commercial`.
-7. Run `npm run chaos:commercial`.
-8. Run `npm run readiness:gate`.
-9. Verify readiness score remains at or above 98.
+4. Run `npm run validate:test-surface`.
+5. Run `npm run validate:infra`.
+6. Run `npm run smoke:pilot`.
+7. Run `npm run proof:commercial`.
+8. Run `npm run load:commercial`.
+9. Run `npm run chaos:commercial`.
+10. Run `npm run readiness:gate`.
+11. Verify readiness score remains at or above 98.
 
 If any step fails, revert the change or roll forward a fix before declaring success.

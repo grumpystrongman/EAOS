@@ -1,0 +1,66 @@
+{{- range .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "openaegis.labels" $ | nindent 4 }}
+    app: {{ .name }}
+spec:
+  replicas: {{ .replicas | default $.Values.global.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+        {{- include "openaegis.labels" $ | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "openaegis.fullname" $ }}-runtime
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ .name }}
+          image: "{{ $.Values.global.imageRegistry }}/{{ .name }}:{{ $.Values.global.imageTag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ .port }}
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "{{ .port }}"
+            - name: OPENAEGIS_ENFORCE_MTLS
+              value: "{{ $.Values.global.enforceMtls }}"
+          resources:
+            {{- toYaml $.Values.global.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+{{- end }}

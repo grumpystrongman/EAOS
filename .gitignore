@@ -27,3 +27,5 @@ bin/
 output/playwright/*.log
 backups/
 docs/assets/evidence-packages/
+.tmp-test/
+frontend/apps/admin-console/.tmp-test/

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tool-execution-service
+  namespace: openaegis
+  labels:
+    app: tool-execution-service
+spec:
+  selector:
+    app: tool-execution-service
+  ports:
+    - name: http
+      port: 3007
+      targetPort: http

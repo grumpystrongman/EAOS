@@ -80,6 +80,7 @@ npm run typecheck
 npm run test
 npm run build
 npm run smoke:pilot
+npm run validate:test-surface
 ```
 
 Run pilot demo output:
@@ -102,6 +103,8 @@ Use these checks before a release candidate is promoted:
 npm run typecheck
 npm run build
 npm run test
+npm run validate:test-surface
+npm run validate:infra
 npm run smoke:pilot
 npm run proof:commercial
 npm run load:commercial
@@ -114,6 +117,8 @@ Expected pass results:
 - `npm run typecheck` exits 0
 - `npm run build` exits 0
 - `npm run test` exits 0
+- `npm run validate:test-surface` exits 0 and verifies every workspace has executable tests
+- `npm run validate:infra` exits 0 and validates Docker/Kubernetes/Helm packaging
 - `npm run smoke:pilot` exits 0 and refreshes the pilot evidence bundle
 - `npm run proof:commercial` exits 0 and writes `docs/assets/demo/commercial-proof-report.json`
 - `npm run load:commercial` exits 0 and writes `docs/assets/demo/load-test-report.json`
@@ -133,7 +138,9 @@ If any one of those checks fails, the release is a no-go.
 ## Documentation Map
 
 - [Platform blueprint](docs/openaegis-blueprint.md)
+- [MVP plan](docs/mvp-plan.md)
 - [Commercial readiness](docs/commercial/COMMERCIAL-READINESS.md)
+- [Why OpenAegis](docs/commercial/WHY-OPENAEGIS.md)
 - [Hospital production gate](docs/readiness/HOSPITAL-PRODUCTION-GATE.md)
 - [SRE runbook](docs/readiness/SRE-RUNBOOK.md)
 - [Hardening controls matrix](docs/security/HARDENING-CONTROLS-MATRIX.md)

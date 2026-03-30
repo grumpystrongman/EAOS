@@ -1,20 +1,51 @@
-image:
-  repository: ghcr.io/openaegis/api-gateway
-  tag: latest
+nameOverride: ""
+fullnameOverride: ""
 
-securityContext:
-  runAsNonRoot: true
-  readOnlyRootFilesystem: true
-  allowPrivilegeEscalation: false
+global:
+  imageRegistry: ghcr.io/grumpystrongman/openaegis
+  imageTag: latest
+  replicas: 2
+  enforceMtls: "true"
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
 
-resources:
-  requests:
-    cpu: 200m
-    memory: 256Mi
-  limits:
-    cpu: 1000m
-    memory: 1024Mi
-
-env:
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-  POLICY_DECISION_MODE: enforce
+services:
+  - name: api-gateway
+    port: 3000
+  - name: auth-service
+    port: 3001
+  - name: tenant-service
+    port: 3002
+  - name: policy-service
+    port: 3003
+  - name: workflow-orchestrator
+    port: 3004
+  - name: agent-registry
+    port: 3005
+  - name: tool-registry
+    port: 3006
+  - name: tool-execution-service
+    port: 3007
+  - name: model-broker
+    port: 3008
+  - name: context-retrieval-service
+    port: 3009
+  - name: classification-service
+    port: 3010
+  - name: approval-service
+    port: 3011
+  - name: audit-ledger
+    port: 3012
+  - name: notification-service
+    port: 3013
+  - name: secrets-broker
+    port: 3014
+  - name: observability-service
+    port: 3015
+  - name: kill-switch-service
+    port: 3016

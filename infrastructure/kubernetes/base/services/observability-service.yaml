@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: observability-service
+  namespace: openaegis
+  labels:
+    app: observability-service
+spec:
+  selector:
+    app: observability-service
+  ports:
+    - name: http
+      port: 3015
+      targetPort: http

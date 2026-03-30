@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: classification-service
+  namespace: openaegis
+  labels:
+    app: classification-service
+spec:
+  selector:
+    app: classification-service
+  ports:
+    - name: http
+      port: 3010
+      targetPort: http
