@@ -11,6 +11,7 @@ const commandPlan = [
   { id: "test", label: "Test", command: "run test", weight: 12, mandatory: true },
   { id: "test-surface", label: "Test Surface Validation", command: "run validate:test-surface", weight: 6, mandatory: true },
   { id: "infra", label: "Infra Validation", command: "run validate:infra", weight: 6, mandatory: true },
+  { id: "security-regression", label: "Security Regression", command: "run security:regression", weight: 8, mandatory: true },
   { id: "smoke", label: "Smoke Pilot", command: "run smoke:pilot", weight: 8, mandatory: true },
   { id: "proof", label: "Commercial Proof", command: "run proof:commercial", weight: 8, mandatory: true },
   { id: "trust-proof", label: "Trust Layer Proof", command: "run proof:trust-layer", weight: 8, mandatory: true },

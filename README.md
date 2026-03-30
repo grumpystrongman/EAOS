@@ -112,6 +112,7 @@ npm run test
 npm run build
 npm run smoke:pilot
 npm run validate:test-surface
+npm run security:regression
 npm run proof:trust-layer
 npm run audit:codebase
 npm run trust:pack
@@ -152,6 +153,7 @@ npm run build
 npm run test
 npm run validate:test-surface
 npm run validate:infra
+npm run security:regression
 npm run smoke:pilot
 npm run proof:commercial
 npm run proof:trust-layer
@@ -171,6 +173,7 @@ Expected pass results:
 - `npm run test` exits 0
 - `npm run validate:test-surface` exits 0 and verifies every workspace has executable tests
 - `npm run validate:infra` exits 0 and validates Docker/Kubernetes/Helm packaging
+- `npm run security:regression` exits 0 and writes `docs/assets/demo/security-regression-report.json`
 - `npm run smoke:pilot` exits 0 and refreshes the pilot evidence bundle
 - `npm run proof:commercial` exits 0 and writes `docs/assets/demo/commercial-proof-report.json`
 - `npm run proof:trust-layer` exits 0 and writes `docs/assets/demo/trust-layer-proof-report.json`

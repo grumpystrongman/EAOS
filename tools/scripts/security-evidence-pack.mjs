@@ -11,6 +11,7 @@ const requiredFiles = [
   "docs/assets/demo/readiness-gate-report.json",
   "docs/assets/demo/commercial-proof-report.json",
   "docs/assets/demo/trust-layer-proof-report.json",
+  "docs/assets/demo/security-regression-report.json",
   "docs/assets/demo/codebase-line-audit-report.json",
   "docs/assets/demo/commercial-audit-report.json",
   "docs/assets/demo/enterprise-trust-pack-audit-report.json",
@@ -59,6 +60,7 @@ const run = async () => {
   const readiness = JSON.parse(await readFile(resolve("docs/assets/demo/readiness-gate-report.json"), "utf8"));
   const trust = JSON.parse(await readFile(resolve("docs/assets/demo/trust-layer-proof-report.json"), "utf8"));
   const commercial = JSON.parse(await readFile(resolve("docs/assets/demo/commercial-proof-report.json"), "utf8"));
+  const securityRegression = JSON.parse(await readFile(resolve("docs/assets/demo/security-regression-report.json"), "utf8"));
   const kpis = JSON.parse(await readFile(resolve("docs/assets/demo/design-partner-kpis.json"), "utf8"));
   const trustPackAudit = JSON.parse(
     await readFile(resolve("docs/assets/demo/enterprise-trust-pack-audit-report.json"), "utf8")
@@ -73,6 +75,7 @@ const run = async () => {
     "## Executive Results",
     `- Readiness gate: ${readiness.summary?.status ?? "UNKNOWN"} (${readiness.summary?.scorePercent ?? 0}%)`,
     `- Trust proof: ${trust.summary?.status ?? "UNKNOWN"} (${trust.summary?.passedExamples ?? 0}/${trust.summary?.totalExamples ?? 0} examples passed)`,
+    `- Security regression: ${securityRegression.summary?.status ?? "UNKNOWN"} (${securityRegression.summary?.scorePercent ?? 0}%)`,
     `- Commercial proof: ${commercial.summary?.status ?? "UNKNOWN"} (${commercial.summary?.passedClaims ?? 0}/${commercial.summary?.totalClaims ?? 0} claims passed)`,
     `- Design partner KPI gate: ${kpis.summary?.status ?? "UNKNOWN"}`,
     `- Enterprise trust pack audit: ${trustPackAudit.summary?.status ?? "UNKNOWN"} (${trustPackAudit.summary?.scorePercent ?? 0}%)`,
@@ -101,6 +104,7 @@ const run = async () => {
     snapshot: {
       readiness: readiness.summary,
       trust: trust.summary,
+      securityRegression: securityRegression.summary,
       commercial: commercial.summary,
       designPartnerKpis: kpis.summary,
       enterpriseTrustPackAudit: trustPackAudit.summary

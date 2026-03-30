@@ -21,6 +21,7 @@ Generated outputs:
 
 - readiness gate results
 - trust-layer proof results
+- security regression results
 - codebase line-audit results
 - commercial proof and audit reports
 - load and chaos reports

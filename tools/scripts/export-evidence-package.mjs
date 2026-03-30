@@ -10,6 +10,7 @@ const requiredFiles = [
   "docs/assets/demo/trust-layer-proof-report.json",
   "docs/assets/demo/codebase-line-audit-report.json",
   "docs/assets/demo/commercial-audit-report.json",
+  "docs/assets/demo/security-regression-report.json",
   "docs/assets/demo/enterprise-trust-pack-audit-report.json",
   "docs/assets/demo/design-partner-kpis.json",
   "docs/assets/demo/load-test-report.json",

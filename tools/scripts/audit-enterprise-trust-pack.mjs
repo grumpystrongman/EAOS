@@ -8,7 +8,8 @@ const requiredPaths = [
   "docs/assets/enterprise-trust-pack/latest/compliance/CONTROL-CROSSWALK.json",
   "docs/assets/enterprise-trust-pack/latest/compliance/EXTERNAL-PENTEST-READY-CHECKLIST.md",
   "docs/assets/demo/readiness-gate-report.json",
-  "docs/assets/demo/commercial-audit-report.json"
+  "docs/assets/demo/commercial-audit-report.json",
+  "docs/assets/demo/security-regression-report.json"
 ];
 
 const readJson = async (path) => JSON.parse(await readFile(resolve(path), "utf8"));
@@ -34,6 +35,7 @@ const isReadinessPassOrInterim = (readiness) => {
     "test",
     "test-surface",
     "infra",
+    "security-regression",
     "smoke",
     "proof",
     "trust-proof",
@@ -73,6 +75,7 @@ const run = async () => {
   const crosswalk = await readJson("docs/assets/enterprise-trust-pack/latest/compliance/CONTROL-CROSSWALK.json").catch(() => null);
   const readiness = await readJson("docs/assets/demo/readiness-gate-report.json").catch(() => null);
   const commercialAudit = await readJson("docs/assets/demo/commercial-audit-report.json").catch(() => null);
+  const securityRegression = await readJson("docs/assets/demo/security-regression-report.json").catch(() => null);
 
   const checks = [
     {
@@ -122,6 +125,14 @@ const run = async () => {
       details: {
         status: commercialAudit?.summary?.status ?? "MISSING",
         scorePercent: Number(commercialAudit?.summary?.scorePercent ?? 0)
+      }
+    },
+    {
+      checkId: "security_regression_still_passed",
+      passed: String(securityRegression?.summary?.status ?? "FAIL") === "PASS",
+      details: {
+        status: securityRegression?.summary?.status ?? "MISSING",
+        scorePercent: Number(securityRegression?.summary?.scorePercent ?? 0)
       }
     }
   ];

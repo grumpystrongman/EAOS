@@ -35,6 +35,7 @@ Run these commands from repository root:
 npm run test
 npm run validate:test-surface
 npm run validate:infra
+npm run security:regression
 npm run smoke:pilot
 npm run proof:commercial
 npm run load:commercial
@@ -50,6 +51,7 @@ Expected results:
 
 - all commands exit `0`
 - `docs/assets/demo/commercial-proof-report.json` has `summary.status = PASS`
+- `docs/assets/demo/security-regression-report.json` has `summary.status = PASS`
 - `docs/assets/demo/codebase-line-audit-report.json` has `summary.status = PASS`
 - `docs/assets/demo/enterprise-trust-pack-audit-report.json` has `summary.status = PASS`
 - `docs/assets/demo/readiness-gate-report.json` has `summary.scorePercent >= 98`

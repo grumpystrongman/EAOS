@@ -54,6 +54,7 @@ Review these artifacts:
 
 - `docs/assets/demo/readiness-gate-report.json`
 - `docs/assets/demo/trust-layer-proof-report.json`
+- `docs/assets/demo/security-regression-report.json`
 - `docs/assets/demo/codebase-line-audit-report.json`
 - `docs/assets/demo/design-partner-kpis.json`
 - `docs/assets/demo/enterprise-trust-pack-audit-report.json`

@@ -36,6 +36,7 @@ Most products only solve part of this.
 | End-to-end hospital workflow remains operational | Proven now | smoke script output | Run `npm run smoke:pilot` |
 | Commercial scorecard and proof bundle export | Proven now | `docs/assets/demo/commercial-proof-report.json` | Run `npm run proof:commercial` |
 | Three distinct trust-layer examples pass end-to-end | Proven now | `docs/assets/demo/trust-layer-proof-report.json` | Run `npm run proof:trust-layer` |
+| Identity and tenant-scope regressions are continuously blocked | Proven now | `docs/assets/demo/security-regression-report.json` | Run `npm run security:regression` |
 | Codebase line audit reports zero skeleton markers across auditable code | Proven now | `docs/assets/demo/codebase-line-audit-report.json` | Run `npm run audit:codebase` |
 | Repository-level commercial audit has no placeholder gaps | Proven now | `docs/assets/demo/commercial-audit-report.json` | Run `npm run audit:commercial` |
 | Enterprise trust pack is framework-mapped and machine-audited | Proven now | `docs/assets/demo/enterprise-trust-pack-audit-report.json` | Run `npm run trust:pack && npm run trust:audit` |

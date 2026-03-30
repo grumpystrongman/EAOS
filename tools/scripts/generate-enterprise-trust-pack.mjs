@@ -18,6 +18,7 @@ const requiredFiles = [
   "docs/assets/demo/commercial-proof-report.json",
   "docs/assets/demo/trust-layer-proof-report.json",
   "docs/assets/demo/commercial-audit-report.json",
+  "docs/assets/demo/security-regression-report.json",
   "docs/assets/demo/codebase-line-audit-report.json",
   "docs/assets/demo/design-partner-kpis.json",
   "docs/assets/demo/chaos-report.json",
@@ -62,6 +63,7 @@ const run = async () => {
   const trust = JSON.parse(await readFile(resolve("docs/assets/demo/trust-layer-proof-report.json"), "utf8"));
   const codebaseAudit = JSON.parse(await readFile(resolve("docs/assets/demo/codebase-line-audit-report.json"), "utf8"));
   const commercialAudit = JSON.parse(await readFile(resolve("docs/assets/demo/commercial-audit-report.json"), "utf8"));
+  const securityRegression = JSON.parse(await readFile(resolve("docs/assets/demo/security-regression-report.json"), "utf8"));
   const kpis = JSON.parse(await readFile(resolve("docs/assets/demo/design-partner-kpis.json"), "utf8"));
 
   const frameworkSet = new Set(crosswalk.frameworks ?? []);
@@ -84,6 +86,7 @@ const run = async () => {
     "test",
     "test-surface",
     "infra",
+    "security-regression",
     "smoke",
     "proof",
     "trust-proof",
@@ -122,6 +125,7 @@ const run = async () => {
     readinessGateAccepted,
     String(commercial.summary?.status ?? "FAIL") === "PASS",
     String(trust.summary?.status ?? "FAIL") === "PASS",
+    String(securityRegression.summary?.status ?? "FAIL") === "PASS",
     String(codebaseAudit.summary?.status ?? "FAIL") === "PASS",
     String(commercialAudit.summary?.status ?? "FAIL") === "PASS",
     String(kpis.summary?.status ?? "FAIL") === "PASS",
@@ -153,6 +157,7 @@ const run = async () => {
     `- Readiness gate: ${readinessGateAccepted ? "PASS" : readiness.summary?.status ?? "UNKNOWN"} (${readinessScorePercent}%)`,
     `- Commercial proof: ${commercial.summary?.status ?? "UNKNOWN"} (${commercial.summary?.scorePercent ?? 0}%)`,
     `- Trust proof: ${trust.summary?.status ?? "UNKNOWN"} (${trust.summary?.passedExamples ?? 0}/${trust.summary?.totalExamples ?? 0} examples)`,
+    `- Security regression: ${securityRegression.summary?.status ?? "UNKNOWN"} (${securityRegression.summary?.scorePercent ?? 0}%)`,
     `- Codebase audit: ${codebaseAudit.summary?.status ?? "UNKNOWN"} (findings=${codebaseAudit.summary?.totalFindings ?? "n/a"})`,
     "",
     "## Compliance Mapping Snapshot",
