@@ -57,6 +57,7 @@ export const SecurityConsolePage = () => {
   const modelPreview = usePilotWorkspace((state) => state.modelPreview);
   const policySnapshot = usePilotWorkspace((state) => state.policySnapshot);
   const policyCopilot = usePilotWorkspace((state) => state.policyCopilot);
+  const policyImpactReview = usePilotWorkspace((state) => state.policyImpactReview);
   const auditEvents = usePilotWorkspace((state) => state.auditEvents);
   const approvals = usePilotWorkspace((state) => state.approvals);
   const incidents = usePilotWorkspace((state) => state.incidents);
@@ -64,6 +65,7 @@ export const SecurityConsolePage = () => {
   const refreshWorkspace = usePilotWorkspace((state) => state.refreshWorkspace);
   const previewPolicy = usePilotWorkspace((state) => state.previewPolicy);
   const reviewPolicyWithCopilot = usePilotWorkspace((state) => state.reviewPolicyWithCopilot);
+  const explainPolicy = usePilotWorkspace((state) => state.explainPolicy);
   const savePolicy = usePilotWorkspace((state) => state.savePolicy);
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
   const securitySession = usePilotWorkspace((state) => state.securitySession);
@@ -103,11 +105,26 @@ export const SecurityConsolePage = () => {
     }
   };
 
+  const runExplain = async () => {
+    setNotice(null);
+    const review = await explainPolicy(draftControls, operatorGoal, profileName);
+    if (review) {
+      setNotice(`Impact advisor updated (${review.advisor.source}).`);
+    }
+  };
+
   const applyCopilotSuggestion = () => {
     if (!policyCopilot) return;
     setDraftControls(policyCopilot.suggestedControls);
     setChangeSummary(policyCopilot.suggestedReason);
     setNotice("Copilot recommendation applied to the editor. Run preview before saving.");
+  };
+
+  const applyImpactAdvisorSuggestion = () => {
+    if (!policyImpactReview) return;
+    setDraftControls(policyImpactReview.advisor.suggestedControls);
+    setChangeSummary(policyImpactReview.advisor.suggestedReason);
+    setNotice("Impact advisor suggestion applied. Run preview and then apply policy.");
   };
 
   const applyPolicy = async () => {
@@ -214,6 +231,9 @@ export const SecurityConsolePage = () => {
               </button>
               <button type="button" onClick={() => void runCopilot()} disabled={isSyncing}>
                 Ask copilot
+              </button>
+              <button type="button" onClick={() => void runExplain()} disabled={isSyncing}>
+                Explain impact
               </button>
               <button type="button" className="primary" onClick={() => void applyPolicy()} disabled={isSyncing}>
                 Apply policy
@@ -334,6 +354,74 @@ export const SecurityConsolePage = () => {
       </section>
 
       <section className="split-grid">
+        <Panel
+          title="Plain-language impact advisor"
+          subtitle="Shows what changed, how risk moved, and the safest next action."
+          actions={
+            policyImpactReview ? (
+              <button type="button" className="primary" onClick={applyImpactAdvisorSuggestion}>
+                Apply advisor fix
+              </button>
+            ) : undefined
+          }
+        >
+          {policyImpactReview ? (
+            <div className="stack">
+              <KeyValueList
+                items={[
+                  { label: "Posture", value: policyImpactReview.explainability.posture },
+                  {
+                    label: "Risk score",
+                    value: `${policyImpactReview.explainability.riskScoreBefore} -> ${policyImpactReview.explainability.riskScoreAfter}`
+                  },
+                  { label: "Risk delta", value: policyImpactReview.explainability.riskDelta },
+                  { label: "Blocking issues", value: policyImpactReview.explainability.blockingIssueCount },
+                  { label: "Warnings", value: policyImpactReview.explainability.warningIssueCount },
+                  {
+                    label: "Break-glass required",
+                    value: policyImpactReview.explainability.requiresBreakGlass ? "yes" : "no"
+                  },
+                  { label: "Advisor source", value: policyImpactReview.advisor.source }
+                ]}
+              />
+              <p>{policyImpactReview.explainability.summary}</p>
+              <p>{policyImpactReview.advisor.riskNarrative}</p>
+              <div className="stack">
+                {policyImpactReview.explainability.controls.map((control) => (
+                  <article key={control.control} className="policy-impact-row">
+                    <div className="policy-impact-head">
+                      <strong>{control.label}</strong>
+                      <Badge
+                        tone={
+                          control.severity === "critical"
+                            ? "danger"
+                            : control.severity === "high"
+                              ? "warning"
+                              : "info"
+                        }
+                      >
+                        {control.severity}
+                      </Badge>
+                    </div>
+                    <p>{control.impact}</p>
+                    <div className="policy-foot">{control.recommendation}</div>
+                  </article>
+                ))}
+              </div>
+              <div className="stack">
+                {policyImpactReview.explainability.nextSteps.map((step) => (
+                  <div key={step} className="hint-row">
+                    <Badge tone="info">Next</Badge>
+                    <span>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="muted">Click Explain impact to get a plain-language safety analysis.</p>
+          )}
+        </Panel>
+
         <Panel
           title="LLM policy copilot"
           subtitle="Local model review explains risks and proposes safer settings."

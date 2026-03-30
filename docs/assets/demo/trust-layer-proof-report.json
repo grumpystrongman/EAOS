@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T18:02:52.975Z",
+  "generatedAt": "2026-03-30T18:45:58.181Z",
   "suite": "trust-layer-end-to-end-proof",
   "product": "OpenAegis",
   "endpoints": {
@@ -26,18 +26,18 @@
           "step": "start_live_execution",
           "expected": "blocked with approval requirement",
           "status": 201,
-          "latencyMs": 20,
+          "latencyMs": 22,
           "data": {
-            "executionId": "ex-mndhxc61-4qiu8d",
+            "executionId": "ex-mndjgqxb-l60eee",
             "executionStatus": "blocked",
-            "approvalId": "ap-mndhxc6e-7fxdtl"
+            "approvalId": "ap-mndjgqxo-xa74u6"
           }
         },
         {
           "step": "approve_high_risk_action",
           "expected": "approval decision accepted",
           "status": 200,
-          "latencyMs": 9,
+          "latencyMs": 8,
           "data": {
             "approvalStatus": "approved"
           }
@@ -46,7 +46,7 @@
           "step": "verify_execution_and_evidence",
           "expected": "completed execution with deterministic graph and audit evidence",
           "status": 200,
-          "latencyMs": 9,
+          "latencyMs": 8,
           "data": {
             "executionStatus": "completed",
             "graphStages": [
@@ -54,17 +54,17 @@
               "executor",
               "reviewer"
             ],
-            "evidenceId": "ev-ex-mndhxc61-4qiu8d",
+            "evidenceId": "ev-ex-mndjgqxb-l60eee",
             "auditEvents": 5
           }
         }
       ],
       "passed": true,
       "metrics": {
-        "approvalLatencyMs": 9,
+        "approvalLatencyMs": 8,
         "blockedRiskyActions": 1,
         "auditCompletenessPercent": 100,
-        "endToEndMs": 39
+        "endToEndMs": 38
       },
       "summary": "High-risk clinical flow was safely blocked, approved, completed, and fully auditable."
     },
@@ -96,7 +96,7 @@
           "step": "block_unapproved_finance_export",
           "expected": "runtime guard blocks outbound execution without approval",
           "status": 403,
-          "latencyMs": 8,
+          "latencyMs": 6,
           "data": {
             "guardReason": "approval_missing",
             "callStatus": "blocked"
@@ -108,8 +108,8 @@
           "status": 200,
           "latencyMs": 8,
           "data": {
-            "firstCallId": "tc-mndhxc7g-2dw79l",
-            "replayCallId": "tc-mndhxc7g-2dw79l",
+            "firstCallId": "tc-mndjgqym-u5ftfd",
+            "replayCallId": "tc-mndjgqym-u5ftfd",
             "replayed": true
           }
         },
@@ -133,7 +133,7 @@
         "approvalLatencyMs": null,
         "blockedRiskyActions": 1,
         "auditCompletenessPercent": 100,
-        "endToEndMs": 23
+        "endToEndMs": 21
       },
       "summary": "Finance automation stayed controlled: unsafe export blocked, retries idempotent, obligations attached."
     },
@@ -163,7 +163,7 @@
           "step": "allow_policy_change_with_dual_approval_break_glass",
           "expected": "200 response with breakGlassUsed=true",
           "status": 200,
-          "latencyMs": 5,
+          "latencyMs": 3,
           "data": {
             "breakGlassUsed": true,
             "profileVersion": 2
@@ -197,8 +197,8 @@
         "approvalLatencyMs": null,
         "blockedRiskyActions": 1,
         "auditCompletenessPercent": 100,
-        "containmentLatencyMs": 9,
-        "endToEndMs": 27
+        "containmentLatencyMs": 10,
+        "endToEndMs": 25
       },
       "summary": "SecOps controls validated: unsafe changes blocked, emergency path controlled, baseline restored."
     }
@@ -211,7 +211,7 @@
     "status": "PASS"
   },
   "kpis": {
-    "approvalLatencyMs": 9,
+    "approvalLatencyMs": 8,
     "blockedRiskyActions": 3,
     "auditCompletenessPercent": 100
   }

@@ -13,6 +13,7 @@ import {
   listAgentGraphDefinitions,
   listIncidents,
   loadState,
+  explainPolicyProfileChange,
   previewPolicyProfile,
   routeModel,
   savePolicyProfile,
@@ -213,6 +214,7 @@ const parseDraftControls = (body: JsonMap): Partial<PolicyProfileControls> => {
 };
 
 const readLocalPolicyCopilot = async (input: {
+  task: string;
   current: unknown;
   proposed: unknown;
   validation: unknown;
@@ -225,7 +227,7 @@ const readLocalPolicyCopilot = async (input: {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        task: "openaegis-policy-review",
+        task: input.task,
         input
       })
     });
@@ -533,6 +535,62 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     return;
   }
 
+  if (method === "POST" && pathname === "/v1/policies/profile/explain") {
+    const body = await readJson(request);
+    const operatorGoal = toString(body.operatorGoal, "Keep the policy secure and easy to operate.");
+    const current = await getPolicyProfileSnapshot();
+    const proposed = await previewPolicyProfile({
+      tenantId: toString(body.tenantId, "tenant-starlight-health"),
+      profileName: toString(body.profileName, current.profile.profileName),
+      draftControls: parseDraftControls(body)
+    });
+    const explainability = explainPolicyProfileChange(current.profile.controls, proposed.profile.controls);
+    const fallbackSuggestion = suggestPolicyAutofix(proposed.profile.controls, operatorGoal);
+    const localCopilot = await readLocalPolicyCopilot({
+      task: "openaegis-policy-impact-explain",
+      current,
+      proposed,
+      validation: proposed.validation,
+      operatorGoal
+    });
+
+    const localSuggestedControls =
+      typeof localCopilot?.suggestedControls === "object" && localCopilot.suggestedControls !== null
+        ? parseDraftControls({ controls: localCopilot.suggestedControls as Record<string, unknown> })
+        : undefined;
+
+    sendJson(response, 200, {
+      current,
+      proposed,
+      explainability,
+      advisor: {
+        source: localCopilot ? "local-llm" : "builtin",
+        summary:
+          typeof localCopilot?.summary === "string"
+            ? localCopilot.summary
+            : explainability.summary,
+        riskNarrative:
+          typeof localCopilot?.riskNarrative === "string"
+            ? localCopilot.riskNarrative
+            : fallbackSuggestion.riskNarrative,
+        hints:
+          Array.isArray(localCopilot?.hints) && localCopilot.hints.every((item) => typeof item === "string")
+            ? (localCopilot.hints as string[])
+            : fallbackSuggestion.hints,
+        suggestedControls: localSuggestedControls
+          ? { ...proposed.profile.controls, ...localSuggestedControls }
+          : fallbackSuggestion.suggestedControls,
+        suggestedReason:
+          typeof localCopilot?.suggestedReason === "string"
+            ? localCopilot.suggestedReason
+            : fallbackSuggestion.suggestedReason,
+        confidence:
+          typeof localCopilot?.confidence === "number" ? localCopilot.confidence : fallbackSuggestion.confidence
+      }
+    });
+    return;
+  }
+
   if (method === "POST" && pathname === "/v1/policies/profile/copilot") {
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure while reducing operator confusion.");
@@ -545,6 +603,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
     const fallbackSuggestion = suggestPolicyAutofix(preview.profile.controls, operatorGoal);
     const localCopilot = await readLocalPolicyCopilot({
+      task: "openaegis-policy-review",
       current,
       proposed: preview,
       validation: preview.validation,

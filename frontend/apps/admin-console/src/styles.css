@@ -970,6 +970,20 @@ button:hover.danger {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.policy-impact-row {
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(199, 210, 224, 0.9);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.policy-impact-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  align-items: flex-start;
+}
+
 .policy-issue-head {
   display: flex;
   justify-content: space-between;

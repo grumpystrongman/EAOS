@@ -38,9 +38,10 @@ Safe flow:
 
 1. Change controls.
 2. Run Preview Impact.
-3. Read warnings.
-4. Ask Copilot when needed.
-5. Apply policy.
+3. Run Explain Impact for plain-language risk delta and next steps.
+4. Read warnings.
+5. Ask Copilot when needed.
+6. Apply policy.
 
 Rules:
 

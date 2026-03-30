@@ -154,6 +154,31 @@ export interface PolicyCopilotSuggestion {
   confidence: number;
 }
 
+export interface PolicyControlImpact {
+  control: keyof PolicyProfileControls;
+  label: string;
+  changed: boolean;
+  beforeValue: boolean | number;
+  afterValue: boolean | number;
+  severity: "critical" | "high" | "medium" | "low";
+  impact: string;
+  recommendation: string;
+}
+
+export interface PolicyProfileExplainability {
+  generatedAt: string;
+  posture: "improved" | "degraded" | "unchanged";
+  riskScoreBefore: number;
+  riskScoreAfter: number;
+  riskDelta: number;
+  requiresBreakGlass: boolean;
+  blockingIssueCount: number;
+  warningIssueCount: number;
+  summary: string;
+  nextSteps: string[];
+  controls: PolicyControlImpact[];
+}
+
 export interface ToolCallRecord {
   toolCallId: string;
   executionId: string;
@@ -442,6 +467,53 @@ const defaultPolicyScenarios = (): PolicySimulationScenario[] => [
   }
 ];
 
+const booleanControlGuide: Record<
+  keyof Omit<PolicyProfileControls, "maxToolCallsPerExecution">,
+  {
+    label: string;
+    disableSeverity: "critical" | "high" | "medium";
+    disableImpact: string;
+    disableRecommendation: string;
+    enableImpact: string;
+  }
+> = {
+  enforceSecretDeny: {
+    label: "Always block SECRET data requests",
+    disableSeverity: "critical",
+    disableImpact: "Disabling this removes the hard stop for SECRET data and increases leak exposure immediately.",
+    disableRecommendation: "Keep this enabled. Use break-glass only for controlled tabletop drills.",
+    enableImpact: "SECRET requests remain blocked automatically."
+  },
+  requireZeroRetentionForPhi: {
+    label: "Require zero-retention for PHI/EPHI model calls",
+    disableSeverity: "critical",
+    disableImpact: "Disabling this allows PHI/EPHI requests without zero-retention safeguards.",
+    disableRecommendation: "Keep this enabled for regulated workloads.",
+    enableImpact: "PHI/EPHI requests require zero-retention routing."
+  },
+  requireApprovalForHighRiskLive: {
+    label: "Require human approval for high-risk live actions",
+    disableSeverity: "high",
+    disableImpact: "Disabling this allows high-risk live actions to run without a human checkpoint.",
+    disableRecommendation: "Keep enabled and tune workflows instead of bypassing approvals.",
+    enableImpact: "High-risk live actions remain approval-gated."
+  },
+  requireDlpOnOutbound: {
+    label: "Run DLP scan before outbound output",
+    disableSeverity: "high",
+    disableImpact: "Disabling this can allow sensitive output to leave without redaction checks.",
+    disableRecommendation: "Keep DLP enabled for all live outbound channels.",
+    enableImpact: "Outbound actions keep DLP checks before data leaves the platform."
+  },
+  restrictExternalProvidersToZeroRetention: {
+    label: "Route PHI/EPHI only to zero-retention providers",
+    disableSeverity: "medium",
+    disableImpact: "Disabling this can route sensitive traffic to providers with weaker retention posture.",
+    disableRecommendation: "Keep enabled unless workload is strictly non-sensitive.",
+    enableImpact: "Sensitive requests stay pinned to zero-retention provider routes."
+  }
+};
+
 const emptyState = (): PilotState => ({
   version: 1,
   users: defaultUsers,
@@ -717,6 +789,186 @@ export const suggestPolicyAutofix = (
     suggestedControls: fixed,
     suggestedReason: "Autofix hardened the policy profile to regulated-safe defaults while preserving operational usability.",
     confidence: 0.86
+  };
+};
+
+export const scorePolicyRisk = (controls: PolicyProfileControls): number => {
+  let risk = 0;
+  if (!controls.enforceSecretDeny) risk += 32;
+  if (!controls.requireZeroRetentionForPhi) risk += 28;
+  if (!controls.requireApprovalForHighRiskLive) risk += 14;
+  if (!controls.requireDlpOnOutbound) risk += 12;
+  if (!controls.restrictExternalProvidersToZeroRetention) risk += 10;
+  if (controls.maxToolCallsPerExecution > 12) {
+    risk += Math.min(16, (controls.maxToolCallsPerExecution - 12) * 2);
+  }
+  if (controls.maxToolCallsPerExecution < 3 || controls.maxToolCallsPerExecution > 20) {
+    risk += 22;
+  }
+  return Math.max(0, Math.min(100, Math.round(risk)));
+};
+
+const explainBooleanControlChange = (
+  control: keyof Omit<PolicyProfileControls, "maxToolCallsPerExecution">,
+  beforeValue: boolean,
+  afterValue: boolean
+): PolicyControlImpact => {
+  const guide = booleanControlGuide[control];
+  if (beforeValue === afterValue) {
+    return {
+      control,
+      label: guide.label,
+      changed: false,
+      beforeValue,
+      afterValue,
+      severity: "low",
+      impact: afterValue ? guide.enableImpact : guide.disableImpact,
+      recommendation: afterValue ? "No action required." : guide.disableRecommendation
+    };
+  }
+
+  if (!afterValue) {
+    return {
+      control,
+      label: guide.label,
+      changed: true,
+      beforeValue,
+      afterValue,
+      severity: guide.disableSeverity,
+      impact: guide.disableImpact,
+      recommendation: guide.disableRecommendation
+    };
+  }
+
+  return {
+    control,
+    label: guide.label,
+    changed: true,
+    beforeValue,
+    afterValue,
+    severity: "low",
+    impact: guide.enableImpact,
+    recommendation: "Keep this enabled and validate using simulation before go-live."
+  };
+};
+
+const explainToolBudgetChange = (beforeValue: number, afterValue: number): PolicyControlImpact => {
+  const changed = beforeValue !== afterValue;
+  if (!changed) {
+    return {
+      control: "maxToolCallsPerExecution",
+      label: "Max tool calls per execution",
+      changed: false,
+      beforeValue,
+      afterValue,
+      severity: afterValue > 12 ? "medium" : "low",
+      impact:
+        afterValue > 12
+          ? "Current budget is above the recommended regulated range and expands blast radius."
+          : "Current budget stays within recommended regulated range.",
+      recommendation: afterValue > 12 ? "Reduce to 12 or less when possible." : "No action required."
+    };
+  }
+
+  const delta = afterValue - beforeValue;
+  const severity: PolicyControlImpact["severity"] =
+    afterValue < 3 || afterValue > 20
+      ? "critical"
+      : afterValue > 12 && delta > 0
+        ? "high"
+        : delta > 0
+          ? "medium"
+          : "low";
+
+  const impact =
+    afterValue < 3 || afterValue > 20
+      ? "Tool budget is outside the allowed safe range (3-20)."
+      : delta > 0
+        ? `Tool budget increased by ${delta}, allowing larger execution surface per workflow.`
+        : `Tool budget reduced by ${Math.abs(delta)}, limiting possible execution blast radius.`;
+
+  const recommendation =
+    severity === "critical"
+      ? "Set maxToolCallsPerExecution between 3 and 20 before applying."
+      : afterValue > 12
+        ? "Prefer 6-12 for regulated workloads unless there is a documented exception."
+        : "Current setting is within recommended range.";
+
+  return {
+    control: "maxToolCallsPerExecution",
+    label: "Max tool calls per execution",
+    changed,
+    beforeValue,
+    afterValue,
+    severity,
+    impact,
+    recommendation
+  };
+};
+
+export const explainPolicyProfileChange = (
+  current: PolicyProfileControls,
+  proposed: PolicyProfileControls
+): PolicyProfileExplainability => {
+  const validation = evaluatePolicyProfileReadiness(proposed);
+  const riskScoreBefore = scorePolicyRisk(current);
+  const riskScoreAfter = scorePolicyRisk(proposed);
+  const riskDelta = riskScoreAfter - riskScoreBefore;
+  const posture =
+    riskDelta < 0 ? "improved" : riskDelta > 0 ? "degraded" : "unchanged";
+
+  const controls: PolicyControlImpact[] = [
+    explainBooleanControlChange("enforceSecretDeny", current.enforceSecretDeny, proposed.enforceSecretDeny),
+    explainBooleanControlChange(
+      "requireZeroRetentionForPhi",
+      current.requireZeroRetentionForPhi,
+      proposed.requireZeroRetentionForPhi
+    ),
+    explainBooleanControlChange(
+      "requireApprovalForHighRiskLive",
+      current.requireApprovalForHighRiskLive,
+      proposed.requireApprovalForHighRiskLive
+    ),
+    explainBooleanControlChange("requireDlpOnOutbound", current.requireDlpOnOutbound, proposed.requireDlpOnOutbound),
+    explainBooleanControlChange(
+      "restrictExternalProvidersToZeroRetention",
+      current.restrictExternalProvidersToZeroRetention,
+      proposed.restrictExternalProvidersToZeroRetention
+    ),
+    explainToolBudgetChange(current.maxToolCallsPerExecution, proposed.maxToolCallsPerExecution)
+  ];
+
+  const blockingIssueCount = validation.issues.filter((issue) => issue.severity === "blocking").length;
+  const warningIssueCount = validation.issues.filter((issue) => issue.severity === "warning").length;
+  const requiresBreakGlass = blockingIssueCount > 0;
+
+  const summary =
+    posture === "improved"
+      ? "This change reduces risk posture. Verify warnings, then apply."
+      : posture === "degraded"
+        ? "This change weakens safeguards. Review impact and justify before applying."
+        : "This change keeps overall risk posture stable. Confirm individual control impacts.";
+
+  const nextSteps = [
+    "Run policy preview and confirm blocking issues are zero.",
+    "If safeguards were weakened, run copilot review and inspect recommended fixes.",
+    requiresBreakGlass
+      ? "Break-glass is required: provide ticket ID, justification, and two approvers."
+      : "Apply policy and monitor blocked events for the first 24 hours."
+  ];
+
+  return {
+    generatedAt: now(),
+    posture,
+    riskScoreBefore,
+    riskScoreAfter,
+    riskDelta,
+    requiresBreakGlass,
+    blockingIssueCount,
+    warningIssueCount,
+    summary,
+    nextSteps,
+    controls
   };
 };
 

@@ -1,6 +1,6 @@
 {
-  "packageId": "2026-03-30T18-02-54-200Z",
-  "generatedAt": "2026-03-30T18:02:54.255Z",
+  "packageId": "2026-03-30T18-45-59-469Z",
+  "generatedAt": "2026-03-30T18:45:59.541Z",
   "requiredFiles": [
     "docs/compliance/CONTROL-CROSSWALK.json",
     "docs/compliance/ENTERPRISE-TRUST-PACK.md",
@@ -67,42 +67,42 @@
     },
     {
       "file": "docs/assets/demo/readiness-gate-report.json",
-      "sha256": "b51d6719a4c245a59786e488f78f387339f743b0d39263e72aaeba408b9b4379",
-      "sizeBytes": 42843
+      "sha256": "535b6e7dac2e213293f035db338368b551f340ec4c34f3f37b5643514f6c4d9a",
+      "sizeBytes": 46843
     },
     {
       "file": "docs/assets/demo/commercial-proof-report.json",
-      "sha256": "33403c9bf5646ceae0857e9479bd6a5bd4fd18e820983aefbf2542c2256cc10e",
+      "sha256": "f130ad2e4276d80aae306b75eb59c1f63faa8fb7cedcfd86f17b67cefcacb119",
       "sizeBytes": 7607
     },
     {
       "file": "docs/assets/demo/trust-layer-proof-report.json",
-      "sha256": "5767a8cc4ca16fc352aa6585296bdc74f401df7ca52625fa88099d9dc636bcd3",
-      "sizeBytes": 6959
+      "sha256": "6072d0c01e76ae6fcaf8e6c1fd04f003dacef6dd3f2cbae39af56fa4010775b9",
+      "sizeBytes": 6960
     },
     {
       "file": "docs/assets/demo/commercial-audit-report.json",
-      "sha256": "c2f84e883acc96d20118c3e78e9ee8d94edc0c917144c36dfe49b81e787737e0",
-      "sizeBytes": 1153
+      "sha256": "9228ad8d1c91c14a65eb3bfc0e4e13ad776bcdbb631904e9fdaa7a33debbbbd6",
+      "sizeBytes": 1351
     },
     {
       "file": "docs/assets/demo/codebase-line-audit-report.json",
-      "sha256": "554e31822180df9a936b04186faaa04a223a85ada9981fbb1a28196786fabb4c",
+      "sha256": "d7879d5fe89c8ff487cc2ae08635184de593be458c636d0963daa372b2dcfdd3",
       "sizeBytes": 383
     },
     {
       "file": "docs/assets/demo/design-partner-kpis.json",
-      "sha256": "5703e34678c0b755da1b7ee1449eb5ef0777ee976c1b61b1dcecb77a7a65a8ff",
-      "sizeBytes": 1389
+      "sha256": "51b6103f334e914eb2263056eed7bd57fc110d8381f36cb0d45ea88dc21fb5c3",
+      "sizeBytes": 1388
     },
     {
       "file": "docs/assets/demo/chaos-report.json",
-      "sha256": "bfac4b55fdaeacecccdae5cc42ca2ef47aa41b42c21124d2f6fe986a81ddf7ee",
+      "sha256": "92a43e3c136ddd91d76934e1b1c214f9807c99b571b3443fb313d997cbb8d99d",
       "sizeBytes": 3878
     },
     {
       "file": "docs/assets/demo/load-test-report.json",
-      "sha256": "74c78cec703aca0b4b88df35730bfea51a26c343ab5bb7ef76db496b0493fe3e",
+      "sha256": "82da3590af4ffedb7d290c6cb032f4cf41dbc96caf2376a6e092f15a885f968d",
       "sizeBytes": 599
     }
   ],

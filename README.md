@@ -32,9 +32,10 @@ OpenAegis now includes a guided **Policy Studio** in the Security Console.
 
 1. Edit beginner-safe controls with plain-language explanations.
 2. Run **Preview Impact** to see `ALLOW / REQUIRE_APPROVAL / DENY` changes.
-3. Review warnings before saving.
-4. Use **LLM Copilot** to review and suggest safer settings.
-5. Apply the policy profile (break-glass fields are required for blocking-risk changes).
+3. Run **Explain Impact** to see risk score delta and per-control safety guidance.
+4. Review warnings before saving.
+5. Use **LLM Copilot** to review and suggest safer settings.
+6. Apply the policy profile (break-glass fields are required for blocking-risk changes).
 
 See detailed guide: [docs/policy-studio.md](docs/policy-studio.md)
 
@@ -72,6 +73,7 @@ The included pilot demonstrates a **Hospital Discharge Readiness Assistant**:
 | Policy gates enforced outside model | `backend/services/api-gateway/src/index.test.ts` |
 | High-risk live approval gating | `backend/services/api-gateway/src/index.test.ts` |
 | Break-glass required for blocking policy downgrades | `backend/services/api-gateway/src/index.test.ts` |
+| Policy impact explainability and advisor fix path | `/v1/policies/profile/explain` + Security Console |
 | Copilot guidance for policy edits | `/v1/policies/profile/copilot` + Security Console |
 | End-to-end pilot still operational | `npm run smoke:pilot` |
 | Commercial evidence output | `docs/assets/demo/commercial-proof-report.json` |

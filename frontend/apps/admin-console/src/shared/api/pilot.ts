@@ -211,6 +211,48 @@ export interface PolicyCopilotReview {
   previewValidation: PolicyValidationResult;
 }
 
+export interface PolicyControlImpact {
+  control: keyof PolicyProfileControls;
+  label: string;
+  changed: boolean;
+  beforeValue: boolean | number;
+  afterValue: boolean | number;
+  severity: "critical" | "high" | "medium" | "low";
+  impact: string;
+  recommendation: string;
+}
+
+export interface PolicyProfileExplainability {
+  generatedAt: string;
+  posture: "improved" | "degraded" | "unchanged";
+  riskScoreBefore: number;
+  riskScoreAfter: number;
+  riskDelta: number;
+  requiresBreakGlass: boolean;
+  blockingIssueCount: number;
+  warningIssueCount: number;
+  summary: string;
+  nextSteps: string[];
+  controls: PolicyControlImpact[];
+}
+
+export interface PolicyImpactAdvisor {
+  source: "local-llm" | "builtin";
+  summary: string;
+  riskNarrative: string;
+  hints: string[];
+  suggestedControls: PolicyProfileControls;
+  suggestedReason: string;
+  confidence: number;
+}
+
+export interface PolicyImpactReview {
+  current: PolicyProfileSnapshot;
+  proposed: PolicyProfileSnapshot;
+  explainability: PolicyProfileExplainability;
+  advisor: PolicyImpactAdvisor;
+}
+
 export interface CommercialClaimsSnapshot {
   generatedAt: string;
   executionTotals: {
@@ -296,6 +338,10 @@ export const pilotApi = {
     token: string,
     payload: { operatorGoal: string; profileName?: string; controls: Partial<PolicyProfileControls> }
   ) => jsonRequest<PolicyCopilotReview>("/v1/policies/profile/copilot", "POST", token, payload),
+  explainPolicyProfile: (
+    token: string,
+    payload: { operatorGoal?: string; profileName?: string; controls: Partial<PolicyProfileControls> }
+  ) => jsonRequest<PolicyImpactReview>("/v1/policies/profile/explain", "POST", token, payload),
   savePolicyProfile: (
     token: string,
     payload: {

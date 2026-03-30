@@ -446,6 +446,54 @@ test("policy copilot endpoint returns actionable guidance", async () => {
   assert.equal(body.suggestedControls.requireApprovalForHighRiskLive, true);
 });
 
+test("policy explain endpoint returns plain-language impact and safe advisor output", async () => {
+  const login = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
+  });
+  const authBody = (await login.json()) as { accessToken: string };
+
+  const response = await fetch(`${baseUrl}/v1/policies/profile/explain`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${authBody.accessToken}`
+    },
+    body: JSON.stringify({
+      operatorGoal: "Make this easy for new staff but keep strict safety controls.",
+      controls: {
+        requireApprovalForHighRiskLive: false,
+        maxToolCallsPerExecution: 16
+      }
+    })
+  });
+
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    explainability: {
+      posture: "improved" | "degraded" | "unchanged";
+      riskDelta: number;
+      controls: Array<{ control: string; changed: boolean }>;
+      nextSteps: string[];
+    };
+    advisor: {
+      source: "local-llm" | "builtin";
+      confidence: number;
+      hints: string[];
+      suggestedControls: { requireApprovalForHighRiskLive: boolean };
+    };
+  };
+  assert.equal(body.explainability.posture, "degraded");
+  assert.ok(body.explainability.riskDelta > 0);
+  assert.ok(body.explainability.controls.some((item) => item.control === "requireApprovalForHighRiskLive" && item.changed));
+  assert.ok(body.explainability.nextSteps.length >= 3);
+  assert.ok(body.advisor.source === "builtin" || body.advisor.source === "local-llm");
+  assert.ok(body.advisor.hints.length >= 2);
+  assert.ok(body.advisor.confidence > 0);
+  assert.equal(body.advisor.suggestedControls.requireApprovalForHighRiskLive, true);
+});
+
 test("rejects oversized payloads", async () => {
   const login = await fetch(`${baseUrl}/v1/auth/login`, {
     method: "POST",

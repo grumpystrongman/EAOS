@@ -35,9 +35,10 @@ Each control in the UI includes:
 
 1. Update one or more controls.
 2. Click **Preview impact**.
-3. Read blocking issues and warnings.
-4. Optional: click **Ask copilot** for plain-language feedback and a safer suggestion.
-5. Click **Apply policy**.
+3. Click **Explain impact** to get a risk score delta, control-by-control impact, and next steps.
+4. Read blocking issues and warnings.
+5. Optional: click **Ask copilot** for plain-language feedback and a safer suggestion.
+6. Click **Apply policy**.
 
 ## Understanding Warnings
 
@@ -69,10 +70,23 @@ Copilot source is either:
 - `local-llm` when `OPENAEGIS_LOCAL_LLM_ENDPOINT` is configured
 - `builtin` fallback logic when local LLM is unavailable
 
+## Impact Advisor Behavior
+
+**Explain impact** returns:
+
+- posture (`improved`, `degraded`, `unchanged`)
+- risk score before and after
+- per-control impact and severity
+- whether break-glass is required
+- concrete next steps for operators
+
+You can apply the advisor's suggested controls directly from the UI.
+
 ## API Endpoints (for automation)
 
 - `GET /v1/policies/profile`
 - `POST /v1/policies/profile/preview`
+- `POST /v1/policies/profile/explain`
 - `POST /v1/policies/profile/copilot`
 - `POST /v1/policies/profile/save`
 

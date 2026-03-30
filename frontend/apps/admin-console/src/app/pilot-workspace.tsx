@@ -12,7 +12,8 @@ import {
   type ModelRoutePreview,
   type PolicyCopilotReview,
   type PolicyProfileControls,
-  type PolicyProfileSnapshot
+  type PolicyProfileSnapshot,
+  type PolicyImpactReview
 } from "../shared/api/pilot.js";
 import { DEMO_PERSONAS, PILOT_USE_CASE, AGENT_BLUEPRINTS, CONNECTOR_BLUEPRINTS, EXECUTIVE_KPIS, POLICY_BLUEPRINTS, WORKFLOW_BLUEPRINTS } from "./pilot-data.js";
 
@@ -49,6 +50,7 @@ interface WorkspaceState {
   commercialReadiness?: CommercialReadinessSnapshot;
   policySnapshot?: PolicyProfileSnapshot;
   policyCopilot?: PolicyCopilotReview;
+  policyImpactReview?: PolicyImpactReview;
   modelPreview?: { selected: ModelRoutePreview; fallback: ModelRoutePreview[] };
   lastSyncedAt?: string;
   isBootstrapping: boolean;
@@ -63,6 +65,7 @@ interface WorkspaceActions {
   decideApproval: (approvalId: string, decision: Decision, reason: string) => Promise<ApprovalRecord | null>;
   previewPolicy: (controls: Partial<PolicyProfileControls>, profileName?: string) => Promise<PolicyProfileSnapshot | null>;
   reviewPolicyWithCopilot: (controls: Partial<PolicyProfileControls>, operatorGoal: string, profileName?: string) => Promise<PolicyCopilotReview | null>;
+  explainPolicy: (controls: Partial<PolicyProfileControls>, operatorGoal?: string, profileName?: string) => Promise<PolicyImpactReview | null>;
   savePolicy: (payload: {
     controls: Partial<PolicyProfileControls>;
     changeSummary: string;
@@ -372,6 +375,29 @@ export const usePilotWorkspace = create<PilotWorkspace>()(
           return review;
         } catch (error) {
           set({ error: error instanceof Error ? error.message : "policy_copilot_failed" });
+          return null;
+        } finally {
+          set({ isSyncing: false });
+        }
+      },
+      explainPolicy: async (controls, operatorGoal, profileName) => {
+        const token = get().securitySession?.accessToken ?? get().clinicianSession?.accessToken;
+        if (!token) {
+          set({ error: "security_session_required" });
+          return null;
+        }
+
+        set({ isSyncing: true, error: undefined });
+        try {
+          const review = await pilotApi.explainPolicyProfile(token, {
+            controls,
+            ...(operatorGoal ? { operatorGoal } : {}),
+            ...(profileName ? { profileName } : {})
+          });
+          set({ policyImpactReview: review, policySnapshot: review.proposed });
+          return review;
+        } catch (error) {
+          set({ error: error instanceof Error ? error.message : "policy_explain_failed" });
           return null;
         } finally {
           set({ isSyncing: false });

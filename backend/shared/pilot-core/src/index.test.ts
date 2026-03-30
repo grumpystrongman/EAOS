@@ -4,9 +4,11 @@ import { beforeEach, test } from "node:test";
 import {
   defaultPolicyControls,
   evaluatePolicy,
+  explainPolicyProfileChange,
   evaluatePolicyProfileReadiness,
   resolveApprovalAndAdvanceExecution,
   savePolicyProfile,
+  scorePolicyRisk,
   startDischargeAssistantExecution
 } from "./index.js";
 
@@ -59,6 +61,26 @@ test("evaluatePolicyProfileReadiness flags blocking and warning issues", () => {
   assert.ok(readiness.issues.some((issue) => issue.code === "zero_retention_phi_disabled"));
   assert.ok(readiness.issues.some((issue) => issue.code === "tool_budget_high"));
   assert.ok(readiness.simulation.warnings.length > 0);
+});
+
+test("explainPolicyProfileChange returns posture and control-level guidance", () => {
+  const current = defaultPolicyControls();
+  const proposed = {
+    ...current,
+    requireApprovalForHighRiskLive: false,
+    maxToolCallsPerExecution: 16
+  };
+
+  const explain = explainPolicyProfileChange(current, proposed);
+  assert.equal(explain.posture, "degraded");
+  assert.ok(explain.riskScoreAfter > explain.riskScoreBefore);
+  assert.ok(explain.warningIssueCount >= 2);
+  assert.ok(explain.controls.some((item) => item.control === "requireApprovalForHighRiskLive" && item.changed));
+  assert.ok(explain.controls.some((item) => item.control === "maxToolCallsPerExecution" && item.severity !== "low"));
+
+  const currentScore = scorePolicyRisk(current);
+  const proposedScore = scorePolicyRisk(proposed);
+  assert.ok(proposedScore > currentScore);
 });
 
 test("savePolicyProfile requires security role and break-glass for blocking profile", async () => {
