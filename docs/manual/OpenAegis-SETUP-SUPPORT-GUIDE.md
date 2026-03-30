@@ -39,8 +39,9 @@ Open `http://127.0.0.1:4273`.
 2. Open Security Console.
 3. Change one policy control.
 4. Click Preview impact.
-5. Click Ask copilot.
-6. Apply policy.
+5. Click Explain impact.
+6. Click Ask copilot.
+7. Apply policy.
 
 Expected behavior:
 
@@ -61,7 +62,24 @@ PORT=4300 node tools/scripts/run-gateway.mjs
 
 If not set, copilot uses built-in fallback logic.
 
-## 6. Generate Demo Artifacts
+## 6. Optional OIDC Introspection Hardening
+
+For enterprise SSO-style token validation at the gateway:
+
+```powershell
+$env:OPENAEGIS_AUTH_INTROSPECTION_URL = "http://127.0.0.1:3001/v1/auth/introspect"
+$env:OPENAEGIS_REQUIRE_INTROSPECTION = "true"
+$env:OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID = "service-gateway"
+$env:OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID = "tenant-platform"
+PORT=4300 node tools/scripts/run-gateway.mjs
+```
+
+When enabled:
+
+- non-demo bearer tokens are validated via introspection
+- tenant claims are enforced on write paths
+- cross-tenant writes return `tenant_scope_mismatch`
+## 7. Generate Demo Artifacts
 
 ```bash
 node tools/scripts/pilot-demo.mjs
@@ -74,7 +92,7 @@ Artifacts:
 - `docs/assets/demo/commercial-proof-report.json`
 - `docs/assets/screenshots/commercial-*.png`
 
-## 7. Common Issues
+## 8. Common Issues
 
 ### Browser shows `Failed to fetch`
 
@@ -107,7 +125,7 @@ git remote -v
 git remote add origin <repository-url>
 ```
 
-## 8. Support Escalation Template
+## 9. Support Escalation Template
 
 Include:
 

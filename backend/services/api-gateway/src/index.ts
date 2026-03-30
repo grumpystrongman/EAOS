@@ -172,15 +172,105 @@ const readJson = async (request: IncomingMessage, maxBytes = 1024 * 1024): Promi
   }
 };
 
-const getActorFromAuthHeader = (request: IncomingMessage): string | undefined => {
+interface AuthSession {
+  actorId: string;
+  tenantId?: string;
+  roles: string[];
+  assuranceLevel?: "aal1" | "aal2" | "aal3";
+  source: "demo" | "introspection";
+}
+
+const getBearerToken = (request: IncomingMessage): string | undefined => {
   const header = request.headers.authorization;
-  if (!header) return undefined;
+  if (typeof header !== "string") return undefined;
   const parts = header.split(" ");
   if (parts.length !== 2) return undefined;
   const token = parts[1];
-  if (!token) return undefined;
+  return typeof token === "string" && token.length > 0 ? token : undefined;
+};
+
+const parseDemoSession = (token: string): AuthSession | undefined => {
   if (!token.startsWith("demo-token-")) return undefined;
-  return token.replace("demo-token-", "");
+  const actorId = token.replace("demo-token-", "");
+  if (actorId.length === 0) return undefined;
+  return {
+    actorId,
+    roles: [],
+    source: "demo"
+  };
+};
+
+const introspectAuthToken = async (token: string): Promise<AuthSession | undefined> => {
+  const endpoint = process.env.OPENAEGIS_AUTH_INTROSPECTION_URL;
+  if (!endpoint) return undefined;
+
+  const timeoutMs = Math.max(500, Number(process.env.OPENAEGIS_AUTH_INTROSPECTION_TIMEOUT_MS ?? 2000));
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-actor-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID ?? "service-gateway",
+        "x-tenant-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID ?? "tenant-platform"
+      },
+      body: JSON.stringify({ token }),
+      signal: controller.signal
+    });
+    if (!response.ok) return undefined;
+    const body = (await response.json()) as {
+      active?: boolean;
+      sub?: unknown;
+      tenantId?: unknown;
+      roles?: unknown;
+      assuranceLevel?: unknown;
+    };
+    if (body.active !== true || typeof body.sub !== "string" || body.sub.trim().length === 0) return undefined;
+    const roles = Array.isArray(body.roles)
+      ? body.roles.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+      : [];
+    const tenantId = typeof body.tenantId === "string" && body.tenantId.trim().length > 0 ? body.tenantId : undefined;
+    const assuranceLevel =
+      body.assuranceLevel === "aal1" || body.assuranceLevel === "aal2" || body.assuranceLevel === "aal3"
+        ? body.assuranceLevel
+        : undefined;
+    return {
+      actorId: body.sub,
+      roles,
+      source: "introspection",
+      ...(tenantId ? { tenantId } : {}),
+      ...(assuranceLevel ? { assuranceLevel } : {})
+    };
+  } catch {
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
+const resolveAuthSession = async (request: IncomingMessage): Promise<AuthSession | undefined> => {
+  const token = getBearerToken(request);
+  if (!token) return undefined;
+  const introspectionRequired = process.env.OPENAEGIS_REQUIRE_INTROSPECTION === "true";
+
+  const demo = parseDemoSession(token);
+  if (demo && !introspectionRequired) return demo;
+
+  const introspected = await introspectAuthToken(token);
+  if (introspected) return introspected;
+
+  return demo && introspectionRequired ? undefined : demo;
+};
+
+const resolveTenantOrReject = (
+  auth: AuthSession,
+  requestedTenant: string
+): { allowed: true; tenantId: string } | { allowed: false } => {
+  if (!auth.tenantId || auth.tenantId === requestedTenant || auth.roles.includes("platform_admin")) {
+    return { allowed: true, tenantId: requestedTenant };
+  }
+  return { allowed: false };
 };
 
 const toString = (value: unknown, fallback: string): string =>
@@ -508,11 +598,12 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     return;
   }
 
-  const actorId = getActorFromAuthHeader(request);
-  if (!actorId) {
+  const authSession = await resolveAuthSession(request);
+  if (!authSession) {
     sendJson(response, 401, { error: "missing_or_invalid_auth_token" });
     return;
   }
+  const actorId = authSession.actorId;
 
   if (method === "GET" && pathname === "/v1/commercial/claims") {
     sendJson(response, 200, await buildCommercialClaims());
@@ -526,8 +617,14 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/policies/profile/preview") {
     const body = await readJson(request);
+    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const preview = await previewPolicyProfile({
-      tenantId: toString(body.tenantId, "tenant-starlight-health"),
+      tenantId: tenantScope.tenantId,
       profileName: toString(body.profileName, "Hospital Safe Baseline"),
       draftControls: parseDraftControls(body)
     });
@@ -538,9 +635,15 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   if (method === "POST" && pathname === "/v1/policies/profile/explain") {
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure and easy to operate.");
+    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const current = await getPolicyProfileSnapshot();
     const proposed = await previewPolicyProfile({
-      tenantId: toString(body.tenantId, "tenant-starlight-health"),
+      tenantId: tenantScope.tenantId,
       profileName: toString(body.profileName, current.profile.profileName),
       draftControls: parseDraftControls(body)
     });
@@ -594,9 +697,15 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   if (method === "POST" && pathname === "/v1/policies/profile/copilot") {
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure while reducing operator confusion.");
+    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const current = await getPolicyProfileSnapshot();
     const preview = await previewPolicyProfile({
-      tenantId: toString(body.tenantId, "tenant-starlight-health"),
+      tenantId: tenantScope.tenantId,
       profileName: toString(body.profileName, current.profile.profileName),
       draftControls: parseDraftControls(body)
     });
@@ -643,13 +752,19 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/policies/profile/save") {
     const body = await readJson(request);
+    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const breakGlassRaw =
       typeof body.breakGlass === "object" && body.breakGlass !== null
         ? (body.breakGlass as Record<string, unknown>)
         : undefined;
     const result = await savePolicyProfile({
       actorId,
-      tenantId: toString(body.tenantId, "tenant-starlight-health"),
+      tenantId: tenantScope.tenantId,
       profileName: toString(body.profileName, "Hospital Safe Baseline"),
       changeSummary: toString(body.changeSummary, "Policy profile updated from Security Console."),
       draftControls: parseDraftControls(body),
@@ -688,9 +803,15 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/approvals") {
     const body = await readJson(request);
+    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const state = await loadState();
     const approval = createApproval({
-      tenantId: typeof body.tenantId === "string" ? body.tenantId : "tenant-starlight-health",
+      tenantId: tenantScope.tenantId,
       requestedBy: actorId,
       reason: typeof body.reason === "string" ? body.reason : "manual_approval",
       riskLevel: (body.riskLevel as "high" | "critical") ?? "high",
@@ -798,12 +919,18 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/executions") {
     const body = await readJson(request);
+    const requestedTenant = typeof body.tenantId === "string" ? body.tenantId : "tenant-starlight-health";
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
     const result = await createExecution({
       actorId,
       patientId: typeof body.patientId === "string" ? body.patientId : "patient-1001",
       mode: (body.mode as PilotMode) ?? "simulation",
       workflowId: typeof body.workflowId === "string" ? body.workflowId : "wf-discharge-assistant",
-      tenantId: typeof body.tenantId === "string" ? body.tenantId : "tenant-starlight-health",
+      tenantId: tenantScope.tenantId,
       requestFollowupEmail: body.requestFollowupEmail !== false,
       ...(typeof body.classification === "string" ? { classification: body.classification } : {}),
       ...(typeof body.zeroRetentionRequested === "boolean" ? { zeroRetentionRequested: body.zeroRetentionRequested } : {})

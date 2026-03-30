@@ -2,6 +2,7 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { rm } from "node:fs/promises";
 import { once } from "node:events";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createAppServer } from "./index.js";
 
 const baseUrl = "http://127.0.0.1:3900";
@@ -492,6 +493,92 @@ test("policy explain endpoint returns plain-language impact and safe advisor out
   assert.ok(body.advisor.hints.length >= 2);
   assert.ok(body.advisor.confidence > 0);
   assert.equal(body.advisor.suggestedControls.requireApprovalForHighRiskLive, true);
+});
+
+test("gateway supports auth-service token introspection and enforces tenant scope", async () => {
+  const introspectionServer = createServer(async (request: IncomingMessage, response: ServerResponse) => {
+    if (request.method !== "POST" || request.url !== "/v1/auth/introspect") {
+      response.writeHead(404).end();
+      return;
+    }
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of request) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const payload = JSON.parse(Buffer.concat(chunks).toString("utf8")) as { token?: string };
+
+    if (payload.token === "oidc-security-good") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          active: true,
+          sub: "user-security",
+          tenantId: "tenant-starlight-health",
+          roles: ["security_admin", "platform_admin"],
+          assuranceLevel: "aal3"
+        })
+      );
+      return;
+    }
+
+    if (payload.token === "oidc-cross-tenant") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        JSON.stringify({
+          active: true,
+          sub: "user-security",
+          tenantId: "tenant-other",
+          roles: ["security_admin"],
+          assuranceLevel: "aal3"
+        })
+      );
+      return;
+    }
+
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ active: false }));
+  });
+
+  introspectionServer.listen(3912);
+  await once(introspectionServer, "listening");
+
+  process.env.OPENAEGIS_AUTH_INTROSPECTION_URL = "http://127.0.0.1:3912/v1/auth/introspect";
+  process.env.OPENAEGIS_REQUIRE_INTROSPECTION = "true";
+
+  try {
+    const authorized = await fetch(`${baseUrl}/v1/policies/profile`, {
+      headers: { authorization: "Bearer oidc-security-good" }
+    });
+    assert.equal(authorized.status, 200);
+
+    const crossTenantDenied = await fetch(`${baseUrl}/v1/executions`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: "Bearer oidc-cross-tenant"
+      },
+      body: JSON.stringify({
+        mode: "simulation",
+        workflowId: "wf-discharge-assistant",
+        patientId: "patient-1001",
+        tenantId: "tenant-starlight-health"
+      })
+    });
+    assert.equal(crossTenantDenied.status, 403);
+    const crossBody = (await crossTenantDenied.json()) as { error: string };
+    assert.equal(crossBody.error, "tenant_scope_mismatch");
+
+    const inactive = await fetch(`${baseUrl}/v1/policies/profile`, {
+      headers: { authorization: "Bearer unknown-token" }
+    });
+    assert.equal(inactive.status, 401);
+  } finally {
+    delete process.env.OPENAEGIS_AUTH_INTROSPECTION_URL;
+    delete process.env.OPENAEGIS_REQUIRE_INTROSPECTION;
+    introspectionServer.close();
+    await once(introspectionServer, "close");
+  }
 });
 
 test("rejects oversized payloads", async () => {

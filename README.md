@@ -39,6 +39,17 @@ OpenAegis now includes a guided **Policy Studio** in the Security Console.
 
 See detailed guide: [docs/policy-studio.md](docs/policy-studio.md)
 
+## Identity Hardening Mode
+
+OpenAegis supports a hardened gateway auth path using auth-service introspection.
+
+Set:
+
+- `OPENAEGIS_AUTH_INTROSPECTION_URL`
+- `OPENAEGIS_REQUIRE_INTROSPECTION=true`
+
+In this mode, bearer tokens are introspected and write operations enforce tenant scope from token claims.
+
 ## Trust Layer Proof (3 End-to-End Examples)
 
 Run the executable trust proof harness:
