@@ -11,6 +11,9 @@
 - [Pilot Runbook](./pilot/PILOT-RUNBOOK.md)
 - [Smoke and Pilot Test Report](./tests/SMOKE-AND-PILOT-TEST-REPORT.md)
 - [Commercial Readiness](./commercial/COMMERCIAL-READINESS.md)
+- [Trust Layer Proof Examples](./pilot/TRUST-LAYER-EXAMPLES.md)
+- [Adoption Playbook](./commercial/ADOPTION-PLAYBOOK.md)
+- [Licensing Model](./commercial/LICENSING.md)
 - [Policy Studio Guide](./policy-studio.md)
 - Demo artifact: `docs/assets/demo/pilot-demo-output.json`
 

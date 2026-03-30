@@ -38,6 +38,24 @@ OpenAegis now includes a guided **Policy Studio** in the Security Console.
 
 See detailed guide: [docs/policy-studio.md](docs/policy-studio.md)
 
+## Trust Layer Proof (3 End-to-End Examples)
+
+Run the executable trust proof harness:
+
+```bash
+npm run proof:trust-layer
+```
+
+This runs three distinct examples:
+
+1. Healthcare discharge orchestration (policy + approval + audit replay)
+2. Finance operations guardrails (runtime blocks + idempotent retries)
+3. SecOps containment (break-glass + kill-switch + immutable chain)
+
+Artifact:
+
+- `docs/assets/demo/trust-layer-proof-report.json`
+
 ## Pilot Use Case (Live)
 
 The included pilot demonstrates a **Hospital Discharge Readiness Assistant**:
@@ -81,6 +99,7 @@ npm run test
 npm run build
 npm run smoke:pilot
 npm run validate:test-surface
+npm run proof:trust-layer
 ```
 
 Run pilot demo output:
@@ -107,6 +126,8 @@ npm run validate:test-surface
 npm run validate:infra
 npm run smoke:pilot
 npm run proof:commercial
+npm run proof:trust-layer
+npm run audit:commercial
 npm run load:commercial
 npm run chaos:commercial
 npm run readiness:gate
@@ -121,6 +142,8 @@ Expected pass results:
 - `npm run validate:infra` exits 0 and validates Docker/Kubernetes/Helm packaging
 - `npm run smoke:pilot` exits 0 and refreshes the pilot evidence bundle
 - `npm run proof:commercial` exits 0 and writes `docs/assets/demo/commercial-proof-report.json`
+- `npm run proof:trust-layer` exits 0 and writes `docs/assets/demo/trust-layer-proof-report.json`
+- `npm run audit:commercial` exits 0 and writes `docs/assets/demo/commercial-audit-report.json`
 - `npm run load:commercial` exits 0 and writes `docs/assets/demo/load-test-report.json`
 - `npm run chaos:commercial` exits 0 and writes `docs/assets/demo/chaos-report.json`
 - `npm run readiness:gate` exits 0, writes `docs/assets/demo/readiness-gate-report.json`, and enforces >= 98%
@@ -141,6 +164,8 @@ If any one of those checks fails, the release is a no-go.
 - [MVP plan](docs/mvp-plan.md)
 - [Commercial readiness](docs/commercial/COMMERCIAL-READINESS.md)
 - [Why OpenAegis](docs/commercial/WHY-OPENAEGIS.md)
+- [Adoption playbook](docs/commercial/ADOPTION-PLAYBOOK.md)
+- [Licensing model](docs/commercial/LICENSING.md)
 - [Hospital production gate](docs/readiness/HOSPITAL-PRODUCTION-GATE.md)
 - [SRE runbook](docs/readiness/SRE-RUNBOOK.md)
 - [Hardening controls matrix](docs/security/HARDENING-CONTROLS-MATRIX.md)
@@ -152,6 +177,13 @@ If any one of those checks fails, the release is a no-go.
 - [FAQ](docs/manual/OpenAegis-FAQ.md)
 - [Setup support guide](docs/manual/OpenAegis-SETUP-SUPPORT-GUIDE.md)
 - [Top-20 language packs](docs/i18n/README.md)
+
+## License
+
+OpenAegis uses dual licensing:
+
+- AGPL-3.0-only: [LICENSE](LICENSE)
+- Commercial terms: [LICENSE-COMMERCIAL.md](LICENSE-COMMERCIAL.md)
 
 ## Build Status
 

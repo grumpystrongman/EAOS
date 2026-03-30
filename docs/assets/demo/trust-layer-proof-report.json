@@ -1,0 +1,183 @@
+{
+  "generatedAt": "2026-03-30T16:13:16.550Z",
+  "suite": "trust-layer-end-to-end-proof",
+  "product": "OpenAegis",
+  "endpoints": {
+    "gateway": "http://127.0.0.1:3960",
+    "toolRegistry": "http://127.0.0.1:3961",
+    "toolExecution": "http://127.0.0.1:3962",
+    "killSwitch": "http://127.0.0.1:3963"
+  },
+  "examples": [
+    {
+      "exampleId": "healthcare-discharge-orchestration",
+      "title": "Hospital Discharge Assistant",
+      "persona": "Care coordinator and clinical security approver",
+      "domain": "Healthcare",
+      "problemSolved": "Automates discharge planning without bypassing human approval or PHI controls.",
+      "trustControlsProven": [
+        "Policy gate for high-risk live actions",
+        "Human approval enforcement",
+        "Deterministic graph checkpointing",
+        "Audit/evidence capture"
+      ],
+      "steps": [
+        {
+          "step": "start_live_execution",
+          "expected": "blocked with approval requirement",
+          "status": 201,
+          "data": {
+            "executionId": "ex-mnde0dqm-io4gvo",
+            "executionStatus": "blocked",
+            "approvalId": "ap-mnde0dqm-0eaw6y"
+          }
+        },
+        {
+          "step": "approve_high_risk_action",
+          "expected": "approval decision accepted",
+          "status": 200,
+          "data": {
+            "approvalStatus": "approved"
+          }
+        },
+        {
+          "step": "verify_execution_and_evidence",
+          "expected": "completed execution with deterministic graph and audit evidence",
+          "status": 200,
+          "data": {
+            "executionStatus": "completed",
+            "graphStages": [
+              "planner",
+              "executor",
+              "reviewer"
+            ],
+            "evidenceId": "ev-ex-mnde0dqm-io4gvo",
+            "auditEvents": 5
+          }
+        }
+      ],
+      "passed": true,
+      "summary": "High-risk clinical flow was safely blocked, approved, completed, and fully auditable."
+    },
+    {
+      "exampleId": "finance-operations-guardrails",
+      "title": "Finance Close Guardrail Assistant",
+      "persona": "Finance operations manager",
+      "domain": "Finance Ops",
+      "problemSolved": "Prevents accidental outbound leakage while keeping recurring automation reliable.",
+      "trustControlsProven": [
+        "Connector registry governance",
+        "Tool runtime guard enforcement",
+        "Idempotency protection",
+        "Policy obligations for live outputs"
+      ],
+      "steps": [
+        {
+          "step": "discover_finance_connectors",
+          "expected": "registry exposes enterprise analytics connectors",
+          "status": 200,
+          "data": {
+            "hasFabric": true,
+            "hasPowerBi": true,
+            "publishedCount": 9
+          }
+        },
+        {
+          "step": "block_unapproved_finance_export",
+          "expected": "runtime guard blocks outbound execution without approval",
+          "status": 403,
+          "data": {
+            "guardReason": "approval_missing",
+            "callStatus": "blocked"
+          }
+        },
+        {
+          "step": "verify_idempotent_finance_automation",
+          "expected": "duplicate submission replays prior tool call safely",
+          "status": 200,
+          "data": {
+            "firstCallId": "tc-mnde0drb-wwq2nd",
+            "replayCallId": "tc-mnde0drb-wwq2nd",
+            "replayed": true
+          }
+        },
+        {
+          "step": "validate_finance_policy_obligations",
+          "expected": "decision includes outbound DLP/logging obligations",
+          "status": 200,
+          "data": {
+            "effect": "ALLOW",
+            "obligations": [
+              "log_audit_event",
+              "classify_output",
+              "dlp_scan_required"
+            ]
+          }
+        }
+      ],
+      "passed": true,
+      "summary": "Finance automation stayed controlled: unsafe export blocked, retries idempotent, obligations attached."
+    },
+    {
+      "exampleId": "secops-containment-and-governance",
+      "title": "SecOps Containment and Policy Governance",
+      "persona": "Security operations lead",
+      "domain": "Security Operations",
+      "problemSolved": "Allows rapid emergency containment and controlled policy exceptions with full auditability.",
+      "trustControlsProven": [
+        "Break-glass governance with dual approval metadata",
+        "Kill-switch scoped containment",
+        "Immutable event chain verification",
+        "Safe baseline restoration"
+      ],
+      "steps": [
+        {
+          "step": "block_unsafe_policy_change_without_break_glass",
+          "expected": "422 response requiring break-glass",
+          "status": 422,
+          "data": {
+            "error": "break_glass_required_for_blocking_policy_changes"
+          }
+        },
+        {
+          "step": "allow_policy_change_with_dual_approval_break_glass",
+          "expected": "200 response with breakGlassUsed=true",
+          "status": 200,
+          "data": {
+            "breakGlassUsed": true,
+            "profileVersion": 2
+          }
+        },
+        {
+          "step": "trigger_and_release_kill_switch",
+          "expected": "triggered then released with immutable event chain",
+          "status": 200,
+          "data": {
+            "triggerStatus": "triggered",
+            "releasedStatus": "released",
+            "chainValid": true,
+            "eventCount": 2
+          }
+        },
+        {
+          "step": "restore_secure_policy_baseline",
+          "expected": "secure defaults restored without break-glass",
+          "status": 200,
+          "data": {
+            "enforceSecretDeny": true,
+            "profileVersion": 3
+          }
+        }
+      ],
+      "passed": true,
+      "summary": "SecOps controls validated: unsafe changes blocked, emergency path controlled, baseline restored."
+    }
+  ],
+  "summary": {
+    "totalExamples": 3,
+    "passedExamples": 3,
+    "failedExamples": 0,
+    "scorePercent": 100,
+    "status": "PASS"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T15:48:35.589Z",
+  "generatedAt": "2026-03-30T16:18:20.359Z",
   "suite": "workspace-test-surface-validation",
   "thresholds": {
     "minTestFilesPerWorkspace": 1

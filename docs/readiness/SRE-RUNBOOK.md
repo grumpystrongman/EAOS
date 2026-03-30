@@ -90,6 +90,8 @@ npm run validate:test-surface
 npm run validate:infra
 npm run smoke:pilot
 npm run proof:commercial
+npm run proof:trust-layer
+npm run audit:commercial
 npm run load:commercial
 npm run chaos:commercial
 npm run readiness:gate
@@ -207,9 +209,11 @@ After any deployment or configuration change:
 5. Run `npm run validate:infra`.
 6. Run `npm run smoke:pilot`.
 7. Run `npm run proof:commercial`.
-8. Run `npm run load:commercial`.
-9. Run `npm run chaos:commercial`.
-10. Run `npm run readiness:gate`.
-11. Verify readiness score remains at or above 98.
+8. Run `npm run proof:trust-layer`.
+9. Run `npm run audit:commercial`.
+10. Run `npm run load:commercial`.
+11. Run `npm run chaos:commercial`.
+12. Run `npm run readiness:gate`.
+13. Verify readiness score remains at or above 98.
 
 If any step fails, revert the change or roll forward a fix before declaring success.

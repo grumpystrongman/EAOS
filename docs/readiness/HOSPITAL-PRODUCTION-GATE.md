@@ -33,6 +33,8 @@ It does not replace security review, architecture review, or change management. 
 | Infrastructure packaging validation | `npm run validate:infra` | Exit code 0 | Docker/Kubernetes/Helm artifacts are complete and internally consistent |
 | Pilot smoke test | `npm run smoke:pilot` | Exit code 0 | Pilot flow boots and completes the smoke scenario |
 | Commercial proof | `npm run proof:commercial` | Exit code 0 | `docs/assets/demo/commercial-proof-report.json` is generated |
+| Trust-layer proof (3 examples) | `npm run proof:trust-layer` | Exit code 0 | `docs/assets/demo/trust-layer-proof-report.json` is generated |
+| Commercial audit | `npm run audit:commercial` | Exit code 0 | `docs/assets/demo/commercial-audit-report.json` is generated |
 | Load test | `npm run load:commercial` | Exit code 0 | `docs/assets/demo/load-test-report.json` is generated |
 | Chaos drill | `npm run chaos:commercial` | Exit code 0 | `docs/assets/demo/chaos-report.json` is generated |
 | Backup drill | `npm run backup:state` | Exit code 0 | Backup manifest is generated under `backups/<timestamp>/manifest.json` |
@@ -51,14 +53,18 @@ The release is only considered ready when all of the following are true:
 5. `npm run validate:infra` passes.
 6. `npm run smoke:pilot` passes.
 7. `npm run proof:commercial` passes.
-8. `npm run load:commercial` passes.
-9. `npm run chaos:commercial` passes.
-10. `npm run readiness:gate` passes.
-11. The commercial proof report records `summary.status = PASS`.
-12. The commercial proof report records `summary.failedClaims = 0`.
-13. The commercial proof report records `summary.scorePercent = 100`.
-14. The readiness gate report records `summary.scorePercent >= 98`.
-15. The readiness gate report records `summary.status = PASS`.
+8. `npm run proof:trust-layer` passes.
+9. `npm run audit:commercial` passes.
+10. `npm run load:commercial` passes.
+11. `npm run chaos:commercial` passes.
+12. `npm run readiness:gate` passes.
+13. The commercial proof report records `summary.status = PASS`.
+14. The commercial proof report records `summary.failedClaims = 0`.
+15. The commercial proof report records `summary.scorePercent = 100`.
+16. The trust-layer proof report records `summary.totalExamples = 3`.
+17. The trust-layer proof report records `summary.status = PASS`.
+18. The readiness gate report records `summary.scorePercent >= 98`.
+19. The readiness gate report records `summary.status = PASS`.
 
 If any one of these checks fails, the gate is closed.
 
@@ -126,10 +132,14 @@ The expected evidence bundle for a gate review is:
 - `npm run validate:test-surface` output
 - `npm run smoke:pilot` output
 - `npm run proof:commercial` output
+- `npm run proof:trust-layer` output
+- `npm run audit:commercial` output
 - `npm run load:commercial` output
 - `npm run chaos:commercial` output
 - `npm run readiness:gate` output
 - `docs/assets/demo/commercial-proof-report.json`
+- `docs/assets/demo/trust-layer-proof-report.json`
+- `docs/assets/demo/commercial-audit-report.json`
 - `docs/assets/demo/load-test-report.json`
 - `docs/assets/demo/chaos-report.json`
 - `docs/assets/demo/readiness-gate-report.json`

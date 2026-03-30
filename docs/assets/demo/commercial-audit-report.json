@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-03-30T16:19:12.142Z",
+  "suite": "commercial-readiness-audit",
+  "checks": [
+    {
+      "checkId": "license_files_present",
+      "passed": true,
+      "details": {
+        "required": [
+          "LICENSE",
+          "LICENSE-COMMERCIAL.md"
+        ]
+      }
+    },
+    {
+      "checkId": "no_placeholder_or_skeleton_markers",
+      "passed": true,
+      "details": {
+        "findings": []
+      }
+    },
+    {
+      "checkId": "commercial_proof_artifact_valid",
+      "passed": true,
+      "details": {
+        "scorePercent": 100,
+        "status": "PASS"
+      }
+    },
+    {
+      "checkId": "trust_layer_proof_passed",
+      "passed": true,
+      "details": {
+        "status": "PASS",
+        "totalExamples": 3,
+        "passedExamples": 3
+      }
+    }
+  ],
+  "summary": {
+    "totalChecks": 4,
+    "passedChecks": 4,
+    "failedChecks": 0,
+    "scorePercent": 100,
+    "status": "PASS"
+  }
+}

@@ -35,6 +35,8 @@ Most products only solve part of this.
 | LLM-assisted policy review provides safer suggestions | Proven now (pilot-grade) | `/v1/policies/profile/copilot` | Use Ask Copilot in Security Console |
 | End-to-end hospital workflow remains operational | Proven now | smoke script output | Run `npm run smoke:pilot` |
 | Commercial scorecard and proof bundle export | Proven now | `docs/assets/demo/commercial-proof-report.json` | Run `npm run proof:commercial` |
+| Three distinct trust-layer examples pass end-to-end | Proven now | `docs/assets/demo/trust-layer-proof-report.json` | Run `npm run proof:trust-layer` |
+| Repository-level commercial audit has no placeholder gaps | Proven now | `docs/assets/demo/commercial-audit-report.json` | Run `npm run audit:commercial` |
 | Full enterprise connector depth and formal certifications | Roadmap | n/a | Not claimed as complete in this MVP |
 
 ## Policy Configuration Experience (Buyer-Facing)
@@ -59,6 +61,8 @@ This is intentionally explicit so a non-expert can operate safely.
 - `docs/assets/screenshots/commercial-readiness.png`
 - `docs/assets/demo/pilot-demo-output.json`
 - `docs/assets/demo/commercial-proof-report.json`
+- `docs/assets/demo/trust-layer-proof-report.json`
+- `docs/assets/demo/commercial-audit-report.json`
 
 ## Buyer Evaluation Runbook
 

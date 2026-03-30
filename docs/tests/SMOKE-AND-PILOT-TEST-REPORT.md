@@ -9,6 +9,8 @@ npm run build
 npm run test:commercial
 npm run smoke:pilot
 npm run proof:commercial
+npm run proof:trust-layer
+npm run audit:commercial
 npm run screenshots:commercial
 node tools/scripts/pilot-demo.mjs
 ```
@@ -38,6 +40,13 @@ node tools/scripts/pilot-demo.mjs
 - Test harness: `tests/commercial/commercial-proof.test.mjs`
 - Artifact: `docs/assets/demo/commercial-proof-report.json`
 
+## Trust Layer Proof Result
+
+- Status: PASS
+- Script: `tools/scripts/prove-trust-layer.mjs`
+- Test harness: `tests/commercial/trust-layer-proof.test.mjs`
+- Artifact: `docs/assets/demo/trust-layer-proof-report.json`
+
 ## Screenshot Capture Result
 
 - Status: PASS
@@ -65,8 +74,6 @@ node tools/scripts/pilot-demo.mjs
 
 ## Remaining Test Gaps
 
-- No load/performance baseline yet
-- No chaos test suite yet
 - No connector contract tests against external systems yet
 
 ## Next Recommended Test Expansions

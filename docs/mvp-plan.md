@@ -37,9 +37,12 @@ OpenAegis MVP is considered commercially pilot-ready when all of the following a
 npm run typecheck
 npm run build
 npm run test
+npm run validate:test-surface
 npm run validate:infra
 npm run smoke:pilot
 npm run proof:commercial
+npm run proof:trust-layer
+npm run audit:commercial
 npm run load:commercial
 npm run chaos:commercial
 npm run backup:state
@@ -51,6 +54,10 @@ npm run readiness:gate
 Pass criteria:
 
 - every command exits 0
+- `docs/assets/demo/commercial-proof-report.json` has `summary.status = PASS`
+- `docs/assets/demo/trust-layer-proof-report.json` has `summary.status = PASS`
+- `docs/assets/demo/trust-layer-proof-report.json` has `summary.totalExamples = 3`
+- `docs/assets/demo/commercial-audit-report.json` has `summary.status = PASS`
 - `docs/assets/demo/readiness-gate-report.json` has `summary.status = PASS`
 - `docs/assets/demo/readiness-gate-report.json` has `summary.scorePercent >= 98`
 
