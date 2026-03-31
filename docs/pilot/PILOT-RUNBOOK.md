@@ -43,6 +43,7 @@ sequenceDiagram
 npm install
 npm run build
 npm run smoke:pilot
+npm run run:tool-registry
 ```
 
 Optional explicit demo output:
@@ -62,7 +63,7 @@ npm run screenshots:commercial
 ## Pilot UI Walkthrough
 
 1. Open the console at `http://127.0.0.1:4273/setup` and click **Connect sessions**.
-2. Open **Integration Hub** and use **Load example config** + **Test connection + policy** for one integration.
+2. Open **Integration Hub**, select one plugin (Databricks/Fabric/AWS/Jira/Confluence/OpenAI/etc), create an instance, authorize OAuth plugins, and run **Test connection**.
 3. Open **Identity & Access** and verify user roles and assurance levels.
 4. Open **Business KPI Dashboard** and run one simulation pass.
 5. Run **Run live workflow** from dashboard or simulation to create a pending approval.

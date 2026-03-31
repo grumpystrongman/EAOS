@@ -25,6 +25,18 @@ OpenAegis is built for organizations where data leakage is a business and compli
 - Sensitive routing can require zero-retention providers.
 - Multi-tenant context is explicit and carried across requests.
 - Simulation mode exists before live execution.
+- Plugin/extension arm supports OAuth, API key, service-principal, and key-pair onboarding patterns.
+
+## Plugin and Extension Arm
+
+OpenAegis now includes a broader plugin lifecycle through `tool-registry`:
+
+- Catalog: `GET /v1/tools`
+- Plugin instances: `GET/POST /v1/plugins/instances`
+- OAuth authorization: `POST /v1/plugins/instances/{id}/authorize`
+- Connection test: `POST /v1/plugins/instances/{id}/test`
+
+Included connector families now cover AWS, Databricks, Fabric, Jira, Confluence, OpenAI, Anthropic, Google, Azure OpenAI, plus healthcare and operations connectors.
 
 ## How Policy Configuration Works
 
@@ -124,6 +136,7 @@ npm run proof:trust-layer
 npm run audit:codebase
 npm run trust:pack
 npm run trust:audit
+npm run run:tool-registry
 ```
 
 Run pilot demo output:
@@ -217,6 +230,7 @@ If any one of those checks fails, the release is a no-go.
 - [CISO decision brief](docs/commercial/CISO-DECISION-BRIEF.md)
 - [Enterprise trust pack](docs/compliance/ENTERPRISE-TRUST-PACK.md)
 - [Adoption playbook](docs/commercial/ADOPTION-PLAYBOOK.md)
+- [OpenClaw adoption matrix](docs/commercial/OPENCLAW-ADOPTION-MATRIX.md)
 - [Security evidence pack guide](docs/commercial/SECURITY-EVIDENCE-PACK.md)
 - [Licensing model](docs/commercial/LICENSING.md)
 - [Trademark policy](docs/commercial/TRADEMARK-POLICY.md)

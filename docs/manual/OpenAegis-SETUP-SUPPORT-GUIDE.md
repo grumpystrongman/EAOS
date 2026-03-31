@@ -29,15 +29,21 @@ PORT=4300 node tools/scripts/run-gateway.mjs
 Terminal B:
 
 ```bash
-VITE_API_URL=http://127.0.0.1:4300 npm run --workspace @openaegis/admin-console dev -- --host 127.0.0.1 --port 4273
+VITE_API_URL=http://127.0.0.1:4300 VITE_TOOL_REGISTRY_URL=http://127.0.0.1:4301 npm run --workspace @openaegis/admin-console dev -- --host 127.0.0.1 --port 4273
+```
+
+Terminal C:
+
+```bash
+npm run run:tool-registry
 ```
 
 Open `http://127.0.0.1:4273`.
 
 ## 4. Guided UI Setup Steps
 
-1. Open Setup Center (`/setup`) and connect demo sessions.
-2. Open Integration Hub (`/integrations`), load example config, and verify one integration.
+1. Open Setup Center (`/setup`) and connect evaluator identities.
+2. Open Integration Hub (`/integrations`), select a plugin, create an instance, authorize OAuth plugins, and run Test connection.
 3. Open Identity & Access (`/identity`) and confirm role/assurance assignments.
 4. Open Security Console (`/security`) for policy changes.
 5. Change one policy control.

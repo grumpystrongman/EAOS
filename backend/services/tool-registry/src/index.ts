@@ -1,11 +1,18 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { randomUUID } from "node:crypto";
 import { URL } from "node:url";
 import type { ServiceDescriptor } from "@openaegis/contracts";
 import {
   defaultRegistryState,
   type ConnectorTrustTier,
+  type PluginAuthMethod,
+  type PluginInstanceAuthInput,
+  type PluginInstanceAuthRefs,
+  type PluginInstanceConfig,
+  type PluginInstanceRecord,
+  type PluginInstanceStatus,
   type ToolAction,
   type ToolManifestRecord,
   type ToolManifestStatus,
@@ -26,6 +33,61 @@ const STATE_FILE = resolve(process.cwd(), ".volumes", "tool-registry-state.json"
 const now = () => new Date().toISOString();
 
 type JsonMap = Record<string, unknown>;
+type PluginInstanceListFilter = {
+  manifestToolId?: string;
+  status?: PluginInstanceStatus;
+  authMethod?: PluginAuthMethod;
+};
+
+const supportedConnectorTypes = new Set<ToolManifestRecord["connectorType"]>([
+  "microsoft-fabric",
+  "power-bi",
+  "sql",
+  "fhir",
+  "hl7",
+  "sharepoint",
+  "email",
+  "ticketing",
+  "project",
+  "aws",
+  "databricks",
+  "fabric",
+  "jira",
+  "confluence",
+  "openai",
+  "anthropic",
+  "google",
+  "azure-openai"
+]);
+
+const supportedAuthMethods = new Set<PluginAuthMethod>(["oauth2", "api_key", "service_principal", "key_pair"]);
+const secretRefFields = new Set<keyof PluginInstanceAuthRefs>([
+  "apiKeyRef",
+  "clientSecretRef",
+  "privateKeyRef",
+  "certificateRef",
+  "privateKeyPasswordRef",
+  "refreshTokenRef",
+  "accessTokenRef"
+]);
+const brokerRefFields = new Set<keyof PluginInstanceAuthRefs>([
+  "brokerRef",
+  "authorizationBrokerRef",
+  "tokenBrokerRef",
+  "refreshTokenBrokerRef",
+  "callbackBrokerRef",
+  "codeBrokerRef"
+]);
+const instanceConfigKeys = new Set<keyof PluginInstanceConfig>([
+  "baseUrl",
+  "endpoint",
+  "region",
+  "workspaceId",
+  "projectKey",
+  "model",
+  "organizationId",
+  "apiVersion"
+]);
 
 const sendJson = (response: ServerResponse, status: number, body: unknown) => {
   response.writeHead(status, { "content-type": "application/json" });
@@ -39,7 +101,8 @@ const readJson = async (request: IncomingMessage): Promise<JsonMap> => {
   }
   if (chunks.length === 0) return {};
   try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8")) as JsonMap;
+    const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as JsonMap) : {};
   } catch {
     return {};
   }
@@ -48,8 +111,9 @@ const readJson = async (request: IncomingMessage): Promise<JsonMap> => {
 const normalizeState = (state: Partial<ToolRegistryState> | undefined): ToolRegistryState => {
   const base = defaultRegistryState();
   return {
-    version: 1,
-    manifests: Array.isArray(state?.manifests) ? state.manifests : base.manifests
+    version: 2,
+    manifests: Array.isArray(state?.manifests) ? state.manifests : base.manifests,
+    instances: Array.isArray(state?.instances) ? state.instances : base.instances
   };
 };
 
@@ -79,7 +143,23 @@ const toActionArray = (value: unknown): ToolAction[] | undefined => {
   for (const item of values) {
     if (item === "READ" || item === "WRITE" || item === "EXECUTE") allowed.push(item);
   }
-  return allowed.length > 0 ? allowed : undefined;
+  return allowed.length > 0 ? Array.from(new Set(allowed)) : undefined;
+};
+
+const toAuthMethod = (value: unknown): PluginAuthMethod | undefined => {
+  if (value === "oauth2" || value === "api_key" || value === "service_principal" || value === "key_pair") return value;
+  return undefined;
+};
+
+const toAuthMethodArray = (value: unknown): PluginAuthMethod[] | undefined => {
+  const values = toStringArray(value);
+  if (!values) return undefined;
+  const allowed: PluginAuthMethod[] = [];
+  for (const item of values) {
+    const method = toAuthMethod(item);
+    if (method) allowed.push(method);
+  }
+  return allowed.length > 0 ? Array.from(new Set(allowed)) : undefined;
 };
 
 const toTrustTier = (value: unknown): ConnectorTrustTier | undefined => {
@@ -92,10 +172,122 @@ const toStatus = (value: unknown): ToolManifestStatus | undefined => {
   return undefined;
 };
 
-const requireActorHeader = (request: IncomingMessage): string | undefined => {
-  const actor = request.headers["x-actor-id"];
-  return typeof actor === "string" && actor.trim().length > 0 ? actor : undefined;
+const toInstanceStatus = (value: unknown): PluginInstanceStatus | undefined => {
+  if (
+    value === "pending_authorization" ||
+    value === "ready" ||
+    value === "authorized" ||
+    value === "healthy" ||
+    value === "unhealthy"
+  ) {
+    return value;
+  }
+  return undefined;
 };
+
+const isPlainObject = (value: unknown): value is JsonMap =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const exactKeys = (value: unknown, allowedKeys: string[]): JsonMap | undefined => {
+  if (!isPlainObject(value)) return undefined;
+  const keys = Object.keys(value);
+  if (keys.some((key) => !allowedKeys.includes(key))) return undefined;
+  return value;
+};
+
+const validatePrefixedRef = (value: unknown, prefix: string): string | undefined => {
+  const ref = toString(value);
+  if (!ref || !ref.startsWith(prefix)) return undefined;
+  return ref;
+};
+
+const ensureNoBrokerRefs = (refs: PluginInstanceAuthRefs | undefined): boolean => {
+  if (!refs) return true;
+  return Object.keys(refs).every((key) => !brokerRefFields.has(key as keyof PluginInstanceAuthRefs));
+};
+
+const validateSecretRefs = (refs: JsonMap | undefined): { refs?: PluginInstanceAuthRefs; error?: string } => {
+  if (!refs) return { refs: {} };
+  const parsed: PluginInstanceAuthRefs = {};
+  for (const [key, rawValue] of Object.entries(refs)) {
+    const field = key as keyof PluginInstanceAuthRefs;
+    if (!secretRefFields.has(field)) {
+      return { error: "unsupported_secret_reference_field" };
+    }
+    const ref = validatePrefixedRef(rawValue, "vault://");
+    if (!ref) {
+      return { error: `secret_reference_must_use_vault_prefix:${key}` };
+    }
+    parsed[field] = ref;
+  }
+  return { refs: parsed };
+};
+
+const validateBrokerRefs = (refs: JsonMap | undefined): { refs?: PluginInstanceAuthRefs; error?: string } => {
+  if (!refs) return { refs: {} };
+  const parsed: PluginInstanceAuthRefs = {};
+  for (const [key, rawValue] of Object.entries(refs)) {
+    const field = key as keyof PluginInstanceAuthRefs;
+    if (!brokerRefFields.has(field)) {
+      return { error: "unsupported_broker_reference_field" };
+    }
+    const ref = validatePrefixedRef(rawValue, "broker://");
+    if (!ref) {
+      return { error: `broker_reference_must_use_broker_prefix:${key}` };
+    }
+    parsed[field] = ref;
+  }
+  return { refs: parsed };
+};
+
+const defaultAuthMethodsForConnectorType = (connectorType: ToolManifestRecord["connectorType"]): PluginAuthMethod[] => {
+  switch (connectorType) {
+    case "openai":
+    case "anthropic":
+      return ["api_key"];
+    case "azure-openai":
+      return ["api_key", "service_principal"];
+    case "aws":
+    case "sql":
+    case "fhir":
+    case "hl7":
+      return ["service_principal", "key_pair"];
+    case "databricks":
+    case "sharepoint":
+    case "ticketing":
+    case "project":
+    case "jira":
+    case "confluence":
+    case "microsoft-fabric":
+    case "fabric":
+      return ["oauth2", "api_key"];
+    case "power-bi":
+      return ["oauth2", "api_key"];
+    case "email":
+      return ["service_principal", "key_pair"];
+    default:
+      return ["api_key"];
+  }
+};
+
+const parseInstanceConfig = (value: unknown): { config?: PluginInstanceConfig; error?: string } => {
+  if (value === undefined) return {};
+  if (!isPlainObject(value)) return { error: "invalid_instance_config" };
+  if (Object.keys(value).some((key) => !instanceConfigKeys.has(key as keyof PluginInstanceConfig))) {
+    return { error: "unsupported_instance_config_field" };
+  }
+
+  const config: PluginInstanceConfig = {};
+  for (const [key, rawValue] of Object.entries(value)) {
+    const resolved = toString(rawValue);
+    if (!resolved) return { error: `instance_config_field_must_be_string:${key}` };
+    config[key as keyof PluginInstanceConfig] = resolved;
+  }
+  return { config };
+};
+
+const resolveManifestAuth = (manifest: ToolManifestRecord): PluginAuthMethod[] =>
+  manifest.authMethods.length > 0 ? Array.from(new Set(manifest.authMethods)) : defaultAuthMethodsForConnectorType(manifest.connectorType);
 
 const buildManifestFromRequest = (body: JsonMap, actorId: string): { manifest?: ToolManifestRecord; error?: string } => {
   const toolId = toString(body.toolId);
@@ -105,6 +297,7 @@ const buildManifestFromRequest = (body: JsonMap, actorId: string): { manifest?: 
   const version = toString(body.version) ?? "1.0.0";
   const trustTier = toTrustTier(body.trustTier);
   const allowedActions = toActionArray(body.allowedActions);
+  const authMethods = toAuthMethodArray(body.authMethods);
   const permissionScopes = toStringArray(body.permissionScopes);
   const outboundDomains = toStringArray(body.outboundDomains);
   const signature = toString(body.signature);
@@ -114,12 +307,27 @@ const buildManifestFromRequest = (body: JsonMap, actorId: string): { manifest?: 
   const idempotent = body.idempotent !== false;
   const mockModeSupported = body.mockModeSupported !== false;
 
-  if (!toolId || !displayName || !description || !signature || !trustTier || !allowedActions || !permissionScopes || !outboundDomains || !connectorType) {
+  if (
+    !toolId ||
+    !displayName ||
+    !description ||
+    !signature ||
+    !trustTier ||
+    !allowedActions ||
+    !permissionScopes ||
+    !outboundDomains ||
+    !connectorType
+  ) {
     return { error: "invalid_manifest_payload" };
   }
 
-  if (!["microsoft-fabric", "power-bi", "sql", "fhir", "hl7", "sharepoint", "email", "ticketing", "project"].includes(connectorType)) {
+  if (!supportedConnectorTypes.has(connectorType)) {
     return { error: "unsupported_connector_type" };
+  }
+
+  const resolvedAuthMethods = authMethods ?? defaultAuthMethodsForConnectorType(connectorType);
+  if (resolvedAuthMethods.some((method) => !supportedAuthMethods.has(method))) {
+    return { error: "unsupported_auth_method" };
   }
 
   const timestamp = now();
@@ -132,6 +340,7 @@ const buildManifestFromRequest = (body: JsonMap, actorId: string): { manifest?: 
       version,
       trustTier,
       allowedActions,
+      authMethods: resolvedAuthMethods,
       permissionScopes,
       outboundDomains,
       rateLimitPerMinute,
@@ -151,13 +360,193 @@ const listManifests = (manifests: ToolManifestRecord[], query: URL): ToolManifes
   const status = toStatus(query.searchParams.get("status"));
   const capability = toString(query.searchParams.get("capability"));
   const trustTier = toTrustTier(query.searchParams.get("trustTier"));
+  const authMethod = toAuthMethod(query.searchParams.get("authMethod"));
 
   return manifests.filter((manifest) => {
     if (status && manifest.status !== status) return false;
     if (trustTier && manifest.trustTier !== trustTier) return false;
     if (capability && !manifest.permissionScopes.some((scope) => scope.includes(capability))) return false;
+    if (authMethod && !resolveManifestAuth(manifest).includes(authMethod)) return false;
     return true;
   });
+};
+
+const findManifest = (state: ToolRegistryState, toolId: string) => state.manifests.find((item) => item.toolId === toolId);
+
+const validateInstanceAuth = (
+  manifest: ToolManifestRecord,
+  body: JsonMap
+): { auth?: PluginInstanceAuthInput; brokerRefs?: PluginInstanceRecord["brokerRefs"]; error?: string } => {
+  const authPayload = exactKeys(body.auth, ["method", "clientId", "tenantId", "principalId", "refs"]);
+  if (!authPayload) return { error: "invalid_instance_auth" };
+
+  const method = toAuthMethod(authPayload.method);
+  const clientId = toString(authPayload.clientId);
+  const tenantId = toString(authPayload.tenantId);
+  const principalId = toString(authPayload.principalId);
+  const refsPayload = authPayload.refs;
+  const refs = isPlainObject(refsPayload) ? refsPayload : undefined;
+
+  if (!method) return { error: "unsupported_instance_auth_method" };
+  if (!resolveManifestAuth(manifest).includes(method)) return { error: "instance_auth_method_not_supported_by_manifest" };
+
+  const validatedRefs = validateSecretRefs(refs);
+  if (validatedRefs.error) return { error: validatedRefs.error };
+
+  const parsedAuth: PluginInstanceAuthInput = {
+    method,
+    ...(clientId ? { clientId } : {}),
+    ...(tenantId ? { tenantId } : {}),
+    ...(principalId ? { principalId } : {}),
+    ...(validatedRefs.refs && Object.keys(validatedRefs.refs).length > 0 ? { refs: validatedRefs.refs } : {})
+  };
+
+  switch (method) {
+    case "api_key":
+      if (!parsedAuth.refs?.apiKeyRef) return { error: "api_key_reference_required" };
+      break;
+    case "service_principal":
+      if (
+        !parsedAuth.refs?.clientSecretRef &&
+        !parsedAuth.refs?.privateKeyRef &&
+        !parsedAuth.refs?.certificateRef
+      ) {
+        return { error: "service_principal_reference_required" };
+      }
+      break;
+    case "key_pair":
+      if (!parsedAuth.refs?.privateKeyRef) return { error: "private_key_reference_required" };
+      break;
+    case "oauth2":
+      break;
+    default:
+      return { error: "unsupported_instance_auth_method" };
+  }
+
+  if (!ensureNoBrokerRefs(parsedAuth.refs)) {
+    return { error: "broker_references_not_allowed_during_create" };
+  }
+
+  return { auth: parsedAuth };
+};
+
+const createInstanceFromRequest = (
+  state: ToolRegistryState,
+  body: JsonMap
+): { instance?: PluginInstanceRecord; error?: string } => {
+  const allowedTopLevelKeys = ["manifestToolId", "displayName", "auth", "config"];
+  if (!isPlainObject(body) || Object.keys(body).some((key) => !allowedTopLevelKeys.includes(key))) {
+    return { error: "invalid_instance_payload" };
+  }
+
+  const manifestToolId = toString(body.manifestToolId);
+  const displayName = toString(body.displayName);
+  const manifest = manifestToolId ? findManifest(state, manifestToolId) : undefined;
+  const authValidation = manifest ? validateInstanceAuth(manifest, body) : { error: "manifest_not_found" };
+  const configValidation = parseInstanceConfig(body.config);
+
+  if (!manifestToolId || !displayName || !manifest) return { error: "manifest_not_found" };
+  if (!authValidation.auth) return { error: authValidation.error ?? "invalid_instance_auth" };
+  if (configValidation.error) return { error: configValidation.error };
+
+  const timestamp = now();
+  const instanceId = `plugin-inst-${randomUUID()}`;
+  return {
+    instance: {
+      instanceId,
+      manifestToolId,
+      displayName,
+      status: authValidation.auth.method === "oauth2" ? "pending_authorization" : "ready",
+      auth: authValidation.auth,
+      ...(configValidation.config ? { config: configValidation.config } : {}),
+      createdAt: timestamp,
+      updatedAt: timestamp
+    }
+  };
+};
+
+const listInstances = (instances: PluginInstanceRecord[], filter: PluginInstanceListFilter): PluginInstanceRecord[] =>
+  instances.filter((instance) => {
+    if (filter.manifestToolId && instance.manifestToolId !== filter.manifestToolId) return false;
+    if (filter.status && instance.status !== filter.status) return false;
+    if (filter.authMethod && instance.auth.method !== filter.authMethod) return false;
+    return true;
+  });
+
+const getInstance = (state: ToolRegistryState, instanceId: string) => state.instances.find((item) => item.instanceId === instanceId);
+
+const updateInstance = (
+  instance: PluginInstanceRecord,
+  patch: Partial<PluginInstanceRecord>
+): PluginInstanceRecord => ({
+  ...instance,
+  ...patch,
+  updatedAt: now()
+});
+
+const authorizeInstance = (
+  instance: PluginInstanceRecord,
+  body: JsonMap
+): { instance?: PluginInstanceRecord; error?: string } => {
+  const allowedTopLevelKeys = ["authorizationBrokerRef", "tokenBrokerRef", "refreshTokenBrokerRef", "callbackBrokerRef", "codeBrokerRef", "brokerRef"];
+  if (!isPlainObject(body) || Object.keys(body).some((key) => !allowedTopLevelKeys.includes(key))) {
+    return { error: "invalid_authorize_payload" };
+  }
+
+  const brokerValidation = validateBrokerRefs(body);
+  if (brokerValidation.error) return { error: brokerValidation.error };
+  if (!brokerValidation.refs || Object.keys(brokerValidation.refs).length === 0) {
+    return { error: "broker_reference_required" };
+  }
+
+  const brokerRefs = {
+    ...(instance.brokerRefs ?? {}),
+    ...(brokerValidation.refs.authorizationBrokerRef ? { authorizationBrokerRef: brokerValidation.refs.authorizationBrokerRef } : {}),
+    ...(brokerValidation.refs.tokenBrokerRef ? { tokenBrokerRef: brokerValidation.refs.tokenBrokerRef } : {}),
+    ...(brokerValidation.refs.refreshTokenBrokerRef ? { refreshTokenBrokerRef: brokerValidation.refs.refreshTokenBrokerRef } : {}),
+    ...(brokerValidation.refs.callbackBrokerRef ? { callbackBrokerRef: brokerValidation.refs.callbackBrokerRef } : {}),
+    ...(brokerValidation.refs.codeBrokerRef ? { codeBrokerRef: brokerValidation.refs.codeBrokerRef } : {}),
+    ...(brokerValidation.refs.brokerRef ? { authorizationBrokerRef: brokerValidation.refs.brokerRef } : {})
+  };
+
+  return {
+    instance: updateInstance(instance, {
+      status: "authorized",
+      brokerRefs,
+      lastAuthorizedAt: now()
+    })
+  };
+};
+
+const authIsReadyForTest = (instance: PluginInstanceRecord): boolean => {
+  const refs = instance.auth.refs ?? {};
+  switch (instance.auth.method) {
+    case "api_key":
+      return Boolean(refs.apiKeyRef);
+    case "service_principal":
+      return Boolean(refs.clientSecretRef || refs.privateKeyRef || refs.certificateRef);
+    case "key_pair":
+      return Boolean(refs.privateKeyRef);
+    case "oauth2":
+      return Boolean(instance.brokerRefs?.tokenBrokerRef || instance.brokerRefs?.authorizationBrokerRef);
+    default:
+      return false;
+  }
+};
+
+const testInstance = (instance: PluginInstanceRecord): { instance?: PluginInstanceRecord; error?: string } => {
+  if (!authIsReadyForTest(instance)) {
+    return { error: "instance_auth_not_ready" };
+  }
+
+  const tested = updateInstance(instance, {
+    status: "healthy",
+    lastTestAt: now(),
+    lastTestStatus: "passed",
+    lastTestMessage: `Validated ${instance.manifestToolId} using ${instance.auth.method}`
+  });
+
+  return { instance: tested };
 };
 
 export const requestHandler = async (request: IncomingMessage, response: ServerResponse) => {
@@ -167,7 +556,12 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "GET" && pathname === "/healthz") {
     const state = await loadState();
-    sendJson(response, 200, { status: "ok", service: descriptor.serviceName, manifests: state.manifests.length });
+    sendJson(response, 200, {
+      status: "ok",
+      service: descriptor.serviceName,
+      manifests: state.manifests.length,
+      instances: state.instances.length
+    });
     return;
   }
 
@@ -245,7 +639,90 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     return;
   }
 
+  if (method === "GET" && pathname === "/v1/plugins/instances") {
+    const state = await loadState();
+    const filter: PluginInstanceListFilter = {};
+    const manifestToolId = toString(parsedUrl.searchParams.get("manifestToolId"));
+    const status = toInstanceStatus(parsedUrl.searchParams.get("status"));
+    const authMethod = toAuthMethod(parsedUrl.searchParams.get("authMethod"));
+    if (manifestToolId) filter.manifestToolId = manifestToolId;
+    if (status) filter.status = status;
+    if (authMethod) filter.authMethod = authMethod;
+    sendJson(response, 200, { instances: listInstances(state.instances, filter) });
+    return;
+  }
+
+  if (method === "POST" && pathname === "/v1/plugins/instances") {
+    const body = await readJson(request);
+    const state = await loadState();
+    const built = createInstanceFromRequest(state, body);
+    if (!built.instance) {
+      sendJson(response, 400, { error: built.error ?? "invalid_instance_payload" });
+      return;
+    }
+
+    state.instances.push(built.instance);
+    await saveState(state);
+    sendJson(response, 201, built.instance);
+    return;
+  }
+
+  if (method === "POST" && /^\/v1\/plugins\/instances\/[^/]+\/authorize$/.test(pathname)) {
+    const instanceId = pathname.split("/")[4] ?? "";
+    const body = await readJson(request);
+    const state = await loadState();
+    const index = state.instances.findIndex((item) => item.instanceId === instanceId);
+    if (index === -1) {
+      sendJson(response, 404, { error: "plugin_instance_not_found" });
+      return;
+    }
+
+    const built = authorizeInstance(state.instances[index]!, body);
+    if (!built.instance) {
+      sendJson(response, 400, { error: built.error ?? "invalid_authorize_payload" });
+      return;
+    }
+
+    state.instances[index] = built.instance;
+    await saveState(state);
+    sendJson(response, 200, built.instance);
+    return;
+  }
+
+  if (method === "POST" && /^\/v1\/plugins\/instances\/[^/]+\/test$/.test(pathname)) {
+    const instanceId = pathname.split("/")[4] ?? "";
+    const state = await loadState();
+    const index = state.instances.findIndex((item) => item.instanceId === instanceId);
+    if (index === -1) {
+      sendJson(response, 404, { error: "plugin_instance_not_found" });
+      return;
+    }
+
+    const built = testInstance(state.instances[index]!);
+    if (!built.instance) {
+      state.instances[index] = updateInstance(state.instances[index]!, {
+        status: "unhealthy",
+        lastTestAt: now(),
+        lastTestStatus: "failed",
+        lastTestMessage: built.error ?? "instance_test_failed"
+      });
+      await saveState(state);
+      sendJson(response, 409, { error: built.error ?? "instance_test_failed", instance: state.instances[index] });
+      return;
+    }
+
+    state.instances[index] = built.instance;
+    await saveState(state);
+    sendJson(response, 200, built.instance);
+    return;
+  }
+
   sendJson(response, 404, { error: "not_found", service: descriptor.serviceName, path: pathname });
+};
+
+const requireActorHeader = (request: IncomingMessage): string | undefined => {
+  const actor = request.headers["x-actor-id"];
+  return typeof actor === "string" && actor.trim().length > 0 ? actor : undefined;
 };
 
 export const createAppServer = () =>
@@ -261,4 +738,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(descriptor.serviceName + " listening on :" + descriptor.listeningPort);
   });
 }
-

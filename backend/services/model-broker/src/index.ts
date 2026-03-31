@@ -29,10 +29,18 @@ export const descriptor: ServiceDescriptor = {
 type ModelProvider = "openai" | "anthropic" | "google" | "azure" | "self_hosted";
 type Capability = "json_schema" | "tool_use" | "vision" | "streaming";
 type CostBand = "low" | "medium" | "high";
+type DeploymentType = "hosted" | "azure_hosted" | "self_hosted";
+type AuthMode = "api_key" | "service_principal" | "managed_identity" | "gcp_service_account" | "oauth" | "self_hosted_token";
+type ZeroRetentionFlag = "supported" | "customer_configurable" | "customer_managed" | "customer_enforced" | "unsupported";
+type ModelFamily = "general" | "fast" | "reasoning";
 
 interface ProviderRecord {
   provider: ModelProvider;
   modelId: string;
+  modelFamily: ModelFamily;
+  deploymentType: DeploymentType;
+  authModes: AuthMode[];
+  zeroRetentionFlags: ZeroRetentionFlag[];
   enabled: boolean;
   supportsZeroRetention: boolean;
   capabilities: Capability[];
@@ -58,6 +66,13 @@ interface RouteScore {
   total: number;
 }
 
+interface RouteBlockedCandidate {
+  provider: ModelProvider;
+  modelId: string;
+  reason: string;
+  reasonCodes: string[];
+}
+
 interface RouteDecisionRecord {
   decisionId: string;
   tenantId: string;
@@ -65,8 +80,9 @@ interface RouteDecisionRecord {
   input: RouteInput;
   selected: ProviderRecord;
   fallback: ProviderRecord[];
-  blockedCandidates: Array<{ provider: ModelProvider; modelId: string; reason: string }>;
+  blockedCandidates: RouteBlockedCandidate[];
   score: RouteScore;
+  routeReasonCodes: string[];
   createdAt: string;
 }
 
@@ -83,10 +99,85 @@ const providerOrder: ModelProvider[] = ["openai", "anthropic", "google", "azure"
 const capabilityOrder: Capability[] = ["json_schema", "tool_use", "vision", "streaming"];
 const classOrder: DataClass[] = ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "PII", "PHI", "EPHI", "SECRET"];
 
+const toDeploymentType = (value: unknown): DeploymentType | undefined =>
+  value === "hosted" || value === "azure_hosted" || value === "self_hosted" ? value : undefined;
+
+const toAuthMode = (value: unknown): AuthMode | undefined =>
+  value === "api_key" ||
+  value === "service_principal" ||
+  value === "managed_identity" ||
+  value === "gcp_service_account" ||
+  value === "oauth" ||
+  value === "self_hosted_token"
+    ? value
+    : undefined;
+
+const toZeroRetentionFlag = (value: unknown): ZeroRetentionFlag | undefined =>
+  value === "supported" ||
+  value === "customer_configurable" ||
+  value === "customer_managed" ||
+  value === "customer_enforced" ||
+  value === "unsupported"
+    ? value
+    : undefined;
+
+const toModelFamily = (value: unknown): ModelFamily | undefined =>
+  value === "general" || value === "fast" || value === "reasoning" ? value : undefined;
+
+const normalizeEnumArray = <T extends string>(value: unknown, parser: (current: unknown) => T | undefined): T[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const parsed = value.map(parser).filter((entry): entry is T => entry !== undefined);
+  return parsed.length > 0 ? [...new Set(parsed)] : undefined;
+};
+
+const providerMetadataFor = (provider: ModelProvider, modelId: string): Pick<ProviderRecord, "modelFamily" | "deploymentType" | "authModes" | "zeroRetentionFlags"> => {
+  switch (provider) {
+    case "openai":
+      return {
+        modelFamily: modelId.includes("mini") || modelId.includes("nano") ? "fast" : "general",
+        deploymentType: "hosted",
+        authModes: ["api_key"],
+        zeroRetentionFlags: ["supported", "customer_configurable"]
+      };
+    case "anthropic":
+      return {
+        modelFamily: modelId.includes("haiku") ? "fast" : modelId.includes("opus") ? "reasoning" : "general",
+        deploymentType: "hosted",
+        authModes: ["api_key"],
+        zeroRetentionFlags: ["supported", "customer_configurable"]
+      };
+    case "google":
+      return {
+        modelFamily: modelId.includes("flash") ? "fast" : "reasoning",
+        deploymentType: "hosted",
+        authModes: ["api_key", "gcp_service_account"],
+        zeroRetentionFlags: ["unsupported"]
+      };
+    case "azure":
+      return {
+        modelFamily: modelId.includes("mini") ? "fast" : "general",
+        deploymentType: "azure_hosted",
+        authModes: ["managed_identity", "service_principal"],
+        zeroRetentionFlags: ["supported", "customer_managed"]
+      };
+    case "self_hosted":
+      return {
+        modelFamily: modelId.includes("8b") || modelId.includes("small") ? "fast" : modelId.includes("mixtral") ? "reasoning" : "general",
+        deploymentType: "self_hosted",
+        authModes: ["self_hosted_token", "oauth"],
+        zeroRetentionFlags: ["supported", "customer_enforced"]
+      };
+  }
+};
+
 const defaultProviders = (): ProviderRecord[] => [
   {
     provider: "self_hosted",
     modelId: "llama-3.1-70b-enterprise",
+    modelFamily: "general",
+    deploymentType: "self_hosted",
+    authModes: ["self_hosted_token", "oauth"],
+    zeroRetentionFlags: ["supported", "customer_enforced"],
     enabled: true,
     supportsZeroRetention: true,
     capabilities: ["json_schema", "tool_use", "streaming"],
@@ -98,6 +189,10 @@ const defaultProviders = (): ProviderRecord[] => [
   {
     provider: "openai",
     modelId: "gpt-4.1",
+    modelFamily: "general",
+    deploymentType: "hosted",
+    authModes: ["api_key"],
+    zeroRetentionFlags: ["supported", "customer_configurable"],
     enabled: true,
     supportsZeroRetention: true,
     capabilities: ["json_schema", "tool_use", "vision", "streaming"],
@@ -107,8 +202,42 @@ const defaultProviders = (): ProviderRecord[] => [
     riskTier: "medium"
   },
   {
+    provider: "openai",
+    modelId: "gpt-4.1-mini",
+    modelFamily: "fast",
+    deploymentType: "hosted",
+    authModes: ["api_key"],
+    zeroRetentionFlags: ["supported", "customer_configurable"],
+    enabled: true,
+    supportsZeroRetention: true,
+    capabilities: ["json_schema", "tool_use", "vision", "streaming"],
+    contextWindow: 128_000,
+    latencyMs: 820,
+    costBand: "low",
+    riskTier: "medium"
+  },
+  {
+    provider: "openai",
+    modelId: "gpt-4.1-nano",
+    modelFamily: "fast",
+    deploymentType: "hosted",
+    authModes: ["api_key"],
+    zeroRetentionFlags: ["supported", "customer_configurable"],
+    enabled: true,
+    supportsZeroRetention: true,
+    capabilities: ["json_schema", "tool_use", "streaming"],
+    contextWindow: 64_000,
+    latencyMs: 620,
+    costBand: "low",
+    riskTier: "medium"
+  },
+  {
     provider: "anthropic",
     modelId: "claude-sonnet-4",
+    modelFamily: "general",
+    deploymentType: "hosted",
+    authModes: ["api_key"],
+    zeroRetentionFlags: ["supported", "customer_configurable"],
     enabled: true,
     supportsZeroRetention: true,
     capabilities: ["json_schema", "tool_use", "vision", "streaming"],
@@ -118,8 +247,72 @@ const defaultProviders = (): ProviderRecord[] => [
     riskTier: "medium"
   },
   {
+    provider: "anthropic",
+    modelId: "claude-haiku-3.5",
+    modelFamily: "fast",
+    deploymentType: "hosted",
+    authModes: ["api_key"],
+    zeroRetentionFlags: ["supported", "customer_configurable"],
+    enabled: true,
+    supportsZeroRetention: true,
+    capabilities: ["json_schema", "tool_use", "vision", "streaming"],
+    contextWindow: 200_000,
+    latencyMs: 760,
+    costBand: "low",
+    riskTier: "medium"
+  },
+  {
+    provider: "anthropic",
+    modelId: "claude-opus-4",
+    modelFamily: "reasoning",
+    deploymentType: "hosted",
+    authModes: ["api_key"],
+    zeroRetentionFlags: ["supported", "customer_configurable"],
+    enabled: true,
+    supportsZeroRetention: true,
+    capabilities: ["json_schema", "tool_use", "vision", "streaming"],
+    contextWindow: 200_000,
+    latencyMs: 1_820,
+    costBand: "high",
+    riskTier: "medium"
+  },
+  {
+    provider: "google",
+    modelId: "gemini-2.5-pro",
+    modelFamily: "reasoning",
+    deploymentType: "hosted",
+    authModes: ["api_key", "gcp_service_account"],
+    zeroRetentionFlags: ["unsupported"],
+    enabled: true,
+    supportsZeroRetention: false,
+    capabilities: ["json_schema", "tool_use", "vision", "streaming"],
+    contextWindow: 1_000_000,
+    latencyMs: 1_420,
+    costBand: "medium",
+    riskTier: "high"
+  },
+  {
+    provider: "google",
+    modelId: "gemini-2.5-flash",
+    modelFamily: "fast",
+    deploymentType: "hosted",
+    authModes: ["api_key", "gcp_service_account"],
+    zeroRetentionFlags: ["unsupported"],
+    enabled: true,
+    supportsZeroRetention: false,
+    capabilities: ["json_schema", "tool_use", "vision", "streaming"],
+    contextWindow: 1_000_000,
+    latencyMs: 730,
+    costBand: "low",
+    riskTier: "high"
+  },
+  {
     provider: "azure",
     modelId: "azure-gpt-4.1",
+    modelFamily: "general",
+    deploymentType: "azure_hosted",
+    authModes: ["managed_identity", "service_principal"],
+    zeroRetentionFlags: ["supported", "customer_managed"],
     enabled: true,
     supportsZeroRetention: true,
     capabilities: ["json_schema", "tool_use", "vision", "streaming"],
@@ -129,15 +322,49 @@ const defaultProviders = (): ProviderRecord[] => [
     riskTier: "low"
   },
   {
-    provider: "google",
-    modelId: "gemini-2.5-pro",
+    provider: "azure",
+    modelId: "azure-gpt-4.1-mini",
+    modelFamily: "fast",
+    deploymentType: "azure_hosted",
+    authModes: ["managed_identity", "service_principal"],
+    zeroRetentionFlags: ["supported", "customer_managed"],
     enabled: true,
-    supportsZeroRetention: false,
+    supportsZeroRetention: true,
     capabilities: ["json_schema", "tool_use", "vision", "streaming"],
-    contextWindow: 1_000_000,
-    latencyMs: 1_420,
+    contextWindow: 128_000,
+    latencyMs: 980,
     costBand: "medium",
-    riskTier: "high"
+    riskTier: "low"
+  },
+  {
+    provider: "self_hosted",
+    modelId: "llama-3.1-8b-private",
+    modelFamily: "fast",
+    deploymentType: "self_hosted",
+    authModes: ["self_hosted_token", "oauth"],
+    zeroRetentionFlags: ["supported", "customer_enforced"],
+    enabled: true,
+    supportsZeroRetention: true,
+    capabilities: ["json_schema", "tool_use", "streaming"],
+    contextWindow: 32_000,
+    latencyMs: 980,
+    costBand: "low",
+    riskTier: "low"
+  },
+  {
+    provider: "self_hosted",
+    modelId: "mistral-small-3.1-private",
+    modelFamily: "reasoning",
+    deploymentType: "self_hosted",
+    authModes: ["self_hosted_token", "oauth"],
+    zeroRetentionFlags: ["supported", "customer_enforced"],
+    enabled: true,
+    supportsZeroRetention: true,
+    capabilities: ["json_schema", "tool_use", "streaming"],
+    contextWindow: 64_000,
+    latencyMs: 1_450,
+    costBand: "low",
+    riskTier: "low"
   }
 ];
 
@@ -178,13 +405,41 @@ const riskScore = (tier: ProviderRecord["riskTier"]): number => {
   return 0.35;
 };
 
+const normalizeProviderRecord = (provider: unknown): ProviderRecord | undefined => {
+  if (!provider || typeof provider !== "object") return undefined;
+  const current = provider as Record<string, unknown>;
+  const providerType = toProvider(current.provider);
+  const modelId = toString(current.modelId);
+  if (!providerType || !modelId) return undefined;
+
+  const defaults = providerMetadataFor(providerType, modelId);
+  const capabilities = Array.isArray(current.capabilities)
+    ? current.capabilities
+        .map(toCapability)
+        .filter((capability): capability is Capability => capability !== undefined)
+    : [];
+  if (capabilities.length === 0) return undefined;
+
+  return {
+    provider: providerType,
+    modelId,
+    modelFamily: toModelFamily(current.modelFamily) ?? defaults.modelFamily,
+    deploymentType: toDeploymentType(current.deploymentType) ?? defaults.deploymentType,
+    authModes: normalizeEnumArray(current.authModes, toAuthMode) ?? defaults.authModes,
+    zeroRetentionFlags: normalizeEnumArray(current.zeroRetentionFlags, toZeroRetentionFlag) ?? defaults.zeroRetentionFlags,
+    enabled: current.enabled !== false,
+    supportsZeroRetention: current.supportsZeroRetention !== false,
+    capabilities,
+    contextWindow: typeof current.contextWindow === "number" ? Math.max(2_048, Math.min(2_000_000, Math.floor(current.contextWindow))) : 8_192,
+    latencyMs: typeof current.latencyMs === "number" ? Math.max(200, Math.min(30_000, Math.floor(current.latencyMs))) : 2_000,
+    costBand: toCostBand(current.costBand),
+    riskTier: current.riskTier === "low" || current.riskTier === "high" ? current.riskTier : "medium"
+  };
+};
+
 const normalizeState = (state: Partial<ModelBrokerState> | undefined): ModelBrokerState => {
   const providers = Array.isArray(state?.providers)
-    ? state.providers.filter((provider): provider is ProviderRecord => {
-        if (!provider || typeof provider !== "object") return false;
-        const current = provider as ProviderRecord;
-        return Boolean(toProvider(current.provider) && toString(current.modelId));
-      })
+    ? state.providers.map(normalizeProviderRecord).filter((provider): provider is ProviderRecord => provider !== undefined)
     : [];
   return {
     version: 1,
@@ -234,9 +489,6 @@ const parseRouteInput = (body: JsonMap): RouteInput | undefined => {
   };
 };
 
-const includesCapabilities = (provider: ProviderRecord, required: Capability[]): boolean =>
-  required.every((capability) => provider.capabilities.includes(capability));
-
 const withinCostCeiling = (provider: ProviderRecord, ceiling: CostBand): boolean => {
   if (ceiling === "high") return true;
   if (ceiling === "medium") return provider.costBand !== "high";
@@ -244,48 +496,85 @@ const withinCostCeiling = (provider: ProviderRecord, ceiling: CostBand): boolean
 };
 
 const sensitivityRestricted = (sensitivity: DataClass, provider: ProviderRecord): string | undefined => {
-  if (sensitivity === "SECRET" && provider.provider !== "self_hosted") {
-    return "secret_requires_self_hosted";
+  if (sensitivity === "SECRET" && provider.deploymentType !== "self_hosted") {
+    return "policy.sensitivity.secret.requires_self_hosted";
   }
   if ((sensitivity === "PHI" || sensitivity === "EPHI") && provider.riskTier === "high") {
-    return "sensitive_data_blocks_high_risk_provider";
+    return "policy.sensitivity.health_data.blocks_high_risk";
   }
   return undefined;
 };
 
+const blockedReasonCodes = (input: RouteInput, provider: ProviderRecord): string[] => {
+  const reasonCodes: string[] = [];
+
+  if (!provider.enabled) {
+    reasonCodes.push("policy.provider.disabled");
+  }
+
+  if (input.providerAllowList && !input.providerAllowList.includes(provider.provider)) {
+    reasonCodes.push("policy.allow_list.excluded");
+  }
+
+  if (input.zeroRetentionRequired && !provider.supportsZeroRetention) {
+    reasonCodes.push("policy.zero_retention.unsupported");
+  }
+
+  const missingCapabilities = input.requiredCapabilities.filter((capability) => !provider.capabilities.includes(capability));
+  if (missingCapabilities.length > 0) {
+    reasonCodes.push(...missingCapabilities.map((capability) => `policy.capabilities.missing.${capability}`));
+  }
+
+  if (!withinCostCeiling(provider, input.costCeiling)) {
+    reasonCodes.push(`policy.cost.exceeds_ceiling.${input.costCeiling}`);
+  }
+
+  const sensitivityRule = sensitivityRestricted(input.sensitivity, provider);
+  if (sensitivityRule) {
+    reasonCodes.push(sensitivityRule);
+  }
+
+  if (provider.riskTier === "high" && input.sensitivity !== "PUBLIC") {
+    reasonCodes.push("policy.risk.high_tier_excluded_for_sensitive_data");
+  }
+
+  if (provider.latencyMs > input.maxLatencyMs) {
+    reasonCodes.push("policy.performance.exceeds_latency_budget");
+  }
+
+  return reasonCodes;
+};
+
+const routeReasonCodes = (input: RouteInput, selected: ProviderRecord): string[] => {
+  const reasons = [
+    `policy.sensitivity.${input.sensitivity.toLowerCase()}.compatible`,
+    input.zeroRetentionRequired ? "policy.zero_retention.required_and_supported" : "policy.zero_retention.optional",
+    `policy.cost.within_ceiling.${input.costCeiling}`,
+    "policy.performance.within_latency_budget",
+    `policy.risk.selected.${selected.riskTier}`,
+    `policy.deployment.${selected.deploymentType}`
+  ];
+
+  if (input.requiredCapabilities.length > 0) {
+    reasons.push(`policy.capabilities.matched.${input.requiredCapabilities.join(".")}`);
+  }
+
+  return reasons;
+};
+
 const evaluateRoute = (input: RouteInput, providers: ProviderRecord[]) => {
   const allowedCandidates: Array<{ provider: ProviderRecord; score: RouteScore }> = [];
-  const blockedCandidates: Array<{ provider: ModelProvider; modelId: string; reason: string }> = [];
+  const blockedCandidates: RouteBlockedCandidate[] = [];
 
   for (const provider of providers) {
-    if (!provider.enabled) {
-      blockedCandidates.push({ provider: provider.provider, modelId: provider.modelId, reason: "provider_disabled" });
-      continue;
-    }
-
-    if (input.providerAllowList && !input.providerAllowList.includes(provider.provider)) {
-      blockedCandidates.push({ provider: provider.provider, modelId: provider.modelId, reason: "not_in_allow_list" });
-      continue;
-    }
-
-    if (input.zeroRetentionRequired && !provider.supportsZeroRetention) {
-      blockedCandidates.push({ provider: provider.provider, modelId: provider.modelId, reason: "zero_retention_required" });
-      continue;
-    }
-
-    if (!includesCapabilities(provider, input.requiredCapabilities)) {
-      blockedCandidates.push({ provider: provider.provider, modelId: provider.modelId, reason: "required_capabilities_missing" });
-      continue;
-    }
-
-    if (!withinCostCeiling(provider, input.costCeiling)) {
-      blockedCandidates.push({ provider: provider.provider, modelId: provider.modelId, reason: "cost_ceiling_exceeded" });
-      continue;
-    }
-
-    const sensitivityRule = sensitivityRestricted(input.sensitivity, provider);
-    if (sensitivityRule) {
-      blockedCandidates.push({ provider: provider.provider, modelId: provider.modelId, reason: sensitivityRule });
+    const reasonCodes = blockedReasonCodes(input, provider);
+    if (reasonCodes.length > 0) {
+      blockedCandidates.push({
+        provider: provider.provider,
+        modelId: provider.modelId,
+        reason: reasonCodes[0] ?? "policy.route_blocked",
+        reasonCodes
+      });
       continue;
     }
 
@@ -302,7 +591,7 @@ const evaluateRoute = (input: RouteInput, providers: ProviderRecord[]) => {
   }
 
   if (allowedCandidates.length === 0) {
-    return { selected: undefined, fallback: [], blockedCandidates };
+    return { selected: undefined, fallback: [], blockedCandidates, routeReasonCodes: [] };
   }
 
   const ranked = allowedCandidates.sort((left, right) => {
@@ -313,12 +602,16 @@ const evaluateRoute = (input: RouteInput, providers: ProviderRecord[]) => {
 
   const selected = ranked[0]!;
   const fallback = ranked.slice(1).map((candidate) => candidate.provider);
-  return { selected, fallback, blockedCandidates };
+  return { selected, fallback, blockedCandidates, routeReasonCodes: routeReasonCodes(input, selected.provider) };
 };
 
 const sanitizeProvider = (provider: ProviderRecord) => ({
   provider: provider.provider,
   modelId: provider.modelId,
+  modelFamily: provider.modelFamily,
+  deploymentType: provider.deploymentType,
+  authModes: provider.authModes,
+  zeroRetentionFlags: provider.zeroRetentionFlags,
   enabled: provider.enabled,
   supportsZeroRetention: provider.supportsZeroRetention,
   capabilities: capabilityOrder.filter((capability) => provider.capabilities.includes(capability)),
@@ -333,6 +626,7 @@ const parseProviderPayload = (body: JsonMap): ProviderRecord | undefined => {
   const modelId = toString(body.modelId);
   if (!provider || !modelId || modelId.length > 120) return undefined;
 
+  const defaults = providerMetadataFor(provider, modelId);
   const capabilities = Array.isArray(body.capabilities)
     ? body.capabilities
         .map(toCapability)
@@ -350,6 +644,10 @@ const parseProviderPayload = (body: JsonMap): ProviderRecord | undefined => {
   return {
     provider,
     modelId,
+    modelFamily: toModelFamily(body.modelFamily) ?? defaults.modelFamily,
+    deploymentType: toDeploymentType(body.deploymentType) ?? defaults.deploymentType,
+    authModes: normalizeEnumArray(body.authModes, toAuthMode) ?? defaults.authModes,
+    zeroRetentionFlags: normalizeEnumArray(body.zeroRetentionFlags, toZeroRetentionFlag) ?? defaults.zeroRetentionFlags,
     enabled: body.enabled !== false,
     supportsZeroRetention: body.supportsZeroRetention !== false,
     capabilities,
@@ -469,6 +767,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       fallback: evaluated.fallback,
       blockedCandidates: evaluated.blockedCandidates,
       score: evaluated.selected.score,
+      routeReasonCodes: evaluated.routeReasonCodes,
       createdAt: nowIso()
     };
 
@@ -484,6 +783,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
         fallback: decision.fallback.map(sanitizeProvider),
         blockedCandidates: decision.blockedCandidates,
         score: decision.score,
+        routeReasonCodes: decision.routeReasonCodes,
         policySummary: {
           sensitivity: decision.input.sensitivity,
           zeroRetentionRequired: decision.input.zeroRetentionRequired,

@@ -15,6 +15,7 @@ const screenshotDir = path.join(repoRoot, "docs", "assets", "screenshots");
 
 const requestedPorts = {
   gateway: Number(process.env.OPENAEGIS_SCREENSHOT_API_PORT ?? 4300),
+  toolRegistry: Number(process.env.OPENAEGIS_SCREENSHOT_TOOL_REGISTRY_PORT ?? 4301),
   frontend: Number(process.env.OPENAEGIS_SCREENSHOT_UI_PORT ?? 4700)
 };
 
@@ -178,10 +179,12 @@ const captureRoute = async (page, appBaseUrl, route, heading, filename) => {
 export const captureCommercialScreenshots = async () => {
   const ports = {
     gateway: await findAvailablePort(requestedPorts.gateway),
+    toolRegistry: await findAvailablePort(requestedPorts.toolRegistry),
     frontend: await findAvailablePort(requestedPorts.frontend)
   };
   const urls = {
     api: `http://127.0.0.1:${ports.gateway}`,
+    toolRegistry: `http://127.0.0.1:${ports.toolRegistry}`,
     app: `http://127.0.0.1:${ports.frontend}`
   };
 
@@ -191,10 +194,20 @@ export const captureCommercialScreenshots = async () => {
   await rm(path.join(repoRoot, ".volumes", "tool-execution-state.json"), { force: true });
 
   log("Building admin-console preview bundle");
+  await runCommand(npmCmd, ["run", "--workspace", "@openaegis/tool-registry", "build"]);
   await runCommand(npmCmd, ["run", "--workspace", "@openaegis/admin-console", "build"], {
     env: {
       ...process.env,
-      VITE_API_URL: urls.api
+      VITE_API_URL: urls.api,
+      VITE_TOOL_REGISTRY_URL: urls.toolRegistry
+    }
+  });
+
+  log(`Starting tool-registry on :${ports.toolRegistry}`);
+  const toolRegistry = startService("tool-registry", "node", ["tools/scripts/run-tool-registry.mjs"], {
+    env: {
+      ...process.env,
+      PORT: String(ports.toolRegistry)
     }
   });
 
@@ -217,6 +230,7 @@ export const captureCommercialScreenshots = async () => {
   let browser;
   try {
     log("Waiting for gateway and UI to be ready");
+    await waitForHttp(`${urls.toolRegistry}/healthz`);
     await waitForHttp(`${urls.api}/healthz`);
     await waitForHttp(`${urls.app}/setup`);
 
@@ -287,7 +301,7 @@ export const captureCommercialScreenshots = async () => {
     if (browser) {
       await browser.close();
     }
-    await Promise.allSettled([stopService(preview), stopService(gateway)]);
+    await Promise.allSettled([stopService(preview), stopService(gateway), stopService(toolRegistry)]);
   }
 
   log("Verifying screenshot files");

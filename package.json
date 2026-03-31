@@ -19,6 +19,7 @@
     "validate:test-surface": "node tools/scripts/validate-test-surface.mjs",
     "typecheck": "npm run --workspaces typecheck",
     "smoke:pilot": "node tools/scripts/smoke-pilot.mjs",
+    "run:tool-registry": "npm run --workspace @openaegis/tool-registry build && node tools/scripts/run-tool-registry.mjs",
     "proof:commercial": "npm run build && node tools/scripts/commercial-proof.mjs",
     "proof:trust-layer": "npm run build && node tools/scripts/prove-trust-layer.mjs",
     "security:regression": "node tools/scripts/security-regression.mjs",
