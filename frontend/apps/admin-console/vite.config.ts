@@ -1,6 +1,11 @@
 import { defineConfig } from "vite";
 
+const demoIdentitiesEnabled = process.env.VITE_ENABLE_DEMO_IDENTITIES === "true";
+
 export default defineConfig({
+  define: {
+    "globalThis.__ENABLE_DEMO_IDENTITIES__": JSON.stringify(demoIdentitiesEnabled)
+  },
   server: {
     port: 8080
   },

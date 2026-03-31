@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import {
+  createSignedInternalContextHeaders,
   InMemoryRateLimiter,
   enforceRateLimit,
   enforceSecurity,
@@ -65,6 +66,43 @@ test("parseContext reads request security headers", () => {
   assert.equal(context.actorId, "user-security");
   assert.deepEqual(context.roles, ["security_admin", "approver"]);
   assert.equal(context.mtlsClientSan, "spiffe://openaegis/api-gateway");
+  assert.equal(context.internalContextVerified, false);
+});
+
+test("parseContext prefers verified signed internal context", () => {
+  const headers = createSignedInternalContextHeaders(
+    {
+      requestId: "req-signed",
+      tenantId: "tenant-signed",
+      actorId: "service-gateway",
+      roles: ["token_introspect", "service_account"],
+      mtlsClientSan: "spiffe://openaegis/api-gateway",
+      mtlsVerified: true
+    },
+    { signingKey: "signed-context-key", nowMs: Date.now() }
+  );
+
+  const request = {
+    headers: {
+      ...headers,
+      "x-request-id": "req-raw",
+      "x-tenant-id": "tenant-raw",
+      "x-actor-id": "user-raw",
+      "x-roles": "workflow_operator"
+    }
+  } as unknown as IncomingMessage;
+
+  process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY = "signed-context-key";
+  try {
+    const context = parseContext(request);
+    assert.equal(context.requestId, "req-signed");
+    assert.equal(context.tenantId, "tenant-signed");
+    assert.equal(context.actorId, "service-gateway");
+    assert.deepEqual(context.roles, ["service_account", "token_introspect"]);
+    assert.equal(context.internalContextVerified, true);
+  } finally {
+    delete process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY;
+  }
 });
 
 test("enforceSecurity denies missing required role", () => {
@@ -114,4 +152,33 @@ test("stableSerialize is deterministic and hmac helper is stable", () => {
   const valueB = { a: { m: [2, 1], z: 9 }, b: 2 };
   assert.equal(stableSerialize(valueA), stableSerialize(valueB));
   assert.equal(hmacSha256("key-1", "payload"), hmacSha256("key-1", "payload"));
+});
+
+test("enforceSecurity requires signed internal context when configured", () => {
+  process.env.OPENAEGIS_REQUIRE_SIGNED_INTERNAL_CONTEXT = "true";
+  process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY = "signed-context-key";
+  const request = {
+    headers: {
+      "x-request-id": "req-4",
+      "x-tenant-id": "tenant-starlight-health",
+      "x-actor-id": "user-security",
+      "x-roles": "security_admin"
+    }
+  } as unknown as IncomingMessage;
+  const response = createMockResponse();
+
+  try {
+    const result = enforceSecurity(request, response as unknown as ServerResponse, {
+      requireTenant: true,
+      requireActor: true,
+      requiredRoles: ["security_admin"]
+    });
+
+    assert.equal(result, undefined);
+    assert.equal(response.statusCode, 401);
+    assert.match(response.payload ?? "", /internal_context_signature_required/);
+  } finally {
+    delete process.env.OPENAEGIS_REQUIRE_SIGNED_INTERNAL_CONTEXT;
+    delete process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY;
+  }
 });

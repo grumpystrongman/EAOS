@@ -159,3 +159,20 @@ test("allows custom token minting only when insecure flag is enabled", async () 
   }
 });
 
+test("denies token issuance for service accounts without token issuer privilege", async () => {
+  const response = await fetch(`${baseUrl}/v1/auth/token`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-tenant-id": "tenant-platform",
+      "x-actor-id": "service-gateway",
+      "x-roles": "service_account,token_introspect"
+    },
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+
+  assert.equal(response.status, 403);
+  const body = (await response.json()) as { error: string };
+  assert.equal(body.error, "insufficient_role");
+});
+

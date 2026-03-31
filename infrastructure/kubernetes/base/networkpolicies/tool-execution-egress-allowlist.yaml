@@ -13,7 +13,7 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              name: openaegis
+              kubernetes.io/metadata.name: openaegis
       ports:
         - protocol: TCP
           port: 443

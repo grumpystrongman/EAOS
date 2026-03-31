@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T15:40:12.412Z",
+  "generatedAt": "2026-03-31T18:26:54.857Z",
   "suite": "security-regression",
   "endpoints": {
     "gateway": "http://127.0.0.1:3970",
@@ -13,7 +13,7 @@
       "details": {
         "status": 404,
         "error": "demo_auth_disabled",
-        "latencyMs": 33
+        "latencyMs": 29
       }
     },
     {
@@ -40,8 +40,8 @@
       "passed": true,
       "details": {
         "status": 201,
-        "executionId": "ex-mnes9pcp-rk683e",
-        "latencyMs": 25
+        "executionId": "ex-mney83a9-971h64",
+        "latencyMs": 24
       }
     },
     {
@@ -50,7 +50,7 @@
       "details": {
         "status": 403,
         "error": "tenant_scope_mismatch",
-        "latencyMs": 5
+        "latencyMs": 6
       }
     },
     {
@@ -59,7 +59,7 @@
       "details": {
         "executionStatus": 201,
         "workflowStatus": "blocked",
-        "approvalId": "ap-mnes9pdg-96uhih",
+        "approvalId": "ap-mney83b1-g3fpsp",
         "deniedStatus": 403,
         "deniedError": "insufficient_role_for_approval_decision"
       }
@@ -84,7 +84,7 @@
         "clinicianStatus": 403,
         "clinicianError": "insufficient_role_for_approval_list",
         "securityStatus": 200,
-        "approvalCount": 3
+        "approvalCount": 1
       }
     },
     {
@@ -116,7 +116,7 @@
       "checkId": "tool_call_lookup_is_tenant_scoped",
       "passed": true,
       "details": {
-        "createdToolCallId": "tc-mnes1t5v-pumild",
+        "createdToolCallId": "tc-mney83cb-gjdgsr",
         "status": 404,
         "error": "tool_call_not_found"
       }

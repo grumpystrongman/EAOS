@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "tsc -p tsconfig.json --outDir .tmp-test --declaration false && cd .tmp-test && node --test app/routes.test.js shared/auth/session.test.js"
+    "test": "tsc -p tsconfig.json --outDir .tmp-test --declaration false && cd .tmp-test && node --test app/routes.test.js app/security-guards.test.js app/workspace-persistence.test.js shared/auth/session.test.js"
   },
   "dependencies": {
     "react": "^19.1.1",

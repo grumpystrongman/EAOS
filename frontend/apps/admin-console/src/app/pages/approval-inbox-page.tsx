@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { usePilotWorkspace } from "../pilot-workspace.js";
+import { isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, EmptyState, KeyValueList, Panel, PageHeader, Table } from "../ui.js";
 
 const formatTime = (value: string) => new Date(value).toLocaleString();
@@ -10,6 +11,7 @@ export const ApprovalInboxPage = () => {
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
   const connectDemoUsers = usePilotWorkspace((state) => state.connectDemoUsers);
   const securitySession = usePilotWorkspace((state) => state.securitySession);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   const [selectedApprovalId, setSelectedApprovalId] = useState<string | undefined>(approvals[0]?.approvalId);
 
@@ -26,9 +28,11 @@ export const ApprovalInboxPage = () => {
         subtitle="High-risk and live actions pause here until the reviewer explicitly approves or rejects them."
         actions={
           <>
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {securitySession ? "Reconnect sessions" : "Connect sessions"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {securitySession ? "Reconnect sessions" : "Connect sessions"}
+              </button>
+            ) : null}
           </>
         }
       />
@@ -39,9 +43,11 @@ export const ApprovalInboxPage = () => {
             title="Inbox empty"
             description="The pilot backend only generates approvals when a live workflow reaches the high-risk outbound step."
             action={
-              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-                Connect demo sessions
-              </button>
+              demoIdentitiesEnabled ? (
+                <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                  Connect demo sessions
+                </button>
+              ) : null
             }
           />
         </Panel>

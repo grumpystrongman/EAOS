@@ -10,6 +10,7 @@ import {
   type PluginInstanceRecord
 } from "../../shared/api/pilot.js";
 import { usePilotWorkspace } from "../pilot-workspace.js";
+import { isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, EmptyState, JsonBlock, KeyValueList, Panel, PageHeader } from "../ui.js";
 
 const INSTANCE_STORAGE_KEY = "openaegis.admin-console.integration-hub.instances";
@@ -100,6 +101,7 @@ export const IntegrationHubPage = () => {
   const token = securitySession?.accessToken ?? clinicianSession?.accessToken;
   const actorId = securitySession?.user.userId ?? clinicianSession?.user.userId ?? undefined;
   const hasActor = Boolean(actorId);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   useEffect(() => {
     if (typeof localStorage === "undefined") return;
@@ -356,9 +358,11 @@ export const IntegrationHubPage = () => {
         actions={
           <>
             <Badge tone={hasActor ? "success" : "warning"}>{hasActor ? `Actor ${actorId}` : "Connect identities to write"}</Badge>
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {clinicianSession && securitySession ? "Reconnect identities" : "Connect evaluator identities"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {clinicianSession && securitySession ? "Reconnect identities" : "Connect evaluator identities"}
+              </button>
+            ) : null}
             <button type="button" onClick={() => void refreshCatalog()} disabled={catalogLoading || isSyncing}>
               {catalogLoading ? "Refreshing..." : "Refresh catalog"}
             </button>

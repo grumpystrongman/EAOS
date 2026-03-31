@@ -10,6 +10,7 @@ let server: ReturnType<typeof createAppServer>;
 
 beforeEach(async () => {
   await rm(".volumes/pilot-state.json", { force: true });
+  await rm(".volumes/api-gateway-security-state.json", { force: true });
   process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
   server = createAppServer();
   server.listen(0, "127.0.0.1");
@@ -212,6 +213,71 @@ test("approval cannot be decided more than once", async () => {
   assert.equal(secondDecision.status, 409);
   const secondBody = (await secondDecision.json()) as { error: string };
   assert.equal(secondBody.error, "approval_already_decided");
+});
+
+test("approved tool execution approvals are single-use", async () => {
+  const securityLogin = await fetch(`${baseUrl}/v1/auth/login`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
+  });
+  const security = (await securityLogin.json()) as { accessToken: string };
+
+  const createApproval = await fetch(`${baseUrl}/v1/approvals`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`
+    },
+    body: JSON.stringify({
+      tenantId: "tenant-starlight-health",
+      reason: "Authorize one outbound notification"
+    })
+  });
+  assert.equal(createApproval.status, 201);
+  const approval = (await createApproval.json()) as { approvalId: string };
+
+  const approve = await fetch(`${baseUrl}/v1/approvals/${approval.approvalId}/decide`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`
+    },
+    body: JSON.stringify({ decision: "approve", reason: "approved for single use" })
+  });
+  assert.equal(approve.status, 200);
+
+  const firstExecute = await fetch(`${baseUrl}/v1/tools/connector-email-notify/execute`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`,
+      "idempotency-key": "gateway-tool-execute-001"
+    },
+    body: JSON.stringify({
+      tenantId: "tenant-starlight-health",
+      approvalId: approval.approvalId,
+      recipient: "patient@example.org"
+    })
+  });
+  assert.equal(firstExecute.status, 200);
+
+  const secondExecute = await fetch(`${baseUrl}/v1/tools/connector-email-notify/execute`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${security.accessToken}`,
+      "idempotency-key": "gateway-tool-execute-001"
+    },
+    body: JSON.stringify({
+      tenantId: "tenant-starlight-health",
+      approvalId: approval.approvalId,
+      recipient: "patient@example.org"
+    })
+  });
+  assert.equal(secondExecute.status, 409);
+  const body = (await secondExecute.json()) as { error: string };
+  assert.equal(body.error, "approval_already_used");
 });
 
 test("simulation mode completes without approval", async () => {
@@ -620,6 +686,19 @@ test("gateway supports auth-service token introspection and enforces tenant scop
       return;
     }
 
+    if (process.env.OPENAEGIS_REQUIRE_SIGNED_INTERNAL_CONTEXT === "true") {
+      assert.equal(typeof request.headers["x-openaegis-internal-context"], "string");
+      assert.equal(typeof request.headers["x-openaegis-internal-context-signature"], "string");
+      const payload = JSON.parse(
+        Buffer.from(String(request.headers["x-openaegis-internal-context"]), "base64url").toString("utf8")
+      ) as { actorId: string; tenantId: string; roles: string[]; issuedAt: number; v: number };
+      assert.equal(payload.v, 1);
+      assert.equal(payload.actorId, "service-gateway");
+      assert.equal(payload.tenantId, "tenant-platform");
+      assert.deepEqual(payload.roles, ["service_account", "token_introspect"]);
+      assert.equal(typeof payload.issuedAt, "number");
+    }
+
     const chunks: Buffer[] = [];
     for await (const chunk of request) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -705,6 +784,8 @@ test("gateway supports auth-service token introspection and enforces tenant scop
 
   process.env.OPENAEGIS_AUTH_INTROSPECTION_URL = "http://127.0.0.1:3912/v1/auth/introspect";
   process.env.OPENAEGIS_REQUIRE_INTROSPECTION = "true";
+  process.env.OPENAEGIS_REQUIRE_SIGNED_INTERNAL_CONTEXT = "true";
+  process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY = "gateway-internal-context-key";
 
   try {
     const authorized = await fetch(`${baseUrl}/v1/policies/profile`, {
@@ -807,6 +888,8 @@ test("gateway supports auth-service token introspection and enforces tenant scop
   } finally {
     delete process.env.OPENAEGIS_AUTH_INTROSPECTION_URL;
     delete process.env.OPENAEGIS_REQUIRE_INTROSPECTION;
+    delete process.env.OPENAEGIS_REQUIRE_SIGNED_INTERNAL_CONTEXT;
+    delete process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY;
     introspectionServer.close();
     await once(introspectionServer, "close");
   }

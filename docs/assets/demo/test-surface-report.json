@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T15:40:10.884Z",
+  "generatedAt": "2026-03-31T18:26:53.135Z",
   "suite": "workspace-test-surface-validation",
   "thresholds": {
     "minTestFilesPerWorkspace": 1
@@ -142,7 +142,7 @@
       "name": "@openaegis/admin-console",
       "path": "C:/Users/grump/EAOS/frontend/apps/admin-console",
       "hasTestScript": true,
-      "testFileCount": 2
+      "testFileCount": 4
     }
   ],
   "failures": []

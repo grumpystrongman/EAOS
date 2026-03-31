@@ -62,7 +62,7 @@ if (strictProductionKeys && signingKey === defaultSigningKey) {
 }
 const stateFile = resolve(process.cwd(), ".volumes", "auth-service-state.json");
 const limiter = new InMemoryRateLimiter(80, 60_000);
-const tokenIssueRoles = ["security_admin", "platform_admin", "service_account", "token_issuer"];
+const tokenIssueRoles = ["security_admin", "platform_admin", "token_issuer"];
 const tokenIntrospectionRoles = ["token_introspect", "security_admin", "platform_admin", "service_account"];
 const tokenRevokeRoles = ["security_admin", "platform_admin", "service_account"];
 

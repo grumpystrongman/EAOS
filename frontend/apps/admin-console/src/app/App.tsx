@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import type { SessionContext, UserRole } from "../shared/auth/session.js";
-import { APP_ROUTES, canAccessRoute } from "./routes.js";
+import { APP_ROUTES } from "./routes.js";
+import { canAccessRouteWithAssurance, isDemoIdentitiesEnabled } from "./security-guards.js";
 import { Badge, EmptyState, PageHeader } from "./ui.js";
 import { PILOT_USE_CASE } from "./pilot-data.js";
 import { usePilotWorkspace } from "./pilot-workspace.js";
@@ -61,6 +62,7 @@ export const App = () => {
   const currentRoute = useMemo(() => {
     return APP_ROUTES.find((route) => route.path === location.pathname) ?? APP_ROUTES[0]!;
   }, [location.pathname]);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   const clinicianSession = usePilotWorkspace((state) => state.clinicianSession);
   const securitySession = usePilotWorkspace((state) => state.securitySession);
@@ -80,7 +82,7 @@ export const App = () => {
     () =>
       APP_ROUTES.map((route) => ({
         route,
-        allowed: activeContext ? canAccessRoute(activeContext, route) : route.path === "/setup"
+        allowed: activeContext ? canAccessRouteWithAssurance(activeContext, route) : route.path === "/setup"
       })),
     [activeContext]
   );
@@ -92,8 +94,9 @@ export const App = () => {
       items: routeAccess.filter(({ route }) => route.section === section)
     }));
   }, [routeAccess]);
-  const hasRouteAccess = activeContext ? canAccessRoute(activeContext, currentRoute) : currentRoute.path === "/setup";
+  const hasRouteAccess = activeContext ? canAccessRouteWithAssurance(activeContext, currentRoute) : currentRoute.path === "/setup";
   const isGuidedRoute = guidedRoutes.has(currentRoute.path);
+  const needsStepUpAssurance = Boolean(activeContext && currentRoute.requireStepUpMfa && activeContext.assuranceLevel !== "aal3");
 
   useEffect(() => {
     void boot();
@@ -176,9 +179,11 @@ export const App = () => {
             <span>{securitySession ? "Security connected" : "Security disconnected"}</span>
           </div>
           <div className="sidebar-actions">
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {clinicianSession || securitySession ? "Reconnect evaluator identities" : "Connect evaluator identities"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {clinicianSession || securitySession ? "Reconnect evaluator identities" : "Connect evaluator identities"}
+              </button>
+            ) : null}
             <button type="button" onClick={() => void refreshWorkspace()} disabled={isSyncing || !clinicianSession}>
               Refresh live data
             </button>
@@ -240,7 +245,11 @@ export const App = () => {
         ) : (
           <EmptyState
             title="Route access denied"
-            description={`The active persona does not have the required role for ${currentRoute.title}. Switch persona or reconnect sessions.`}
+            description={
+              needsStepUpAssurance
+                ? `The active persona does not have the required assurance level for ${currentRoute.title}. Step up to AAL3, then try again.`
+                : `The active persona does not have the required role for ${currentRoute.title}. Switch persona or reconnect sessions.`
+            }
             action={
               <div className="pill-row">
                 <button type="button" onClick={() => setActivePersona("clinician")}>

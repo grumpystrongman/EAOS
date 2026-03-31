@@ -2,13 +2,43 @@ import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import { rm } from "node:fs/promises";
+import { hmacSha256, stableSerialize } from "@openaegis/security-kit";
 import { createAppServer } from "./index.js";
 
 const baseUrl = "http://127.0.0.1:3907";
 let server: ReturnType<typeof createAppServer>;
 
+const createApprovalHeaders = (input: {
+  approvalId: string;
+  toolId: string;
+  action: "READ" | "WRITE" | "EXECUTE";
+  mode: "simulate" | "execute";
+  requestedNetworkProfile: string;
+  tenantId: string;
+  actorId: string;
+  idempotencyKey?: string;
+  parameters?: Record<string, unknown>;
+}) => ({
+  "x-approval-id": input.approvalId,
+  "x-approval-proof": hmacSha256(
+    process.env.OPENAEGIS_TOOL_EXECUTION_APPROVAL_KEY ?? "",
+    stableSerialize({
+      approvalId: input.approvalId,
+      toolId: input.toolId,
+      action: input.action,
+      mode: input.mode,
+      requestedNetworkProfile: input.requestedNetworkProfile,
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      idempotencyKey: input.idempotencyKey ?? null,
+      parameters: input.parameters ?? {}
+    })
+  )
+});
+
 beforeEach(async () => {
   await rm(".volumes/tool-execution-state.json", { force: true });
+  process.env.OPENAEGIS_TOOL_EXECUTION_APPROVAL_KEY = "tool-execution-approval-key";
   server = createAppServer();
   server.listen(3907);
   await once(server, "listening");
@@ -17,6 +47,7 @@ beforeEach(async () => {
 test.afterEach(async () => {
   server.close();
   await once(server, "close");
+  delete process.env.OPENAEGIS_TOOL_EXECUTION_APPROVAL_KEY;
 });
 
 test("allows simulated connector execution", async () => {
@@ -59,7 +90,6 @@ test("blocks execution when approval is required and missing", async () => {
       mode: "execute",
       requestedNetworkProfile: "outbound-approved",
       stepBudgetRemaining: 1,
-      requiresApproval: true,
       approvalGranted: false
     })
   });
@@ -68,6 +98,72 @@ test("blocks execution when approval is required and missing", async () => {
   const body = (await response.json()) as { status: string; guardReason: string };
   assert.equal(body.status, "blocked");
   assert.equal(body.guardReason, "approval_missing");
+});
+
+test("ignores client-controlled approval flags without proof headers", async () => {
+  const response = await fetch(`${baseUrl}/v1/tool-calls`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-actor-id": "user-workflow",
+      "x-tenant-id": "tenant-starlight-health",
+      "x-roles": "workflow_operator",
+      "idempotency-key": "idem-approval-bypass-001"
+    },
+    body: JSON.stringify({
+      toolId: "connector-email-notify",
+      action: "EXECUTE",
+      mode: "execute",
+      requestedNetworkProfile: "outbound-approved",
+      stepBudgetRemaining: 1,
+      approvalGranted: true,
+      requiresApproval: false
+    })
+  });
+
+  assert.equal(response.status, 403);
+  const body = (await response.json()) as { status: string; guardReason: string };
+  assert.equal(body.status, "blocked");
+  assert.equal(body.guardReason, "approval_missing");
+});
+
+test("accepts live execution only with a signed approval proof", async () => {
+  const parameters = { recipient: "patient@example.org" };
+  const response = await fetch(`${baseUrl}/v1/tool-calls`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-actor-id": "user-workflow",
+      "x-tenant-id": "tenant-starlight-health",
+      "x-roles": "workflow_operator",
+      "idempotency-key": "idem-approval-proof-001",
+      ...createApprovalHeaders({
+        approvalId: "ap-approved-001",
+        toolId: "connector-email-notify",
+        action: "EXECUTE",
+        mode: "execute",
+        requestedNetworkProfile: "outbound-approved",
+        tenantId: "tenant-starlight-health",
+        actorId: "user-workflow",
+        idempotencyKey: "idem-approval-proof-001",
+        parameters
+      })
+    },
+    body: JSON.stringify({
+      toolId: "connector-email-notify",
+      action: "EXECUTE",
+      mode: "execute",
+      requestedNetworkProfile: "outbound-approved",
+      stepBudgetRemaining: 1,
+      parameters,
+      approvalGranted: true
+    })
+  });
+
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as { status: string; approvalId?: string };
+  assert.equal(body.status, "completed");
+  assert.equal(body.approvalId, "ap-approved-001");
 });
 
 test("replays idempotent calls for matching idempotency key", async () => {

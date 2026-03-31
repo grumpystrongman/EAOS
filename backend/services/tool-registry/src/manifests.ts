@@ -81,6 +81,8 @@ export interface PluginInstanceConfig {
 
 export interface PluginInstanceRecord {
   instanceId: string;
+  tenantId: string;
+  createdBy: string;
   manifestToolId: string;
   displayName: string;
   status: PluginInstanceStatus;

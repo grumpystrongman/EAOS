@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { usePilotWorkspace } from "../pilot-workspace.js";
+import { isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, EmptyState, KeyValueList, Panel, PageHeader } from "../ui.js";
 
 const scenarios = [
@@ -29,6 +30,7 @@ export const SimulationLabPage = () => {
   const connectDemoUsers = usePilotWorkspace((state) => state.connectDemoUsers);
   const clinicianSession = usePilotWorkspace((state) => state.clinicianSession);
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   const latestExecution = executions[0];
   const selectedScenario = scenarios.find((item) => item.key === scenario) ?? scenarios[0];
@@ -73,9 +75,11 @@ export const SimulationLabPage = () => {
             </label>
           </div>
           <div className="pill-row">
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {clinicianSession ? "Reconnect demo sessions" : "Connect demo sessions"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {clinicianSession ? "Reconnect demo sessions" : "Connect demo sessions"}
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => void runWorkflow("simulation", requestFollowupEmail)}
@@ -140,9 +144,11 @@ export const SimulationLabPage = () => {
               title="No runs yet"
               description="Connect a demo session and run the simulation to populate the lab."
               action={
-                <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-                  Connect demo sessions
-                </button>
+                demoIdentitiesEnabled ? (
+                  <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                    Connect demo sessions
+                  </button>
+                ) : null
               }
             />
           )}

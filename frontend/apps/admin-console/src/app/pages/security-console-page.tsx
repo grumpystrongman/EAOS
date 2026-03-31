@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PolicyProfileControls } from "../../shared/api/pilot.js";
 import { pilotWorkspaceBlueprint, usePilotWorkspace } from "../pilot-workspace.js";
+import { buildPolicyDraftHash, hasFreshPreviewHash, isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, JsonBlock, KeyValueList, Panel, PageHeader } from "../ui.js";
 
 const defaultControls: PolicyProfileControls = {
@@ -69,6 +70,7 @@ export const SecurityConsolePage = () => {
   const savePolicy = usePilotWorkspace((state) => state.savePolicy);
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
   const securitySession = usePilotWorkspace((state) => state.securitySession);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   const [profileName, setProfileName] = useState("Hospital Safe Baseline");
   const [changeSummary, setChangeSummary] = useState("Update policy controls from Security Console.");
@@ -77,7 +79,9 @@ export const SecurityConsolePage = () => {
   const [justification, setJustification] = useState("");
   const [approverIds, setApproverIds] = useState("security-lead-1, compliance-lead-2");
   const [draftControls, setDraftControls] = useState<PolicyProfileControls>(defaultControls);
+  const [previewHash, setPreviewHash] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const currentDraftHash = useMemo(() => buildPolicyDraftHash(profileName, draftControls), [draftControls, profileName]);
 
   useEffect(() => {
     if (!policySnapshot) return;
@@ -90,11 +94,19 @@ export const SecurityConsolePage = () => {
   const blockingIssues = issues.filter((issue) => issue.severity === "blocking");
   const warnings = issues.filter((issue) => issue.severity === "warning");
   const simulation = policySnapshot?.validation.simulation;
+  const hasFreshDraftPreview = hasFreshPreviewHash(previewHash ?? undefined, profileName, draftControls);
 
   const runPreview = async () => {
     setNotice(null);
+    const draftHashAtPreviewStart = buildPolicyDraftHash(profileName, draftControls);
     const snapshot = await previewPolicy(draftControls, profileName);
-    if (snapshot) setNotice("Preview refreshed. Review warnings before applying.");
+    if (snapshot && draftHashAtPreviewStart === buildPolicyDraftHash(profileName, draftControls)) {
+      setPreviewHash(draftHashAtPreviewStart);
+      setNotice("Preview refreshed. Review warnings before applying.");
+    } else if (snapshot) {
+      setPreviewHash(null);
+      setNotice("Preview refreshed, but the draft changed before it finished. Run preview again.");
+    }
   };
 
   const runCopilot = async () => {
@@ -129,6 +141,10 @@ export const SecurityConsolePage = () => {
 
   const applyPolicy = async () => {
     setNotice(null);
+    if (!hasFreshDraftPreview || previewHash !== currentDraftHash) {
+      setNotice("Run Preview impact for the current draft before applying policy.");
+      return;
+    }
     const breakGlass = blockingIssues.length
       ? {
           ticketId,
@@ -159,9 +175,11 @@ export const SecurityConsolePage = () => {
         subtitle="Beginner-safe policy controls with impact preview, human-readable warnings, and copilot guidance."
         actions={
           <>
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {securitySession ? "Reconnect sessions" : "Connect sessions"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {securitySession ? "Reconnect sessions" : "Connect sessions"}
+              </button>
+            ) : null}
             <button type="button" onClick={() => void refreshWorkspace()} disabled={!securitySession || isSyncing}>
               Refresh policy view
             </button>
@@ -180,7 +198,9 @@ export const SecurityConsolePage = () => {
           </ol>
           <div className="pill-row">
             <Badge tone="success">Policies enforced outside model</Badge>
-            <Badge tone="warning">Impact preview required</Badge>
+            <Badge tone={hasFreshDraftPreview && previewHash === currentDraftHash ? "success" : "warning"}>
+              Impact preview required
+            </Badge>
             <Badge tone="danger">Break-glass needs dual approval</Badge>
           </div>
         </Panel>
@@ -235,7 +255,17 @@ export const SecurityConsolePage = () => {
               <button type="button" onClick={() => void runExplain()} disabled={isSyncing}>
                 Explain impact
               </button>
-              <button type="button" className="primary" onClick={() => void applyPolicy()} disabled={isSyncing}>
+              <button
+                type="button"
+                className="primary"
+                onClick={() => void applyPolicy()}
+                disabled={isSyncing || !hasFreshDraftPreview || previewHash !== currentDraftHash}
+                title={
+                  !hasFreshDraftPreview || previewHash !== currentDraftHash
+                    ? "Run Preview impact for the current draft before applying."
+                    : undefined
+                }
+              >
                 Apply policy
               </button>
             </div>

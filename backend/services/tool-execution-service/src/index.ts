@@ -7,6 +7,7 @@ import {
   InMemoryRateLimiter,
   enforceRateLimit,
   enforceSecurity,
+  hmacSha256,
   parseContext,
   readJson,
   sendJson,
@@ -38,6 +39,7 @@ interface ToolCallRecord {
   actorId: string;
   tenantId: string;
   idempotencyKey?: string;
+  approvalId?: string;
   requestHash: string;
   status: "completed" | "blocked";
   guardReason?: string;
@@ -146,6 +148,64 @@ const readRoles = [...writeExecuteRoles, "clinician", "data_analyst"];
 
 const hasAnyRole = (roles: string[], allowed: string[]) => allowed.some((role) => roles.includes(role));
 
+const resolveApprovalProofKey = (): string | undefined => {
+  const explicit = toString(process.env.OPENAEGIS_TOOL_EXECUTION_APPROVAL_KEY);
+  if (explicit) return explicit;
+  return toString(process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY);
+};
+
+const approvalRequiredForRequest = (input: {
+  action: ToolAction;
+  mode: RunMode;
+  requestedNetworkProfile: string;
+}): boolean => {
+  if (input.mode !== "execute") return false;
+  if (input.action !== "READ") return true;
+  return input.requestedNetworkProfile !== "clinical-internal";
+};
+
+const resolveApprovalFromHeaders = (
+  request: IncomingMessage,
+  input: {
+    toolId: string;
+    action: ToolAction;
+    mode: RunMode;
+    requestedNetworkProfile: string;
+    tenantId: string;
+    actorId: string;
+    idempotencyKey?: string;
+    parameters: Record<string, unknown>;
+  }
+): { approvalId?: string; approvalGranted: boolean } => {
+  const approvalId = toString(request.headers["x-approval-id"]);
+  const proof = toString(request.headers["x-approval-proof"]);
+  const key = resolveApprovalProofKey();
+  if (!approvalId || !proof || !key) {
+    return { approvalGranted: false };
+  }
+
+  const expected = hmacSha256(
+    key,
+    stableSerialize({
+      approvalId,
+      toolId: input.toolId,
+      action: input.action,
+      mode: input.mode,
+      requestedNetworkProfile: input.requestedNetworkProfile,
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      idempotencyKey: input.idempotencyKey ?? null,
+      parameters: input.parameters
+    })
+  );
+
+  if (expected !== proof) {
+    return { approvalGranted: false };
+  }
+
+  return { approvalId, approvalGranted: true };
+};
+
 const toRequestHash = (input: {
   toolId: string;
   action: ToolAction;
@@ -154,7 +214,7 @@ const toRequestHash = (input: {
   tenantId: string;
   actorId: string;
   requiresApproval: boolean;
-  approvalGranted: boolean;
+  approvalId?: string;
   stepBudgetRemaining: number;
   parameters: Record<string, unknown>;
 }) => sha256Hex(stableSerialize(input));
@@ -221,8 +281,6 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const tenantId = secured.tenantId ?? "unknown";
     const idempotencyKey = toString(request.headers["idempotency-key"]) ?? toString(body.idempotencyKey);
     const stepBudgetRemaining = typeof body.stepBudgetRemaining === "number" ? body.stepBudgetRemaining : 1;
-    const requiresApproval = body.requiresApproval === true;
-    const approvalGranted = body.approvalGranted === true;
     const parameters = (typeof body.parameters === "object" && body.parameters !== null
       ? body.parameters
       : {}) as Record<string, unknown>;
@@ -249,6 +307,18 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       return;
     }
 
+    const requiresApproval = approvalRequiredForRequest({ action, mode, requestedNetworkProfile });
+    const approval = resolveApprovalFromHeaders(request, {
+      toolId,
+      action,
+      mode,
+      requestedNetworkProfile,
+      tenantId,
+      actorId,
+      parameters,
+      ...(idempotencyKey ? { idempotencyKey } : {})
+    });
+
     const requestHash = toRequestHash({
       toolId,
       action,
@@ -257,7 +327,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       tenantId,
       actorId,
       requiresApproval,
-      approvalGranted,
+      ...(approval.approvalId ? { approvalId: approval.approvalId } : {}),
       stepBudgetRemaining,
       parameters
     });
@@ -286,7 +356,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       requestedNetworkProfile,
       stepBudgetRemaining,
       requiresApproval,
-      approvalGranted
+      approvalGranted: approval.approvalGranted
     });
 
     if (!guard.allowed) {
@@ -299,6 +369,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
         actorId,
         tenantId,
         ...(idempotencyKey ? { idempotencyKey } : {}),
+        ...(approval.approvalId ? { approvalId: approval.approvalId } : {}),
         requestHash,
         status: "blocked",
         guardReason: guard.reason ?? "blocked",
@@ -321,6 +392,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       actorId,
       tenantId,
       ...(idempotencyKey ? { idempotencyKey } : {}),
+      ...(approval.approvalId ? { approvalId: approval.approvalId } : {}),
       requestHash,
       status: "completed",
       parameters,

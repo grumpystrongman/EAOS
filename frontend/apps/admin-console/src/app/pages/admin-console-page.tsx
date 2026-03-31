@@ -1,4 +1,5 @@
 import { pilotWorkspaceBlueprint, usePilotWorkspace } from "../pilot-workspace.js";
+import { isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, KeyValueList, Panel, PageHeader } from "../ui.js";
 
 export const AdminConsolePage = () => {
@@ -9,6 +10,7 @@ export const AdminConsolePage = () => {
   const connectDemoUsers = usePilotWorkspace((state) => state.connectDemoUsers);
   const refreshWorkspace = usePilotWorkspace((state) => state.refreshWorkspace);
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   return (
     <div className="page-stack">
@@ -18,9 +20,11 @@ export const AdminConsolePage = () => {
         subtitle="Operational controls for the regulated hospital tenant, including session readiness and release posture."
         actions={
           <>
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {clinicianSession ? "Reconnect sessions" : "Connect sessions"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {clinicianSession ? "Reconnect sessions" : "Connect sessions"}
+              </button>
+            ) : null}
             <button type="button" onClick={() => void refreshWorkspace()} disabled={!clinicianSession || isSyncing}>
               Refresh workspace
             </button>
@@ -124,4 +128,3 @@ export const AdminConsolePage = () => {
     </div>
   );
 };
-

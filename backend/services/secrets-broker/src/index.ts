@@ -62,6 +62,8 @@ const limiter = new InMemoryRateLimiter(80, 60_000);
 const supportedKmsProviders = new Set(["local", "aws", "azure", "gcp"]);
 const defaultKmsProvider = "local";
 const strictProductionKms = process.env.NODE_ENV === "production" && process.env.OPENAEGIS_ALLOW_LOCAL_KMS_IN_PRODUCTION !== "true";
+const leaseRoles = ["security_admin", "platform_admin", "service_account", "secret_lease"];
+const plaintextLeaseRoles = ["security_admin", "platform_admin", "service_account"];
 
 const parseKmsProvider = (value: unknown): SecretRecord["kmsProvider"] | undefined => {
   if (typeof value !== "string") return undefined;
@@ -169,6 +171,8 @@ const resolveLeaseStatus = (lease: LeaseRecord): LeaseStatus => {
   if (lease.status === "revoked") return "revoked";
   return Date.now() > new Date(lease.expiresAt).getTime() ? "expired" : "active";
 };
+
+const hasAnyRole = (roles: string[], allowed: readonly string[]): boolean => allowed.some((role) => roles.includes(role));
 
 export const requestHandler = async (request: IncomingMessage, response: ServerResponse) => {
   const method = request.method ?? "GET";
@@ -286,15 +290,25 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && path === "/v1/secrets/lease") {
-    const secured = enforceSecurity(request, response, { requireActor: true, requireTenant: true }, context);
+    const secured = enforceSecurity(
+      request,
+      response,
+      { requireActor: true, requireTenant: true, requiredRoles: leaseRoles },
+      context
+    );
     if (!secured) return;
     const body = await readJson(request);
     const secretId = toString(body.secretId);
     const purpose = toString(body.purpose) ?? "unspecified";
+    const includeSecretValue = body.includeSecretValue === true;
     const ttlSecondsRaw = typeof body.ttlSeconds === "number" ? body.ttlSeconds : 900;
     const ttlSeconds = Math.max(60, Math.min(3600, Math.floor(ttlSecondsRaw)));
     if (!secretId) {
       sendJson(response, 400, { error: "secret_id_required" }, context.requestId);
+      return;
+    }
+    if (includeSecretValue && !hasAnyRole(secured.roles, plaintextLeaseRoles)) {
+      sendJson(response, 403, { error: "insufficient_role_for_plaintext_secret_lease" }, context.requestId);
       return;
     }
     const state = await loadState();
@@ -322,9 +336,10 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       {
         leaseId,
         secretId,
-        secretValue: decryptValue(secret),
         expiresAt: lease.expiresAt,
-        purpose
+        purpose,
+        delivery: includeSecretValue ? "plaintext" : "metadata_only",
+        ...(includeSecretValue ? { secretValue: decryptValue(secret) } : {})
       },
       context.requestId
     );
@@ -332,7 +347,12 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && path === "/v1/secrets/renew") {
-    const secured = enforceSecurity(request, response, { requireActor: true, requireTenant: true }, context);
+    const secured = enforceSecurity(
+      request,
+      response,
+      { requireActor: true, requireTenant: true, requiredRoles: leaseRoles },
+      context
+    );
     if (!secured) return;
     const body = await readJson(request);
     const leaseId = toString(body.leaseId);
@@ -359,7 +379,12 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && path === "/v1/secrets/revoke") {
-    const secured = enforceSecurity(request, response, { requireActor: true, requireTenant: true }, context);
+    const secured = enforceSecurity(
+      request,
+      response,
+      { requireActor: true, requireTenant: true, requiredRoles: leaseRoles },
+      context
+    );
     if (!secured) return;
     const body = await readJson(request);
     const leaseId = toString(body.leaseId);

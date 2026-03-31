@@ -25,7 +25,7 @@ const authAdminHeaders = {
 const authPlatformHeaders = {
   "x-actor-id": "service-gateway",
   "x-tenant-id": "tenant-platform",
-  "x-roles": "service_account,token_introspect"
+  "x-roles": "platform_admin,token_issue,token_introspect"
 };
 
 const call = async (baseUrl, path, method = "GET", options = {}) => {
@@ -70,6 +70,8 @@ export const runSecurityRegression = async () => {
   process.env.OPENAEGIS_AUTH_ISSUER = baseUrls.auth;
   process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "false";
   await rm(".volumes/auth-service-state.json", { force: true });
+  await rm(".volumes/tool-execution-state.json", { force: true });
+  await rm(".volumes/pilot-state.json", { force: true });
 
   const servers = {
     auth: createAuthServer(),

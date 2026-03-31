@@ -6,6 +6,17 @@ import { createAppServer } from "./index.js";
 
 const baseUrl = "http://127.0.0.1:3906";
 let server: ReturnType<typeof createAppServer>;
+const securityHeaders = {
+  "content-type": "application/json",
+  "x-tenant-id": "tenant-starlight-health",
+  "x-actor-id": "user-security",
+  "x-roles": "security_admin,platform_admin"
+};
+const auditorHeaders = {
+  "x-tenant-id": "tenant-starlight-health",
+  "x-actor-id": "user-auditor",
+  "x-roles": "auditor"
+};
 
 beforeEach(async () => {
   await rm(".volumes/tool-registry-state.json", { force: true });
@@ -42,9 +53,7 @@ test("lists default published manifests including the expanded connector catalog
 test("creates a plugin instance with vault-backed api key, lists it, and tests it", async () => {
   const create = await fetch(`${baseUrl}/v1/plugins/instances`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       manifestToolId: "connector-openai-responses",
       displayName: "OpenAI production",
@@ -63,24 +72,29 @@ test("creates a plugin instance with vault-backed api key, lists it, and tests i
   assert.equal(create.status, 201);
   const created = (await create.json()) as {
     instanceId: string;
+    tenantId: string;
     manifestToolId: string;
     status: string;
     auth: { method: string; refs: { apiKeyRef: string } };
   };
   assert.ok(created.instanceId.startsWith("plugin-inst-"));
+  assert.equal(created.tenantId, "tenant-starlight-health");
   assert.equal(created.manifestToolId, "connector-openai-responses");
   assert.equal(created.status, "ready");
   assert.equal(created.auth.method, "api_key");
   assert.equal(created.auth.refs.apiKeyRef, "vault://tenants/demo/openai/api-key");
 
-  const list = await fetch(`${baseUrl}/v1/plugins/instances?manifestToolId=connector-openai-responses`);
+  const list = await fetch(`${baseUrl}/v1/plugins/instances?manifestToolId=connector-openai-responses`, {
+    headers: auditorHeaders
+  });
   assert.equal(list.status, 200);
   const listBody = (await list.json()) as { instances: Array<{ instanceId: string }> };
   assert.equal(listBody.instances.length, 1);
   assert.equal(listBody.instances[0]?.instanceId, created.instanceId);
 
   const testResponse = await fetch(`${baseUrl}/v1/plugins/instances/${created.instanceId}/test`, {
-    method: "POST"
+    method: "POST",
+    headers: securityHeaders
   });
   assert.equal(testResponse.status, 200);
   const tested = (await testResponse.json()) as {
@@ -96,9 +110,7 @@ test("creates a plugin instance with vault-backed api key, lists it, and tests i
 test("rejects raw secrets in plugin instance auth payloads", async () => {
   const create = await fetch(`${baseUrl}/v1/plugins/instances`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       manifestToolId: "connector-openai-responses",
       displayName: "Bad OpenAI instance",
@@ -119,9 +131,7 @@ test("rejects raw secrets in plugin instance auth payloads", async () => {
 test("rejects unsupported auth methods for a catalog entry", async () => {
   const create = await fetch(`${baseUrl}/v1/plugins/instances`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       manifestToolId: "connector-openai-responses",
       displayName: "Wrong auth method",
@@ -139,9 +149,7 @@ test("rejects unsupported auth methods for a catalog entry", async () => {
 test("authorizes oauth2 instances with broker refs only and then tests them", async () => {
   const create = await fetch(`${baseUrl}/v1/plugins/instances`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       manifestToolId: "connector-jira-workflow",
       displayName: "Jira oauth instance",
@@ -155,7 +163,8 @@ test("authorizes oauth2 instances with broker refs only and then tests them", as
   assert.equal(created.status, "pending_authorization");
 
   const preTest = await fetch(`${baseUrl}/v1/plugins/instances/${created.instanceId}/test`, {
-    method: "POST"
+    method: "POST",
+    headers: securityHeaders
   });
   assert.equal(preTest.status, 409);
   const preTestBody = (await preTest.json()) as { error: string };
@@ -163,9 +172,7 @@ test("authorizes oauth2 instances with broker refs only and then tests them", as
 
   const authorize = await fetch(`${baseUrl}/v1/plugins/instances/${created.instanceId}/authorize`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       authorizationBrokerRef: "broker://oauth/jira/authorize",
       tokenBrokerRef: "broker://oauth/jira/token",
@@ -184,7 +191,8 @@ test("authorizes oauth2 instances with broker refs only and then tests them", as
   assert.ok(authorized.lastAuthorizedAt.length > 0);
 
   const testResponse = await fetch(`${baseUrl}/v1/plugins/instances/${created.instanceId}/test`, {
-    method: "POST"
+    method: "POST",
+    headers: securityHeaders
   });
   assert.equal(testResponse.status, 200);
   const tested = (await testResponse.json()) as { status: string; lastTestStatus: string };
@@ -195,9 +203,7 @@ test("authorizes oauth2 instances with broker refs only and then tests them", as
 test("rejects non-broker references during authorization", async () => {
   const create = await fetch(`${baseUrl}/v1/plugins/instances`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       manifestToolId: "connector-jira-workflow",
       displayName: "Jira oauth instance",
@@ -210,9 +216,7 @@ test("rejects non-broker references during authorization", async () => {
 
   const authorize = await fetch(`${baseUrl}/v1/plugins/instances/${created.instanceId}/authorize`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       tokenBrokerRef: "vault://not-allowed"
     })
@@ -226,10 +230,7 @@ test("rejects non-broker references during authorization", async () => {
 test("creates a manifest with omitted auth methods by inferring sensible defaults", async () => {
   const create = await fetch(`${baseUrl}/v1/tools`, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-actor-id": "user-security"
-    },
+    headers: securityHeaders,
     body: JSON.stringify({
       toolId: "connector-custom-research",
       displayName: "Custom Research Connector",
@@ -247,4 +248,75 @@ test("creates a manifest with omitted auth methods by inferring sensible default
   assert.equal(created.toolId, "connector-custom-research");
   assert.equal(created.status, "draft");
   assert.ok(created.authMethods.length > 0);
+});
+
+test("manifest create requires privileged security context", async () => {
+  const create = await fetch(`${baseUrl}/v1/tools`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-tenant-id": "tenant-starlight-health",
+      "x-actor-id": "user-clinician",
+      "x-roles": "workflow_operator"
+    },
+    body: JSON.stringify({
+      toolId: "connector-unprivileged-create",
+      displayName: "Denied Connector",
+      connectorType: "project",
+      description: "Should be denied",
+      trustTier: "tier-3",
+      allowedActions: ["READ"],
+      permissionScopes: ["project.read"],
+      outboundDomains: ["project.internal.local"],
+      signature: "sig-denied-v1"
+    })
+  });
+
+  assert.equal(create.status, 403);
+  const body = (await create.json()) as { error: string };
+  assert.equal(body.error, "insufficient_role");
+});
+
+test("hides plugin instances from other tenants", async () => {
+  const create = await fetch(`${baseUrl}/v1/plugins/instances`, {
+    method: "POST",
+    headers: securityHeaders,
+    body: JSON.stringify({
+      manifestToolId: "connector-openai-responses",
+      displayName: "Tenant isolated instance",
+      auth: {
+        method: "api_key",
+        refs: {
+          apiKeyRef: "vault://tenants/demo/openai/api-key"
+        }
+      }
+    })
+  });
+  assert.equal(create.status, 201);
+  const created = (await create.json()) as { instanceId: string };
+
+  const crossTenantList = await fetch(`${baseUrl}/v1/plugins/instances`, {
+    headers: {
+      "x-tenant-id": "tenant-other-health",
+      "x-actor-id": "user-other-security",
+      "x-roles": "security_admin"
+    }
+  });
+  assert.equal(crossTenantList.status, 200);
+  const listBody = (await crossTenantList.json()) as { instances: Array<{ instanceId: string }> };
+  assert.equal(listBody.instances.some((instance) => instance.instanceId === created.instanceId), false);
+
+  const crossTenantAuthorize = await fetch(`${baseUrl}/v1/plugins/instances/${created.instanceId}/authorize`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-tenant-id": "tenant-other-health",
+      "x-actor-id": "user-other-security",
+      "x-roles": "security_admin"
+    },
+    body: JSON.stringify({
+      authorizationBrokerRef: "broker://oauth/jira/authorize"
+    })
+  });
+  assert.equal(crossTenantAuthorize.status, 404);
 });

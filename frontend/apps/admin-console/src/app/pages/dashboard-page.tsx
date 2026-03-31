@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { pilotWorkspaceBlueprint, usePilotWorkspace } from "../pilot-workspace.js";
+import { isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, EmptyState, KeyValueList, MetricTile, Panel, PageHeader } from "../ui.js";
 
 const formatTime = (value?: string) => (value ? new Date(value).toLocaleString() : "n/a");
@@ -14,6 +15,7 @@ export const DashboardPage = () => {
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
   const connectDemoUsers = usePilotWorkspace((state) => state.connectDemoUsers);
   const runWorkflow = usePilotWorkspace((state) => state.runWorkflow);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   const latestExecution = executions[0];
   const pendingApprovals = approvals.filter((item) => item.status === "pending");
@@ -42,9 +44,11 @@ export const DashboardPage = () => {
         subtitle="A live readout of the discharge assistant pilot, with approval state, audit coverage, and route posture."
         actions={
           <>
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {clinicianSession ? "Reconnect demo sessions" : "Connect demo sessions"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {clinicianSession ? "Reconnect demo sessions" : "Connect demo sessions"}
+              </button>
+            ) : null}
             <button type="button" onClick={() => void runWorkflow("simulation")} disabled={!clinicianSession || isSyncing}>
               Run simulation
             </button>
@@ -118,9 +122,11 @@ export const DashboardPage = () => {
               title="Connect a demo session"
               description="The route preview comes from the live pilot API after authentication."
               action={
-                <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-                  Connect demo sessions
-                </button>
+                demoIdentitiesEnabled ? (
+                  <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                    Connect demo sessions
+                  </button>
+                ) : null
               }
             />
           )}
@@ -162,9 +168,11 @@ export const DashboardPage = () => {
               title="No executions yet"
               description="Run the simulation once the demo sessions are connected."
               action={
-                <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-                  Connect demo sessions
-                </button>
+                demoIdentitiesEnabled ? (
+                  <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                    Connect demo sessions
+                  </button>
+                ) : null
               }
             />
           )}

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T15:41:19.477Z",
+  "generatedAt": "2026-03-31T18:27:56.532Z",
   "suite": "trust-layer-end-to-end-proof",
   "product": "OpenAegis",
   "endpoints": {
@@ -26,11 +26,11 @@
           "step": "start_live_execution",
           "expected": "blocked with approval requirement",
           "status": 201,
-          "latencyMs": 21,
+          "latencyMs": 27,
           "data": {
-            "executionId": "ex-mnesb57o-vgnptx",
+            "executionId": "ex-mney9ezx-6h42lz",
             "executionStatus": "blocked",
-            "approvalId": "ap-mnesb580-inwwot"
+            "approvalId": "ap-mney9f0d-mmhada"
           }
         },
         {
@@ -54,7 +54,7 @@
               "executor",
               "reviewer"
             ],
-            "evidenceId": "ev-ex-mnesb57o-vgnptx",
+            "evidenceId": "ev-ex-mney9ezx-6h42lz",
             "auditEvents": 5
           }
         }
@@ -64,7 +64,7 @@
         "approvalLatencyMs": 11,
         "blockedRiskyActions": 1,
         "auditCompletenessPercent": 100,
-        "endToEndMs": 43
+        "endToEndMs": 50
       },
       "summary": "High-risk clinical flow was safely blocked, approved, completed, and fully auditable."
     },
@@ -96,7 +96,7 @@
           "step": "block_unapproved_finance_export",
           "expected": "runtime guard blocks outbound execution without approval",
           "status": 403,
-          "latencyMs": 10,
+          "latencyMs": 11,
           "data": {
             "guardReason": "approval_missing",
             "callStatus": "blocked"
@@ -106,10 +106,10 @@
           "step": "verify_idempotent_finance_automation",
           "expected": "duplicate submission replays prior tool call safely",
           "status": 200,
-          "latencyMs": 8,
+          "latencyMs": 9,
           "data": {
-            "firstCallId": "tc-mnesb59b-zq5gde",
-            "replayCallId": "tc-mnesb59b-zq5gde",
+            "firstCallId": "tc-mney9f1p-losszp",
+            "replayCallId": "tc-mney9f1p-losszp",
             "replayed": true
           }
         },
@@ -117,7 +117,7 @@
           "step": "validate_finance_policy_obligations",
           "expected": "decision includes outbound DLP/logging obligations",
           "status": 200,
-          "latencyMs": 5,
+          "latencyMs": 3,
           "data": {
             "effect": "ALLOW",
             "obligations": [
@@ -163,7 +163,7 @@
           "step": "allow_policy_change_with_dual_approval_break_glass",
           "expected": "200 response with breakGlassUsed=true",
           "status": 200,
-          "latencyMs": 6,
+          "latencyMs": 5,
           "data": {
             "breakGlassUsed": true,
             "profileVersion": 2
@@ -197,8 +197,8 @@
         "approvalLatencyMs": null,
         "blockedRiskyActions": 1,
         "auditCompletenessPercent": 100,
-        "containmentLatencyMs": 11,
-        "endToEndMs": 30
+        "containmentLatencyMs": 10,
+        "endToEndMs": 29
       },
       "summary": "SecOps controls validated: unsafe changes blocked, emergency path controlled, baseline restored."
     }

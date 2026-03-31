@@ -15,6 +15,8 @@ import {
   type PolicyProfileSnapshot,
   type PolicyImpactReview
 } from "../shared/api/pilot.js";
+import { isDemoIdentitiesEnabled } from "./security-guards.js";
+import { workspacePersistSnapshot } from "./workspace-persistence.js";
 import {
   DEMO_PERSONAS,
   PILOT_USE_CASE,
@@ -131,6 +133,61 @@ interface WorkspaceActions {
 export type PilotWorkspace = WorkspaceState & WorkspaceActions;
 
 const storageKey = "openaegis.admin-console.workspace";
+const memoryStorage = (): Storage => {
+  const entries = new Map<string, string>();
+  return {
+    get length() {
+      return entries.size;
+    },
+    clear: () => entries.clear(),
+    key: (index) => Array.from(entries.keys())[index] ?? null,
+    getItem: (key) => entries.get(key) ?? null,
+    setItem: (key, value) => {
+      entries.set(key, value);
+    },
+    removeItem: (key) => {
+      entries.delete(key);
+    }
+  };
+};
+const fallbackStorage = memoryStorage();
+const createWorkspaceStorage = (): Storage => {
+  const baseStorage = typeof localStorage === "undefined" ? fallbackStorage : localStorage;
+  return {
+    get length() {
+      return baseStorage.length;
+    },
+    clear: () => baseStorage.clear(),
+    key: (index) => baseStorage.key(index),
+    getItem: (key) => {
+      const raw = baseStorage.getItem(key);
+      if (raw === null) return null;
+      try {
+        const parsed = JSON.parse(raw) as { state?: Record<string, unknown> };
+        if (!parsed || typeof parsed !== "object" || !parsed.state || typeof parsed.state !== "object") {
+          return raw;
+        }
+        const { clinicianSession: _clinicianSession, securitySession: _securitySession, ...sanitizedState } = parsed.state;
+        if ("clinicianSession" in parsed.state || "securitySession" in parsed.state) {
+          const sanitized = JSON.stringify({ ...parsed, state: sanitizedState });
+          if (sanitized !== raw) {
+            baseStorage.setItem(key, sanitized);
+          }
+          return sanitized;
+        }
+      } catch {
+        return raw;
+      }
+      return raw;
+    },
+    setItem: (key, value) => {
+      baseStorage.setItem(key, value);
+    },
+    removeItem: (key) => {
+      baseStorage.removeItem(key);
+    }
+  };
+};
 
 const toIso = () => new Date().toISOString();
 
@@ -384,6 +441,11 @@ export const usePilotWorkspace = create<PilotWorkspace>()(
           )
         })),
       connectDemoUsers: async () => {
+        if (!isDemoIdentitiesEnabled()) {
+          set({ error: "demo_identities_disabled_in_this_build" });
+          return;
+        }
+
         set({ isSyncing: true, error: undefined });
         try {
           const [clinicianSession, securitySession] = await Promise.all([
@@ -639,16 +701,11 @@ export const usePilotWorkspace = create<PilotWorkspace>()(
     }),
     {
       name: storageKey,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        clinicianSession: state.clinicianSession,
-        securitySession: state.securitySession,
-        activePersona: state.activePersona,
-        trackedExecutionIds: state.trackedExecutionIds,
-        integrations: state.integrations,
-        directoryUsers: state.directoryUsers
-      })
-    }
+      storage: createJSONStorage(() => createWorkspaceStorage()),
+      version: 2,
+      partialize: (state: PilotWorkspace) => workspacePersistSnapshot(state),
+      migrate: (persistedState: unknown) => workspacePersistSnapshot(persistedState as PilotWorkspace)
+    } as any
   )
 );
 

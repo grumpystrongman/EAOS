@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 import { URL } from "node:url";
 import type { ServiceDescriptor } from "@openaegis/contracts";
+import { enforceSecurity, parseContext, readJson, sendJson } from "@openaegis/security-kit";
 import {
   defaultRegistryState,
   type ConnectorTrustTier,
@@ -88,25 +89,10 @@ const instanceConfigKeys = new Set<keyof PluginInstanceConfig>([
   "organizationId",
   "apiVersion"
 ]);
-
-const sendJson = (response: ServerResponse, status: number, body: unknown) => {
-  response.writeHead(status, { "content-type": "application/json" });
-  response.end(JSON.stringify(body));
-};
-
-const readJson = async (request: IncomingMessage): Promise<JsonMap> => {
-  const chunks: Buffer[] = [];
-  for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  if (chunks.length === 0) return {};
-  try {
-    const parsed = JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown;
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as JsonMap) : {};
-  } catch {
-    return {};
-  }
-};
+const manifestManageRoles = ["security_admin", "platform_admin"];
+const publishRoles = ["security_admin", "platform_admin"];
+const pluginInstanceManageRoles = ["security_admin", "platform_admin"];
+const pluginInstanceViewRoles = ["security_admin", "platform_admin", "auditor"];
 
 const normalizeState = (state: Partial<ToolRegistryState> | undefined): ToolRegistryState => {
   const base = defaultRegistryState();
@@ -432,7 +418,9 @@ const validateInstanceAuth = (
 
 const createInstanceFromRequest = (
   state: ToolRegistryState,
-  body: JsonMap
+  body: JsonMap,
+  tenantId: string,
+  actorId: string
 ): { instance?: PluginInstanceRecord; error?: string } => {
   const allowedTopLevelKeys = ["manifestToolId", "displayName", "auth", "config"];
   if (!isPlainObject(body) || Object.keys(body).some((key) => !allowedTopLevelKeys.includes(key))) {
@@ -454,6 +442,8 @@ const createInstanceFromRequest = (
   return {
     instance: {
       instanceId,
+      tenantId,
+      createdBy: actorId,
       manifestToolId,
       displayName,
       status: authValidation.auth.method === "oauth2" ? "pending_authorization" : "ready",
@@ -474,6 +464,12 @@ const listInstances = (instances: PluginInstanceRecord[], filter: PluginInstance
   });
 
 const getInstance = (state: ToolRegistryState, instanceId: string) => state.instances.find((item) => item.instanceId === instanceId);
+
+const canAccessInstance = (
+  roles: string[],
+  tenantId: string | undefined,
+  instance: PluginInstanceRecord
+): boolean => roles.includes("platform_admin") || Boolean(tenantId) && tenantId === instance.tenantId;
 
 const updateInstance = (
   instance: PluginInstanceRecord,
@@ -553,6 +549,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   const method = request.method ?? "GET";
   const parsedUrl = new URL(request.url ?? "/", "http://localhost");
   const pathname = parsedUrl.pathname;
+  const context = parseContext(request);
 
   if (method === "GET" && pathname === "/healthz") {
     const state = await loadState();
@@ -561,13 +558,13 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       service: descriptor.serviceName,
       manifests: state.manifests.length,
       instances: state.instances.length
-    });
+    }, context.requestId);
     return;
   }
 
   if (method === "GET" && pathname === "/v1/tools") {
     const state = await loadState();
-    sendJson(response, 200, { manifests: listManifests(state.manifests, parsedUrl) });
+    sendJson(response, 200, { manifests: listManifests(state.manifests, parsedUrl) }, context.requestId);
     return;
   }
 
@@ -576,45 +573,49 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const state = await loadState();
     const manifest = state.manifests.find((item) => item.toolId === toolId);
     if (!manifest) {
-      sendJson(response, 404, { error: "tool_not_found" });
+      sendJson(response, 404, { error: "tool_not_found" }, context.requestId);
       return;
     }
-    sendJson(response, 200, manifest);
+    sendJson(response, 200, manifest, context.requestId);
     return;
   }
 
   if (method === "POST" && pathname === "/v1/tools") {
-    const actorId = requireActorHeader(request);
-    if (!actorId) {
-      sendJson(response, 401, { error: "actor_header_required" });
-      return;
-    }
+    const secured = enforceSecurity(request, response, {
+      requireActor: true,
+      requireTenant: true,
+      requiredRoles: manifestManageRoles
+    }, context);
+    if (!secured) return;
+    const actorId = secured.actorId ?? "unknown";
 
     const body = await readJson(request);
     const built = buildManifestFromRequest(body, actorId);
     if (!built.manifest) {
-      sendJson(response, 400, { error: built.error ?? "invalid_manifest_payload" });
+      sendJson(response, 400, { error: built.error ?? "invalid_manifest_payload" }, context.requestId);
       return;
     }
 
     const state = await loadState();
     if (state.manifests.some((item) => item.toolId === built.manifest!.toolId)) {
-      sendJson(response, 409, { error: "tool_manifest_already_exists" });
+      sendJson(response, 409, { error: "tool_manifest_already_exists" }, context.requestId);
       return;
     }
 
     state.manifests.push(built.manifest);
     await saveState(state);
-    sendJson(response, 201, built.manifest);
+    sendJson(response, 201, built.manifest, context.requestId);
     return;
   }
 
   if (method === "POST" && /^\/v1\/tools\/[^/]+\/publish$/.test(pathname)) {
-    const actorId = requireActorHeader(request);
-    if (!actorId) {
-      sendJson(response, 401, { error: "actor_header_required" });
-      return;
-    }
+    const secured = enforceSecurity(request, response, {
+      requireActor: true,
+      requireTenant: true,
+      requiredRoles: publishRoles
+    }, context);
+    if (!secured) return;
+    const actorId = secured.actorId ?? "unknown";
     const toolId = pathname.split("/")[3] ?? "";
     const body = await readJson(request);
     const signer = toString(body.signer) ?? actorId;
@@ -622,7 +623,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const state = await loadState();
     const index = state.manifests.findIndex((item) => item.toolId === toolId);
     if (index === -1) {
-      sendJson(response, 404, { error: "tool_not_found" });
+      sendJson(response, 404, { error: "tool_not_found" }, context.requestId);
       return;
     }
 
@@ -635,11 +636,17 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       publishedAt: now()
     };
     await saveState(state);
-    sendJson(response, 200, state.manifests[index]);
+    sendJson(response, 200, state.manifests[index], context.requestId);
     return;
   }
 
   if (method === "GET" && pathname === "/v1/plugins/instances") {
+    const secured = enforceSecurity(request, response, {
+      requireActor: true,
+      requireTenant: true,
+      requiredRoles: pluginInstanceViewRoles
+    }, context);
+    if (!secured) return;
     const state = await loadState();
     const filter: PluginInstanceListFilter = {};
     const manifestToolId = toString(parsedUrl.searchParams.get("manifestToolId"));
@@ -648,53 +655,74 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     if (manifestToolId) filter.manifestToolId = manifestToolId;
     if (status) filter.status = status;
     if (authMethod) filter.authMethod = authMethod;
-    sendJson(response, 200, { instances: listInstances(state.instances, filter) });
+    const visibleInstances = secured.roles.includes("platform_admin")
+      ? state.instances
+      : state.instances.filter((instance) => instance.tenantId === secured.tenantId);
+    sendJson(response, 200, { instances: listInstances(visibleInstances, filter) }, context.requestId);
     return;
   }
 
   if (method === "POST" && pathname === "/v1/plugins/instances") {
+    const secured = enforceSecurity(request, response, {
+      requireActor: true,
+      requireTenant: true,
+      requiredRoles: pluginInstanceManageRoles
+    }, context);
+    if (!secured) return;
     const body = await readJson(request);
     const state = await loadState();
-    const built = createInstanceFromRequest(state, body);
+    const built = createInstanceFromRequest(state, body, secured.tenantId ?? "unknown", secured.actorId ?? "unknown");
     if (!built.instance) {
-      sendJson(response, 400, { error: built.error ?? "invalid_instance_payload" });
+      sendJson(response, 400, { error: built.error ?? "invalid_instance_payload" }, context.requestId);
       return;
     }
 
     state.instances.push(built.instance);
     await saveState(state);
-    sendJson(response, 201, built.instance);
+    sendJson(response, 201, built.instance, context.requestId);
     return;
   }
 
   if (method === "POST" && /^\/v1\/plugins\/instances\/[^/]+\/authorize$/.test(pathname)) {
+    const secured = enforceSecurity(request, response, {
+      requireActor: true,
+      requireTenant: true,
+      requiredRoles: pluginInstanceManageRoles
+    }, context);
+    if (!secured) return;
     const instanceId = pathname.split("/")[4] ?? "";
     const body = await readJson(request);
     const state = await loadState();
     const index = state.instances.findIndex((item) => item.instanceId === instanceId);
-    if (index === -1) {
-      sendJson(response, 404, { error: "plugin_instance_not_found" });
+    if (index === -1 || !canAccessInstance(secured.roles, secured.tenantId, state.instances[index]!)) {
+      sendJson(response, 404, { error: "plugin_instance_not_found" }, context.requestId);
       return;
     }
 
     const built = authorizeInstance(state.instances[index]!, body);
     if (!built.instance) {
-      sendJson(response, 400, { error: built.error ?? "invalid_authorize_payload" });
+      sendJson(response, 400, { error: built.error ?? "invalid_authorize_payload" }, context.requestId);
       return;
     }
 
     state.instances[index] = built.instance;
     await saveState(state);
-    sendJson(response, 200, built.instance);
+    sendJson(response, 200, built.instance, context.requestId);
     return;
   }
 
   if (method === "POST" && /^\/v1\/plugins\/instances\/[^/]+\/test$/.test(pathname)) {
+    const secured = enforceSecurity(request, response, {
+      requireActor: true,
+      requireTenant: true,
+      requiredRoles: pluginInstanceManageRoles
+    }, context);
+    if (!secured) return;
     const instanceId = pathname.split("/")[4] ?? "";
     const state = await loadState();
     const index = state.instances.findIndex((item) => item.instanceId === instanceId);
-    if (index === -1) {
-      sendJson(response, 404, { error: "plugin_instance_not_found" });
+    if (index === -1 || !canAccessInstance(secured.roles, secured.tenantId, state.instances[index]!)) {
+      sendJson(response, 404, { error: "plugin_instance_not_found" }, context.requestId);
       return;
     }
 
@@ -707,28 +735,23 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
         lastTestMessage: built.error ?? "instance_test_failed"
       });
       await saveState(state);
-      sendJson(response, 409, { error: built.error ?? "instance_test_failed", instance: state.instances[index] });
+      sendJson(response, 409, { error: built.error ?? "instance_test_failed", instance: state.instances[index] }, context.requestId);
       return;
     }
 
     state.instances[index] = built.instance;
     await saveState(state);
-    sendJson(response, 200, built.instance);
+    sendJson(response, 200, built.instance, context.requestId);
     return;
   }
 
-  sendJson(response, 404, { error: "not_found", service: descriptor.serviceName, path: pathname });
-};
-
-const requireActorHeader = (request: IncomingMessage): string | undefined => {
-  const actor = request.headers["x-actor-id"];
-  return typeof actor === "string" && actor.trim().length > 0 ? actor : undefined;
+  sendJson(response, 404, { error: "not_found", service: descriptor.serviceName, path: pathname }, context.requestId);
 };
 
 export const createAppServer = () =>
   createServer((request, response) => {
     void requestHandler(request, response).catch((error: unknown) => {
-      sendJson(response, 500, { error: "internal_error", message: error instanceof Error ? error.message : "unknown" });
+      sendJson(response, 500, { error: "internal_error", message: error instanceof Error ? error.message : "unknown" }, parseContext(request).requestId);
     });
   });
 

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { pilotWorkspaceBlueprint, usePilotWorkspace } from "../pilot-workspace.js";
+import { isDemoIdentitiesEnabled } from "../security-guards.js";
 import { Badge, KeyValueList, Panel, PageHeader } from "../ui.js";
 
 const statusTone = (status: "done" | "pending" | "warning") =>
@@ -17,6 +18,7 @@ export const SetupCenterPage = () => {
   const refreshWorkspace = usePilotWorkspace((state) => state.refreshWorkspace);
   const isSyncing = usePilotWorkspace((state) => state.isSyncing);
   const sessionsConnected = Boolean(clinicianSession && securitySession);
+  const demoIdentitiesEnabled = isDemoIdentitiesEnabled();
 
   const readiness = useMemo(() => {
     const simulationRan = executions.some((execution) => execution.mode === "simulation");
@@ -69,9 +71,11 @@ export const SetupCenterPage = () => {
         actions={
           <>
             <Badge tone="info">Progress {completed}/4</Badge>
-            <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
-              {clinicianSession && securitySession ? "Reconnect identities" : "Connect identities"}
-            </button>
+            {demoIdentitiesEnabled ? (
+              <button type="button" className="primary" onClick={() => void connectDemoUsers()} disabled={isSyncing}>
+                {clinicianSession && securitySession ? "Reconnect identities" : "Connect identities"}
+              </button>
+            ) : null}
             <button type="button" onClick={() => void refreshWorkspace()} disabled={isSyncing}>
               Refresh status
             </button>

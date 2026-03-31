@@ -4,10 +4,12 @@ services:
   # Database
   postgres:
     image: postgres:15-alpine
+    env_file:
+      - .env.example
     environment:
       POSTGRES_DB: openaegis
       POSTGRES_USER: openaegis
-      POSTGRES_PASSWORD: openaegis_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -63,9 +65,11 @@ services:
   # Object Storage
   minio:
     image: minio/minio
+    env_file:
+      - .env.example
     environment:
-      MINIO_ROOT_USER: openaegis_access_key
-      MINIO_ROOT_PASSWORD: openaegis_secret_key
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-change-me-local-access-key}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-me-local-secret-key}
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -85,6 +89,8 @@ services:
       dockerfile: backend/services/api-gateway/Dockerfile
     ports:
       - "3000:3000"
+    env_file:
+      - .env.example
     depends_on:
       postgres:
         condition: service_healthy
@@ -92,7 +98,7 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://openaegis:openaegis_password@postgres:5432/openaegis
+      - DATABASE_URL=${DATABASE_URL:-postgresql://openaegis:change-me-local-postgres@postgres:5432/openaegis}
       - REDIS_URL=redis://redis:6379
 
   # Auth Service (placeholder)
@@ -102,6 +108,8 @@ services:
       dockerfile: backend/services/auth-service/Dockerfile
     ports:
       - "3001:3001"
+    env_file:
+      - .env.example
     depends_on:
       postgres:
         condition: service_healthy
@@ -109,7 +117,7 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://openaegis:openaegis_password@postgres:5432/openaegis
+      - DATABASE_URL=${DATABASE_URL:-postgresql://openaegis:change-me-local-postgres@postgres:5432/openaegis}
       - REDIS_URL=redis://redis:6379
 
   # Frontend

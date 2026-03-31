@@ -3,7 +3,7 @@ fullnameOverride: ""
 
 global:
   imageRegistry: ghcr.io/grumpystrongman/openaegis
-  imageTag: latest
+  imageTag: "0.2.0"
   replicas: 2
   enforceMtls: "true"
   trustProxyMtlsHeaders: "true"

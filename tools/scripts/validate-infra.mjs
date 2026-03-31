@@ -28,6 +28,8 @@ const loadYamlDocs = async (file) => {
   return parseAllDocuments(raw).map((doc) => doc.toJSON()).filter(Boolean);
 };
 
+const readText = async (file) => readFile(resolve(file), "utf8");
+
 const validateDockerfile = async (service) => {
   const dockerfilePath = resolve(`backend/services/${service}/Dockerfile`);
   const content = await readFile(dockerfilePath, "utf8");
@@ -103,11 +105,82 @@ const validateHelm = async () => {
   };
 };
 
+const validateHardening = async () => {
+  const deploymentDir = resolve("infrastructure/kubernetes/base/deployments");
+  const deploymentFiles = (await readdir(deploymentDir)).filter((name) => name.endsWith(".yaml"));
+  const deploymentFindings = [];
+
+  for (const file of deploymentFiles) {
+    const docs = await loadYamlDocs(`${deploymentDir}/${file}`);
+    for (const doc of docs) {
+      if (doc?.kind !== "Deployment") continue;
+
+      const name = doc?.metadata?.name ?? file;
+      const labels = doc?.spec?.template?.metadata?.labels ?? {};
+      const containers = Array.isArray(doc?.spec?.template?.spec?.containers) ? doc.spec.template.spec.containers : [];
+      const imageFindings = containers
+        .map((container) => container?.image)
+        .filter((image) => typeof image === "string")
+        .filter((image) => image.includes(":latest") || image.endsWith("/"));
+      const missingStartupProbe = containers.some((container) => !container?.startupProbe?.httpGet?.path || !container?.startupProbe?.httpGet?.port);
+      const meshBound = labels["openaegis.io/mesh-participant"] === "true";
+
+      if (imageFindings.length || missingStartupProbe || !meshBound) {
+        deploymentFindings.push({
+          name,
+          imageFindings,
+          missingStartupProbe,
+          meshBound
+        });
+      }
+    }
+  }
+
+  const compose = await readText("docker-compose.yml");
+  const composeHasPlaintextSecrets =
+    compose.includes("openaegis_password") ||
+    compose.includes("openaegis_secret_key") ||
+    compose.includes("openaegis_access_key");
+  const composeUsesEnvFile = compose.includes("env_file:") && compose.includes(".env.example");
+  const composeHasSafePlaceholders =
+    compose.includes("${POSTGRES_PASSWORD:-change-me-local-postgres}") &&
+    compose.includes("${MINIO_ROOT_USER:-change-me-local-access-key}") &&
+    compose.includes("${MINIO_ROOT_PASSWORD:-change-me-local-secret-key}");
+
+  const helmDeploymentTemplate = await readText("infrastructure/helm/openaegis/templates/deployments.yaml");
+  const helmValues = (await loadYamlDocs("infrastructure/helm/openaegis/values.yaml"))[0] ?? {};
+  const helmImageTag = helmValues?.global?.imageTag;
+  const helmHardening = {
+    safeImageTag: helmImageTag && helmImageTag !== "latest",
+    startupProbePresent: helmDeploymentTemplate.includes("startupProbe:"),
+    meshLabelPresent: helmDeploymentTemplate.includes("openaegis.io/mesh-participant: \"true\"")
+  };
+
+  return {
+    passed:
+      deploymentFindings.length === 0 &&
+      !composeHasPlaintextSecrets &&
+      composeUsesEnvFile &&
+      composeHasSafePlaceholders &&
+      helmHardening.safeImageTag &&
+      helmHardening.startupProbePresent &&
+      helmHardening.meshLabelPresent,
+    details: {
+      deploymentFindings,
+      composeHasPlaintextSecrets,
+      composeUsesEnvFile,
+      composeHasSafePlaceholders,
+      helmHardening
+    }
+  };
+};
+
 const run = async () => {
   const dockerChecks = await Promise.all(expectedServices.map((service) => validateDockerfile(service)));
   const dockerFailures = dockerChecks.filter((check) => !check.passed);
   const k8s = await validateK8s();
   const helm = await validateHelm();
+  const hardening = await validateHardening();
 
   const checks = [
     {
@@ -127,6 +200,11 @@ const run = async () => {
       checkId: "helm_chart_complete",
       passed: helm.passed,
       details: helm.details
+    },
+    {
+      checkId: "infra_hardening_defaults",
+      passed: hardening.passed,
+      details: hardening.details
     }
   ];
 

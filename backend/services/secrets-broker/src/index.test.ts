@@ -71,9 +71,10 @@ test("registers secret and leases short-lived credential", async () => {
     })
   });
   assert.equal(lease.status, 200);
-  const leaseBody = (await lease.json()) as { leaseId: string; secretValue: string };
+  const leaseBody = (await lease.json()) as { leaseId: string; delivery: string; secretValue?: string };
   assert.ok(leaseBody.leaseId.startsWith("lease-"));
-  assert.equal(leaseBody.secretValue, "super-secret-token");
+  assert.equal(leaseBody.delivery, "metadata_only");
+  assert.equal(leaseBody.secretValue, undefined);
 });
 
 test("revokes active lease", async () => {
@@ -139,12 +140,42 @@ test("supports provider-specific KMS material for aws mode", async () => {
     headers: adminHeaders,
     body: JSON.stringify({
       secretId: "connector/fabric/token",
-      purpose: "fabric-read"
+      purpose: "fabric-read",
+      includeSecretValue: true
     })
   });
   assert.equal(lease.status, 200);
-  const leaseBody = (await lease.json()) as { secretValue: string };
+  const leaseBody = (await lease.json()) as { delivery: string; secretValue: string };
+  assert.equal(leaseBody.delivery, "plaintext");
   assert.equal(leaseBody.secretValue, "fabric-token");
+});
+
+test("lease path requires a privileged role", async () => {
+  await fetch(`${baseUrl}/v1/secrets/register`, {
+    method: "POST",
+    headers: adminHeaders,
+    body: JSON.stringify({
+      secretId: "connector/limited/token",
+      value: "limited-token"
+    })
+  });
+
+  const lease = await fetch(`${baseUrl}/v1/secrets/lease`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-tenant-id": "tenant-starlight-health",
+      "x-actor-id": "user-clinician",
+      "x-roles": "workflow_operator"
+    },
+    body: JSON.stringify({
+      secretId: "connector/limited/token"
+    })
+  });
+
+  assert.equal(lease.status, 403);
+  const body = (await lease.json()) as { error: string };
+  assert.equal(body.error, "insufficient_role");
 });
 
 test("fails closed when configured kms provider has no key material", async () => {

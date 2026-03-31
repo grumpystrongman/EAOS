@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-31T15:41:21.733Z",
+  "generatedAt": "2026-03-31T18:27:58.772Z",
   "suite": "commercial-readiness-audit",
   "checks": [
     {
@@ -42,8 +42,8 @@
       "details": {
         "status": "PASS",
         "totalFindings": 0,
-        "filesReviewed": 167,
-        "linesReviewed": 26529
+        "filesReviewed": 170,
+        "linesReviewed": 27693
       }
     },
     {

@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 import { URL } from "node:url";
 import type { ServiceDescriptor } from "@openaegis/contracts";
 import {
@@ -24,7 +25,14 @@ import {
   type PilotMode,
   type PolicyProfileControls
 } from "@openaegis/pilot-core";
-import { InMemoryRateLimiter, enforceRateLimit, parseContext } from "@openaegis/security-kit";
+import {
+  InMemoryRateLimiter,
+  createSignedInternalContextHeaders,
+  enforceRateLimit,
+  parseContext,
+  sha256Hex,
+  stableSerialize
+} from "@openaegis/security-kit";
 
 export const descriptor: ServiceDescriptor = {
   serviceName: "api-gateway",
@@ -55,6 +63,7 @@ const policyProfileReadRoles = ["auditor", "security_admin", "platform_admin"] a
 const policyProfileManageRoles = ["security_admin", "platform_admin"] as const;
 
 const gatewayRateLimiter = new InMemoryRateLimiter(250, 60_000);
+const gatewaySecurityStateFile = resolve(process.cwd(), ".volumes", "api-gateway-security-state.json");
 
 const roleToAssurance: Record<string, "aal1" | "aal2" | "aal3"> = {
   clinician: "aal2",
@@ -214,6 +223,21 @@ interface AuthSession {
   source: "demo" | "introspection";
 }
 
+interface ApprovalExecutionBinding {
+  approvalId: string;
+  toolId: string;
+  tenantId: string;
+  actorId: string;
+  requestHash: string;
+  idempotencyKey?: string;
+  consumedAt: string;
+}
+
+interface GatewaySecurityState {
+  version: number;
+  approvalBindings: ApprovalExecutionBinding[];
+}
+
 const getBearerToken = (request: IncomingMessage): string | undefined => {
   const header = request.headers.authorization;
   if (typeof header !== "string") return undefined;
@@ -222,6 +246,83 @@ const getBearerToken = (request: IncomingMessage): string | undefined => {
   const token = parts[1];
   return typeof token === "string" && token.length > 0 ? token : undefined;
 };
+
+const normalizeGatewaySecurityState = (state: Partial<GatewaySecurityState> | undefined): GatewaySecurityState => ({
+  version: 1,
+  approvalBindings: Array.isArray(state?.approvalBindings) ? state.approvalBindings : []
+});
+
+const loadGatewaySecurityState = async (): Promise<GatewaySecurityState> => {
+  try {
+    return normalizeGatewaySecurityState(
+      JSON.parse(await readFile(gatewaySecurityStateFile, "utf8")) as Partial<GatewaySecurityState>
+    );
+  } catch {
+    return normalizeGatewaySecurityState(undefined);
+  }
+};
+
+const saveGatewaySecurityState = async (state: GatewaySecurityState): Promise<void> => {
+  await mkdir(dirname(gatewaySecurityStateFile), { recursive: true });
+  await writeFile(gatewaySecurityStateFile, `${JSON.stringify(normalizeGatewaySecurityState(state), null, 2)}\n`, "utf8");
+};
+
+const shouldRequireSignedInternalContext = (): boolean => {
+  if (process.env.OPENAEGIS_REQUIRE_SIGNED_INTERNAL_CONTEXT === "true") return true;
+  return process.env.NODE_ENV === "production" && process.env.OPENAEGIS_ALLOW_UNSIGNED_INTERNAL_CONTEXT_IN_PRODUCTION !== "true";
+};
+
+const buildInternalServiceHeaders = (input: {
+  actorId: string;
+  tenantId: string;
+  roles: string[];
+  mtlsClientSan?: string;
+  mtlsVerified?: boolean;
+}): Record<string, string> | undefined => {
+  const shouldSign = shouldRequireSignedInternalContext() || Boolean(process.env.OPENAEGIS_INTERNAL_CONTEXT_SIGNING_KEY);
+  const baseHeaders: Record<string, string> = {
+    "x-actor-id": input.actorId,
+    "x-tenant-id": input.tenantId,
+    "x-roles": input.roles.join(",")
+  };
+
+  if (input.mtlsClientSan) {
+    baseHeaders["x-mtls-client-san"] = input.mtlsClientSan;
+  }
+  if (typeof input.mtlsVerified === "boolean") {
+    baseHeaders["x-mtls-verified"] = input.mtlsVerified ? "true" : "false";
+  }
+
+  if (!shouldSign) return baseHeaders;
+
+  try {
+    return {
+      ...baseHeaders,
+      ...createSignedInternalContextHeaders(input)
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+const buildToolApprovalBindingHash = (input: {
+  approvalId: string;
+  toolId: string;
+  tenantId: string;
+  actorId: string;
+  body: JsonMap;
+  idempotencyKey?: string;
+}): string =>
+  sha256Hex(
+    stableSerialize({
+      approvalId: input.approvalId,
+      toolId: input.toolId,
+      tenantId: input.tenantId,
+      actorId: input.actorId,
+      idempotencyKey: input.idempotencyKey ?? null,
+      body: input.body
+    })
+  );
 
 const parseDemoActorId = (token: string): string | undefined => {
   if (!token.startsWith("demo-token-")) return undefined;
@@ -251,6 +352,18 @@ const introspectAuthToken = async (token: string): Promise<AuthSession | undefin
   const introspectorRoles =
     process.env.OPENAEGIS_AUTH_INTROSPECTOR_ROLES ?? "service_account,token_introspect";
   const trustProxyMtlsHeaders = process.env.OPENAEGIS_TRUST_PROXY_MTLS_HEADERS === "true";
+  const introspectionHeaders = buildInternalServiceHeaders({
+    actorId: process.env.OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID ?? "service-gateway",
+    tenantId: process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID ?? "tenant-platform",
+    roles: introspectorRoles.split(",").map((role) => role.trim()).filter((role) => role.length > 0),
+    ...(trustProxyMtlsHeaders
+      ? {
+          mtlsClientSan: process.env.OPENAEGIS_AUTH_INTROSPECTOR_MTLS_SAN ?? "spiffe://openaegis/api-gateway",
+          mtlsVerified: true
+        }
+      : {})
+  });
+  if (!introspectionHeaders) return undefined;
 
   const timeoutMs = Math.max(500, Number(process.env.OPENAEGIS_AUTH_INTROSPECTION_TIMEOUT_MS ?? 2000));
   const controller = new AbortController();
@@ -260,16 +373,7 @@ const introspectAuthToken = async (token: string): Promise<AuthSession | undefin
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-actor-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID ?? "service-gateway",
-        "x-tenant-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID ?? "tenant-platform",
-        "x-roles": introspectorRoles,
-        ...(trustProxyMtlsHeaders
-          ? {
-              "x-mtls-client-san":
-                process.env.OPENAEGIS_AUTH_INTROSPECTOR_MTLS_SAN ?? "spiffe://openaegis/api-gateway",
-              "x-mtls-verified": "true"
-            }
-          : {})
+        ...introspectionHeaders
       },
       body: JSON.stringify({ token }),
       signal: controller.signal
@@ -1000,6 +1104,10 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const mode = pathname.endsWith("/simulate") ? "simulate" : "execute";
     const toolId = pathname.split("/")[3] ?? "unknown-tool";
     const requestedTenant = toString(body.tenantId, authSession.tenantId ?? "tenant-starlight-health");
+    const idempotencyKey =
+      typeof request.headers["idempotency-key"] === "string" && request.headers["idempotency-key"].trim().length > 0
+        ? request.headers["idempotency-key"].trim()
+        : undefined;
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1016,6 +1124,36 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
         sendJson(response, 403, { error: "approval_missing" });
         return;
       }
+
+      const securityState = await loadGatewaySecurityState();
+      const requestHash = buildToolApprovalBindingHash({
+        approvalId,
+        toolId,
+        tenantId: tenantScope.tenantId,
+        actorId,
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+        body
+      });
+      const existingBinding = securityState.approvalBindings.find((item) => item.approvalId === approvalId);
+      if (existingBinding) {
+        sendJson(
+          response,
+          409,
+          { error: existingBinding.requestHash === requestHash ? "approval_already_used" : "approval_binding_mismatch" }
+        );
+        return;
+      }
+
+      securityState.approvalBindings.push({
+        approvalId,
+        toolId,
+        tenantId: tenantScope.tenantId,
+        actorId,
+        requestHash,
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+        consumedAt: new Date().toISOString()
+      });
+      await saveGatewaySecurityState(securityState);
     }
     const result = {
       toolCallId: `tc-${Date.now().toString(36)}`,

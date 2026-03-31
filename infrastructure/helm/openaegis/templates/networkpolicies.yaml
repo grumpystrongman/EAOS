@@ -17,20 +17,22 @@ metadata:
   labels:
     {{- include "openaegis.labels" . | nindent 4 }}
 spec:
-  podSelector: {}
+  podSelector:
+    matchLabels:
+      openaegis.io/mesh-participant: "true"
   policyTypes:
     - Ingress
     - Egress
   ingress:
     - from:
-        - namespaceSelector:
+        - podSelector:
             matchLabels:
-              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+              openaegis.io/mesh-participant: "true"
   egress:
     - to:
-        - namespaceSelector:
+        - podSelector:
             matchLabels:
-              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+              openaegis.io/mesh-participant: "true"
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -52,3 +54,24 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tool-execution-egress-allowlist
+  labels:
+    {{- include "openaegis.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: tool-execution-service
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+      ports:
+        - protocol: TCP
+          port: 443
