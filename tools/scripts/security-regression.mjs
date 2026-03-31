@@ -17,6 +17,16 @@ const baseUrls = {
   auth: `http://127.0.0.1:${ports.auth}`,
   toolExecution: `http://127.0.0.1:${ports.toolExecution}`
 };
+const authAdminHeaders = {
+  "x-actor-id": "user-security",
+  "x-tenant-id": "tenant-starlight-health",
+  "x-roles": "security_admin,token_introspect"
+};
+const authPlatformHeaders = {
+  "x-actor-id": "service-gateway",
+  "x-tenant-id": "tenant-platform",
+  "x-roles": "service_account,token_introspect"
+};
 
 const call = async (baseUrl, path, method = "GET", options = {}) => {
   const headers = { "content-type": "application/json", ...(options.headers ?? {}) };
@@ -108,9 +118,11 @@ export const runSecurityRegression = async () => {
     });
 
     const clinicianToken = await callTimed(baseUrls.auth, "/v1/auth/token", "POST", {
+      headers: authAdminHeaders,
       body: { email: "clinician@starlighthealth.org" }
     });
     const securityToken = await callTimed(baseUrls.auth, "/v1/auth/token", "POST", {
+      headers: authAdminHeaders,
       body: { email: "security@starlighthealth.org" }
     });
 
@@ -206,6 +218,7 @@ export const runSecurityRegression = async () => {
     });
 
     const crossTenantApproverToken = await callTimed(baseUrls.auth, "/v1/auth/token", "POST", {
+      headers: authPlatformHeaders,
       body: {
         email: "approver@otherhealth.org"
       }
@@ -439,10 +452,7 @@ export const runSecurityRegression = async () => {
     });
 
     const revokeResponse = await callTimed(baseUrls.auth, "/v1/auth/revoke", "POST", {
-      headers: {
-        "x-actor-id": "service-gateway",
-        "x-tenant-id": "tenant-platform"
-      },
+      headers: authPlatformHeaders,
       body: { token: clinicianAccessToken }
     });
     const postRevokeExecution = await callTimed(baseUrls.gateway, "/v1/executions", "POST", {

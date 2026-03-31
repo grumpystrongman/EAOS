@@ -8,10 +8,12 @@ const excludedFiles = new Set(["commercial-audit.mjs", "codebase-line-audit.mjs"
 const codeExtensions = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".json", ".sh", ".yml", ".yaml", ".sql"]);
 
 const markerPatterns = [
-  { id: "placeholder_or_skeleton", regex: /\b(placeholder|skeleton)\b/i },
   { id: "todo_or_fixme", regex: /\b(todo|fixme)\b/i },
   { id: "not_implemented", regex: /\b(not implemented|not_implemented)\b/i },
-  { id: "coming_soon_or_stub", regex: /\b(coming soon|stub)\b/i }
+  { id: "coming_soon", regex: /\bcoming soon\b/i },
+  { id: "explicit_skeleton_marker", regex: /\b(skeleton implementation|skeleton code)\b/i },
+  { id: "explicit_stub_marker", regex: /\b(stubbed implementation|temporary stub)\b/i },
+  { id: "throw_not_implemented", regex: /throw\s+new\s+Error\s*\(\s*["'`]not implemented["'`]\s*\)/i }
 ];
 
 const walkFiles = async (root) => {

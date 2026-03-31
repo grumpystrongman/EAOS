@@ -69,7 +69,7 @@ const run = async () => {
     }
 
     const audit = await request("/v1/audit/events", {
-      headers: { authorization: `Bearer ${login.body.accessToken}` }
+      headers: { authorization: `Bearer ${approver.body.accessToken}` }
     });
 
     if (audit.status !== 200 || !Array.isArray(audit.body.events) || audit.body.events.length === 0) {

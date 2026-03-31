@@ -49,6 +49,10 @@ const roleToPrivileges: Record<string, string[]> = {
 const approvalViewRoles = ["approver", "security_admin", "auditor", "platform_admin"] as const;
 const approvalCreateRoles = ["approver", "security_admin", "platform_admin"] as const;
 const approvalDecisionRoles = ["approver", "security_admin", "platform_admin"] as const;
+const auditReadRoles = ["auditor", "security_admin", "platform_admin"] as const;
+const commercialReadRoles = ["auditor", "security_admin", "platform_admin"] as const;
+const policyProfileReadRoles = ["auditor", "security_admin", "platform_admin"] as const;
+const policyProfileManageRoles = ["security_admin", "platform_admin"] as const;
 
 const gatewayRateLimiter = new InMemoryRateLimiter(250, 60_000);
 
@@ -149,12 +153,32 @@ const buildCommercialSnapshot = async () => {
   };
 };
 
-const sendJson = (response: ServerResponse, statusCode: number, body: unknown) => {
-  response.writeHead(statusCode, {
-    "content-type": "application/json",
-    "access-control-allow-origin": "*",
+const parseAllowedOrigins = (): Set<string> =>
+  new Set(
+    (process.env.OPENAEGIS_ALLOWED_ORIGINS ?? "")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0)
+  );
+
+const buildCorsHeaders = (request?: IncomingMessage): Record<string, string> => {
+  if (!request) return {};
+  const origin = typeof request.headers.origin === "string" ? request.headers.origin.trim() : "";
+  if (origin.length === 0) return {};
+  const allowedOrigins = parseAllowedOrigins();
+  if (!allowedOrigins.has(origin)) return {};
+  return {
+    "access-control-allow-origin": origin,
+    vary: "Origin",
     "access-control-allow-headers": "content-type,authorization",
     "access-control-allow-methods": "GET,POST,OPTIONS"
+  };
+};
+
+const sendJson = (response: ServerResponse, statusCode: number, body: unknown, request?: IncomingMessage) => {
+  response.writeHead(statusCode, {
+    "content-type": "application/json",
+    ...buildCorsHeaders(request)
   });
   response.end(JSON.stringify(body));
 };
@@ -224,6 +248,9 @@ const loadDemoSession = async (actorId: string): Promise<AuthSession | undefined
 const introspectAuthToken = async (token: string): Promise<AuthSession | undefined> => {
   const endpoint = process.env.OPENAEGIS_AUTH_INTROSPECTION_URL;
   if (!endpoint) return undefined;
+  const introspectorRoles =
+    process.env.OPENAEGIS_AUTH_INTROSPECTOR_ROLES ?? "service_account,token_introspect";
+  const trustProxyMtlsHeaders = process.env.OPENAEGIS_TRUST_PROXY_MTLS_HEADERS === "true";
 
   const timeoutMs = Math.max(500, Number(process.env.OPENAEGIS_AUTH_INTROSPECTION_TIMEOUT_MS ?? 2000));
   const controller = new AbortController();
@@ -234,7 +261,15 @@ const introspectAuthToken = async (token: string): Promise<AuthSession | undefin
       headers: {
         "content-type": "application/json",
         "x-actor-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_ACTOR_ID ?? "service-gateway",
-        "x-tenant-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID ?? "tenant-platform"
+        "x-tenant-id": process.env.OPENAEGIS_AUTH_INTROSPECTOR_TENANT_ID ?? "tenant-platform",
+        "x-roles": introspectorRoles,
+        ...(trustProxyMtlsHeaders
+          ? {
+              "x-mtls-client-san":
+                process.env.OPENAEGIS_AUTH_INTROSPECTOR_MTLS_SAN ?? "spiffe://openaegis/api-gateway",
+              "x-mtls-verified": "true"
+            }
+          : {})
       },
       body: JSON.stringify({ token }),
       signal: controller.signal
@@ -312,6 +347,12 @@ const requireRole = (
 ): boolean => {
   if (hasAnyRole(auth, roles)) return true;
   sendJson(response, 403, { error });
+  return false;
+};
+
+const requireTenantAccess = (response: ServerResponse, auth: AuthSession, tenantId: string): boolean => {
+  if (canAccessTenant(auth, tenantId)) return true;
+  sendJson(response, 403, { error: "tenant_scope_mismatch" });
   return false;
 };
 
@@ -597,17 +638,29 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     pathname !== "/healthz" &&
     !(method === "POST" && pathname === "/v1/auth/login");
 
-  if (requiresMtlsAttestation && !requestContext.mtlsClientSan) {
-    sendJson(response, 401, { error: "mtls_attestation_required" });
-    return;
+  if (requiresMtlsAttestation) {
+    const trustProxyMtlsHeaders = process.env.OPENAEGIS_TRUST_PROXY_MTLS_HEADERS === "true";
+    if (!trustProxyMtlsHeaders) {
+      sendJson(response, 503, { error: "mtls_proxy_attestation_not_configured" }, request);
+      return;
+    }
+    if (!requestContext.mtlsClientSan) {
+      sendJson(response, 401, { error: "mtls_attestation_required" }, request);
+      return;
+    }
+    if (!requestContext.mtlsVerified) {
+      sendJson(response, 401, { error: "mtls_attestation_unverified" }, request);
+      return;
+    }
   }
 
   if (method === "OPTIONS") {
-    response.writeHead(204, {
-      "access-control-allow-origin": "*",
-      "access-control-allow-headers": "content-type,authorization",
-      "access-control-allow-methods": "GET,POST,OPTIONS"
-    });
+    const corsHeaders = buildCorsHeaders(request);
+    if (!corsHeaders["access-control-allow-origin"]) {
+      sendJson(response, 403, { error: "cors_origin_not_allowed" }, request);
+      return;
+    }
+    response.writeHead(204, corsHeaders);
     response.end();
     return;
   }
@@ -652,16 +705,29 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   const actorId = authSession.actorId;
 
   if (method === "GET" && pathname === "/v1/commercial/claims") {
+    if (!requireRole(response, authSession, commercialReadRoles, "insufficient_role_for_commercial_claims")) {
+      return;
+    }
     sendJson(response, 200, await buildCommercialClaims());
     return;
   }
 
   if (method === "GET" && pathname === "/v1/policies/profile") {
-    sendJson(response, 200, await getPolicyProfileSnapshot());
+    if (!requireRole(response, authSession, policyProfileReadRoles, "insufficient_role_for_policy_profile_read")) {
+      return;
+    }
+    const snapshot = await getPolicyProfileSnapshot();
+    if (!requireTenantAccess(response, authSession, snapshot.profile.tenantId)) {
+      return;
+    }
+    sendJson(response, 200, snapshot);
     return;
   }
 
   if (method === "POST" && pathname === "/v1/policies/profile/preview") {
+    if (!requireRole(response, authSession, policyProfileManageRoles, "insufficient_role_for_policy_profile_manage")) {
+      return;
+    }
     const body = await readJson(request);
     const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
@@ -679,6 +745,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && pathname === "/v1/policies/profile/explain") {
+    if (!requireRole(response, authSession, policyProfileManageRoles, "insufficient_role_for_policy_profile_manage")) {
+      return;
+    }
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure and easy to operate.");
     const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
@@ -741,6 +810,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && pathname === "/v1/policies/profile/copilot") {
+    if (!requireRole(response, authSession, policyProfileManageRoles, "insufficient_role_for_policy_profile_manage")) {
+      return;
+    }
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure while reducing operator confusion.");
     const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
@@ -797,6 +869,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && pathname === "/v1/policies/profile/save") {
+    if (!requireRole(response, authSession, policyProfileManageRoles, "insufficient_role_for_policy_profile_manage")) {
+      return;
+    }
     const body = await readJson(request);
     const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
@@ -924,6 +999,24 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const body = await readJson(request);
     const mode = pathname.endsWith("/simulate") ? "simulate" : "execute";
     const toolId = pathname.split("/")[3] ?? "unknown-tool";
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? "tenant-starlight-health");
+    const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
+    if (!tenantScope.allowed) {
+      sendJson(response, 403, { error: "tenant_scope_mismatch" });
+      return;
+    }
+    if (mode === "execute") {
+      if (!requireRole(response, authSession, approvalDecisionRoles, "insufficient_role_for_tool_execute")) {
+        return;
+      }
+      const approvalId = toString(body.approvalId, "");
+      const state = await loadState();
+      const approval = state.approvals.find((item) => item.approvalId === approvalId);
+      if (!approval || approval.status !== "approved" || approval.tenantId !== tenantScope.tenantId) {
+        sendJson(response, 403, { error: "approval_missing" });
+        return;
+      }
+    }
     const result = {
       toolCallId: `tc-${Date.now().toString(36)}`,
       toolId,
@@ -944,8 +1037,8 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     sendJson(response, 200, {
       graphs: graphs.map((graph) => ({
         ...graph,
-        executionCount: state.graphExecutions.filter((item) => item.graphId === graph.graphId).length,
-        incidentCount: state.incidents.filter((item) => item.graphId === graph.graphId).length
+        executionCount: state.graphExecutions.filter((item) => item.graphId === graph.graphId && canAccessTenant(authSession, item.tenantId)).length,
+        incidentCount: state.incidents.filter((item) => item.graphId === graph.graphId && canAccessTenant(authSession, item.tenantId)).length
       }))
     });
     return;
@@ -960,10 +1053,12 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     }
 
     const state = await loadState();
+    const executions = state.graphExecutions.filter((item) => item.graphId === graphId && canAccessTenant(authSession, item.tenantId));
+    const incidents = state.incidents.filter((item) => item.graphId === graphId && canAccessTenant(authSession, item.tenantId));
     sendJson(response, 200, {
       graph,
-      executions: state.graphExecutions.filter((item) => item.graphId === graphId),
-      incidents: state.incidents.filter((item) => item.graphId === graphId)
+      executions,
+      incidents
     });
     return;
   }
@@ -976,6 +1071,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const executionBundle = await getGraphExecutionByExecutionId(executionId);
     if (!graphExecution || !executionBundle) {
       sendJson(response, 404, { error: "graph_execution_not_found" });
+      return;
+    }
+    if (!requireTenantAccess(response, authSession, executionBundle.execution.tenantId)) {
       return;
     }
     sendJson(response, 200, {
@@ -1014,6 +1112,9 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       sendJson(response, 404, { error: "graph_execution_not_found" });
       return;
     }
+    if (!requireTenantAccess(response, authSession, bundle.execution.tenantId)) {
+      return;
+    }
     sendJson(response, 200, bundle);
     return;
   }
@@ -1026,12 +1127,20 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       sendJson(response, 404, { error: "execution_not_found" });
       return;
     }
+    if (!requireTenantAccess(response, authSession, execution.tenantId)) {
+      return;
+    }
     sendJson(response, 200, execution);
     return;
   }
 
   if (method === "GET" && pathname === "/v1/incidents") {
-    sendJson(response, 200, { incidents: await listIncidents() });
+    const incidents = await listIncidents();
+    sendJson(response, 200, {
+      incidents: authSession.roles.includes("platform_admin")
+        ? incidents
+        : incidents.filter((incident) => authSession.tenantId && incident.tenantId === authSession.tenantId)
+    });
     return;
   }
 
@@ -1042,17 +1151,29 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       sendJson(response, 404, { error: "incident_not_found" });
       return;
     }
+    if (!requireTenantAccess(response, authSession, incident.tenantId)) {
+      return;
+    }
     sendJson(response, 200, incident);
     return;
   }
 
   if (method === "GET" && pathname === "/v1/audit/events") {
+    if (!requireRole(response, authSession, auditReadRoles, "insufficient_role_for_audit_list")) {
+      return;
+    }
     const state = await loadState();
-    sendJson(response, 200, { events: state.auditEvents.slice().reverse() });
+    const events = authSession.roles.includes("platform_admin")
+      ? state.auditEvents
+      : state.auditEvents.filter((event) => authSession.tenantId && event.tenantId === authSession.tenantId);
+    sendJson(response, 200, { events: events.slice().reverse() });
     return;
   }
 
   if (method === "GET" && pathname === "/v1/commercial/proof") {
+    if (!requireRole(response, authSession, commercialReadRoles, "insufficient_role_for_commercial_proof")) {
+      return;
+    }
     const snapshot = await buildCommercialSnapshot();
     const report = await readCommercialProofReport();
     sendJson(response, 200, { ...snapshot, ...(report ? { report } : {}) });
@@ -1060,16 +1181,25 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "GET" && pathname === "/v1/commercial/readiness") {
+    if (!requireRole(response, authSession, commercialReadRoles, "insufficient_role_for_commercial_readiness")) {
+      return;
+    }
     sendJson(response, 200, await buildCommercialReadinessSnapshot());
     return;
   }
 
   if (method === "GET" && /^\/v1\/audit\/evidence\/.+$/.test(pathname)) {
+    if (!requireRole(response, authSession, auditReadRoles, "insufficient_role_for_audit_evidence_read")) {
+      return;
+    }
     const evidenceId = pathname.split("/")[4] ?? "";
     const state = await loadState();
     const event = state.auditEvents.find((item) => item.evidenceId === evidenceId);
     if (!event) {
       sendJson(response, 404, { error: "evidence_not_found" });
+      return;
+    }
+    if (!requireTenantAccess(response, authSession, event.tenantId)) {
       return;
     }
     sendJson(response, 200, { evidence: event });

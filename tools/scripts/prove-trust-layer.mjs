@@ -110,7 +110,7 @@ const runHealthcareDischargeExample = async (tokens) => {
     headers: { authorization: `Bearer ${tokens.clinician}` }
   });
   const audit = await callTimed(baseUrls.gateway, "/v1/audit/events", "GET", {
-    headers: { authorization: `Bearer ${tokens.clinician}` }
+    headers: { authorization: `Bearer ${tokens.security}` }
   });
 
   const graphStages = graph.payload.graphExecution?.steps?.map((step) => step.stage) ?? [];

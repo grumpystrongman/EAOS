@@ -11,6 +11,7 @@ export interface RequestContext {
   actorId?: string | undefined;
   roles: string[];
   mtlsClientSan?: string | undefined;
+  mtlsVerified: boolean;
 }
 
 export interface SecurityRequirements {
@@ -121,8 +122,11 @@ export const parseContext = (request: IncomingMessage): RequestContext => {
     typeof request.headers["x-mtls-client-san"] === "string" && request.headers["x-mtls-client-san"].trim().length > 0
       ? request.headers["x-mtls-client-san"].trim()
       : undefined;
+  const mtlsVerifiedRaw =
+    typeof request.headers["x-mtls-verified"] === "string" ? request.headers["x-mtls-verified"].trim().toLowerCase() : "";
+  const mtlsVerified = mtlsVerifiedRaw === "true" || mtlsVerifiedRaw === "1" || mtlsVerifiedRaw === "verified";
 
-  return { requestId, tenantId, actorId, roles, mtlsClientSan };
+  return { requestId, tenantId, actorId, roles, mtlsClientSan, mtlsVerified };
 };
 
 export const enforceSecurity = (
@@ -141,6 +145,18 @@ export const enforceSecurity = (
   if (requirements.requireActor && !context.actorId) {
     sendJson(response, 401, { error: "actor_context_required" }, context.requestId);
     return undefined;
+  }
+
+  if (enforceMtls) {
+    const trustProxyHeaders = process.env.OPENAEGIS_TRUST_PROXY_MTLS_HEADERS === "true";
+    if (!trustProxyHeaders) {
+      sendJson(response, 503, { error: "mtls_proxy_attestation_not_configured" }, context.requestId);
+      return undefined;
+    }
+    if (!context.mtlsVerified) {
+      sendJson(response, 401, { error: "mtls_attestation_unverified" }, context.requestId);
+      return undefined;
+    }
   }
 
   if (enforceMtls && !context.mtlsClientSan) {

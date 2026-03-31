@@ -35,6 +35,8 @@ spec:
               value: "3000"
             - name: OPENAEGIS_ENFORCE_MTLS
               value: "true"
+            - name: OPENAEGIS_TRUST_PROXY_MTLS_HEADERS
+              value: "true"
           resources:
             requests:
               cpu: 100m

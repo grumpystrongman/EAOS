@@ -1,6 +1,6 @@
 {
-  "packageId": "2026-03-30T20-27-25-206Z",
-  "generatedAt": "2026-03-30T20:27:25.271Z",
+  "packageId": "2026-03-31T15-41-20-941Z",
+  "generatedAt": "2026-03-31T15:41:21.016Z",
   "requiredFiles": [
     "docs/compliance/CONTROL-CROSSWALK.json",
     "docs/compliance/ENTERPRISE-TRUST-PACK.md",
@@ -11,7 +11,6 @@
     "docs/assets/demo/readiness-gate-report.json",
     "docs/assets/demo/commercial-proof-report.json",
     "docs/assets/demo/trust-layer-proof-report.json",
-    "docs/assets/demo/commercial-audit-report.json",
     "docs/assets/demo/security-regression-report.json",
     "docs/assets/demo/codebase-line-audit-report.json",
     "docs/assets/demo/design-partner-kpis.json",
@@ -28,7 +27,6 @@
     "docs/assets/demo/readiness-gate-report.json",
     "docs/assets/demo/commercial-proof-report.json",
     "docs/assets/demo/trust-layer-proof-report.json",
-    "docs/assets/demo/commercial-audit-report.json",
     "docs/assets/demo/security-regression-report.json",
     "docs/assets/demo/codebase-line-audit-report.json",
     "docs/assets/demo/design-partner-kpis.json",
@@ -69,32 +67,27 @@
     },
     {
       "file": "docs/assets/demo/readiness-gate-report.json",
-      "sha256": "72411e1306611ad84692b1ca40fe9cf99f990dee6c0b2b56a6e1d923f8a070da",
-      "sizeBytes": 49848
+      "sha256": "6e40d4efe2a0e6df57551a1b24ec18e3485788bbee0b1c1bb873738ca7964dc7",
+      "sizeBytes": 49618
     },
     {
       "file": "docs/assets/demo/commercial-proof-report.json",
-      "sha256": "dbee3cd90f07cdcbcbbcf8c9edee79e821471fc55f9caa314c38c67403a2eaa0",
-      "sizeBytes": 7607
+      "sha256": "9d28527bb79dda57ab3eced2ecbd192d31f4b4331f3b28dd8a293328d3ce8912",
+      "sizeBytes": 7609
     },
     {
       "file": "docs/assets/demo/trust-layer-proof-report.json",
-      "sha256": "2c74ac688cadb90117588e35e429a564135e2f5f4c08bc4f2d3450aa2efa317a",
-      "sizeBytes": 6963
-    },
-    {
-      "file": "docs/assets/demo/commercial-audit-report.json",
-      "sha256": "4fa7b28a6c158931033241c746a0a074585f688bd5d11de0622180c6ee17d001",
-      "sizeBytes": 1541
+      "sha256": "9885bade64bdf6cf4d822fb5fbf446a9fee62e69e106ba78112e9ce3b51e9ead",
+      "sizeBytes": 6966
     },
     {
       "file": "docs/assets/demo/security-regression-report.json",
-      "sha256": "7edf8602804a96f07e0943bda6639eccf25d32162e3926ded8c73f31f7420537",
+      "sha256": "cc5c129d839c63c4429410489923271084d1ab7decb952dc7edd77d89918068d",
       "sizeBytes": 3979
     },
     {
       "file": "docs/assets/demo/codebase-line-audit-report.json",
-      "sha256": "496964a33a92e4b6148e426884035b12a63551080bd9717c738c4ef9a02687c1",
+      "sha256": "3f79f1f4e0e935fb896153bb8c3b4b97e90bfdb19302f3aebda6e9df4c3f16be",
       "sizeBytes": 383
     },
     {
@@ -104,13 +97,13 @@
     },
     {
       "file": "docs/assets/demo/chaos-report.json",
-      "sha256": "8d791da4cee883dddb321d4359cb01827cc77d04d6d31e25278a2585b90125af",
+      "sha256": "cb12c6063812d7cb2b30ad22d583e5906df682543e675a0ac80b56f33be8d55d",
       "sizeBytes": 3878
     },
     {
       "file": "docs/assets/demo/load-test-report.json",
-      "sha256": "6f7865992d66309ee7e403bd6118fd3ea934c4cc8aa1a65d986d2b533ce4027c",
-      "sizeBytes": 599
+      "sha256": "59e01d256b35f4bced18cc379f514ce08048683436cc46e69c03184048a15277",
+      "sizeBytes": 598
     }
   ],
   "summary": {

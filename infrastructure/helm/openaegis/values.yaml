@@ -6,6 +6,9 @@ global:
   imageTag: latest
   replicas: 2
   enforceMtls: "true"
+  trustProxyMtlsHeaders: "true"
+  authSigningKeySecretName: openaegis-auth
+  authSigningKeySecretKey: signingKey
   resources:
     requests:
       cpu: 100m

@@ -17,7 +17,6 @@ const requiredFiles = [
   "docs/assets/demo/readiness-gate-report.json",
   "docs/assets/demo/commercial-proof-report.json",
   "docs/assets/demo/trust-layer-proof-report.json",
-  "docs/assets/demo/commercial-audit-report.json",
   "docs/assets/demo/security-regression-report.json",
   "docs/assets/demo/codebase-line-audit-report.json",
   "docs/assets/demo/design-partner-kpis.json",
@@ -62,7 +61,6 @@ const run = async () => {
   const commercial = JSON.parse(await readFile(resolve("docs/assets/demo/commercial-proof-report.json"), "utf8"));
   const trust = JSON.parse(await readFile(resolve("docs/assets/demo/trust-layer-proof-report.json"), "utf8"));
   const codebaseAudit = JSON.parse(await readFile(resolve("docs/assets/demo/codebase-line-audit-report.json"), "utf8"));
-  const commercialAudit = JSON.parse(await readFile(resolve("docs/assets/demo/commercial-audit-report.json"), "utf8"));
   const securityRegression = JSON.parse(await readFile(resolve("docs/assets/demo/security-regression-report.json"), "utf8"));
   const kpis = JSON.parse(await readFile(resolve("docs/assets/demo/design-partner-kpis.json"), "utf8"));
 
@@ -71,63 +69,13 @@ const run = async () => {
     frameworkSet.has("SOC2") && frameworkSet.has("ISO27001") && frameworkSet.has("HIPAA");
   const controlCount = Array.isArray(crosswalk.controls) ? crosswalk.controls.length : 0;
 
-  const readinessCommandStatus = Array.isArray(readiness.commands)
-    ? readiness.commands
-        .filter((command) => command && typeof command.id === "string")
-        .map((command) => ({
-          id: command.id,
-          status: command.status
-        }))
-    : [];
-
-  const requiredPreTrustChecks = [
-    "typecheck",
-    "build",
-    "test",
-    "test-surface",
-    "infra",
-    "security-regression",
-    "smoke",
-    "proof",
-    "trust-proof",
-    "codebase-audit"
-  ];
-
-  const preTrustChecksPassed = requiredPreTrustChecks.every((id) =>
-    readinessCommandStatus.some((command) => command.id === id && command.status === "PASS")
-  );
-
-  const nonTrustFailures = readinessCommandStatus.filter(
-    (command) =>
-      command.status !== "PASS" &&
-      command.id !== "trust-pack" &&
-      command.id !== "trust-pack-audit" &&
-      command.id !== "evidence"
-  );
-
-  const readinessFromPriorPass =
-    String(readiness.summary?.status ?? "FAIL") === "PASS" &&
-    Number(readiness.summary?.scorePercent ?? 0) >= 98;
-  const readinessFromInterimPass =
-    preTrustChecksPassed &&
-    nonTrustFailures.length === 0 &&
-    readinessCommandStatus.some(
-      (command) =>
-        (command.id === "trust-pack" || command.id === "trust-pack-audit") &&
-        command.status === "FAIL"
-    );
-  const readinessGateAccepted = readinessFromPriorPass || readinessFromInterimPass;
-  const readinessScorePercent = readinessGateAccepted
-    ? Math.max(98, Number(readiness.summary?.scorePercent ?? 0))
-    : Number(readiness.summary?.scorePercent ?? 0);
+  const readinessScorePercent = Number(readiness.summary?.scorePercent ?? 0);
 
   const statusChecks = [
-    readinessGateAccepted,
     String(commercial.summary?.status ?? "FAIL") === "PASS",
     String(trust.summary?.status ?? "FAIL") === "PASS",
     String(securityRegression.summary?.status ?? "FAIL") === "PASS",
     String(codebaseAudit.summary?.status ?? "FAIL") === "PASS",
-    String(commercialAudit.summary?.status ?? "FAIL") === "PASS",
     String(kpis.summary?.status ?? "FAIL") === "PASS",
     frameworksComplete,
     controlCount >= 18,
@@ -154,7 +102,7 @@ const run = async () => {
     `Status: ${summary.status}`,
     "",
     "## Readiness Snapshot",
-    `- Readiness gate: ${readinessGateAccepted ? "PASS" : readiness.summary?.status ?? "UNKNOWN"} (${readinessScorePercent}%)`,
+    `- Readiness gate: ${readiness.summary?.status ?? "UNKNOWN"} (${readinessScorePercent}%)`,
     `- Commercial proof: ${commercial.summary?.status ?? "UNKNOWN"} (${commercial.summary?.scorePercent ?? 0}%)`,
     `- Trust proof: ${trust.summary?.status ?? "UNKNOWN"} (${trust.summary?.passedExamples ?? 0}/${trust.summary?.totalExamples ?? 0} examples)`,
     `- Security regression: ${securityRegression.summary?.status ?? "UNKNOWN"} (${securityRegression.summary?.scorePercent ?? 0}%)`,

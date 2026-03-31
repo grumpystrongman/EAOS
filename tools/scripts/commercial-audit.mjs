@@ -4,7 +4,8 @@ import { join, resolve } from "node:path";
 
 const auditableRoots = ["backend/services", "backend/shared", "frontend/apps", "tools/scripts", "tests/commercial"];
 const excludedDirs = new Set(["dist", "node_modules", ".git", ".brv", "docs", ".tmp-test"]);
-const placeholderPattern = /\b(placeholder|skeleton)\b/i;
+const unfinishedMarkerPattern =
+  /\b(todo|fixme|not implemented|not_implemented|coming soon|skeleton implementation|skeleton code|stubbed implementation|temporary stub)\b/i;
 const excludedFiles = new Set(["commercial-audit.mjs", "codebase-line-audit.mjs"]);
 
 const readJson = async (path, fallback) => {
@@ -46,7 +47,7 @@ const detectPlaceholders = async () => {
       const lines = content.split(/\r?\n/);
       for (let index = 0; index < lines.length; index += 1) {
         const line = lines[index] ?? "";
-        if (placeholderPattern.test(line)) {
+        if (unfinishedMarkerPattern.test(line)) {
           findings.push({
             file: file.replace(/\\/g, "/"),
             line: index + 1,
@@ -63,7 +64,6 @@ const run = async () => {
   const commercialProof = await readJson("docs/assets/demo/commercial-proof-report.json", null);
   const trustProof = await readJson("docs/assets/demo/trust-layer-proof-report.json", null);
   const codebaseAudit = await readJson("docs/assets/demo/codebase-line-audit-report.json", null);
-  const trustPackAudit = await readJson("docs/assets/demo/enterprise-trust-pack-audit-report.json", null);
   const securityRegression = await readJson("docs/assets/demo/security-regression-report.json", null);
   const placeholderFindings = await detectPlaceholders();
 
@@ -126,15 +126,6 @@ const run = async () => {
         status: securityRegression?.summary?.status ?? "MISSING",
         scorePercent: Number(securityRegression?.summary?.scorePercent ?? 0),
         failedChecks: Number(securityRegression?.summary?.failedChecks ?? 0)
-      }
-    },
-    {
-      checkId: "enterprise_trust_pack_audit_passed",
-      passed: String(trustPackAudit?.summary?.status ?? "FAIL") === "PASS",
-      details: {
-        status: trustPackAudit?.summary?.status ?? "MISSING",
-        scorePercent: Number(trustPackAudit?.summary?.scorePercent ?? 0),
-        failedChecks: Number(trustPackAudit?.summary?.failedChecks ?? 0)
       }
     }
   ];

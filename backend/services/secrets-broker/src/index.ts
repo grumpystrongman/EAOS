@@ -61,6 +61,7 @@ const stateFile = resolve(process.cwd(), ".volumes", "secrets-broker-state.json"
 const limiter = new InMemoryRateLimiter(80, 60_000);
 const supportedKmsProviders = new Set(["local", "aws", "azure", "gcp"]);
 const defaultKmsProvider = "local";
+const strictProductionKms = process.env.NODE_ENV === "production" && process.env.OPENAEGIS_ALLOW_LOCAL_KMS_IN_PRODUCTION !== "true";
 
 const parseKmsProvider = (value: unknown): SecretRecord["kmsProvider"] | undefined => {
   if (typeof value !== "string") return undefined;
@@ -69,8 +70,13 @@ const parseKmsProvider = (value: unknown): SecretRecord["kmsProvider"] | undefin
   return normalized as SecretRecord["kmsProvider"];
 };
 
-const resolveKmsProvider = (value: unknown): SecretRecord["kmsProvider"] =>
-  parseKmsProvider(value) ?? defaultKmsProvider;
+const resolveKmsProvider = (value: unknown): SecretRecord["kmsProvider"] => {
+  const provider = parseKmsProvider(value) ?? defaultKmsProvider;
+  if (strictProductionKms && provider === "local") {
+    throw new Error("kms_provider_local_not_allowed_in_production");
+  }
+  return provider;
+};
 
 const resolveKeyVersion = (provider: SecretRecord["kmsProvider"]): string => {
   const providerSpecific = process.env[`OPENAEGIS_${provider.toUpperCase()}_KMS_KEY_VERSION`];
@@ -83,6 +89,9 @@ const deriveKek = (material: string): Buffer => createHash("sha256").update(mate
 const resolveKekMaterial = (provider: SecretRecord["kmsProvider"]): string | undefined => {
   switch (provider) {
     case "local":
+      if (strictProductionKms) {
+        return undefined;
+      }
       return process.env.OPENAEGIS_LOCAL_KEK ?? "dev-local-kek-change-me";
     case "aws":
       return process.env.OPENAEGIS_AWS_KMS_KEK ?? process.env.OPENAEGIS_KMS_KEK;
@@ -436,6 +445,10 @@ export const createAppServer = () =>
       }
       if (error instanceof Error && error.message.startsWith("kms_kek_material_missing_for_provider_")) {
         sendJson(response, 503, { error: "kms_provider_not_configured", detail: error.message }, requestId);
+        return;
+      }
+      if (error instanceof Error && error.message === "kms_provider_local_not_allowed_in_production") {
+        sendJson(response, 503, { error: "kms_provider_local_not_allowed_in_production" }, requestId);
         return;
       }
       sendJson(response, 500, { error: "internal_error", message: error instanceof Error ? error.message : "unknown" }, requestId);

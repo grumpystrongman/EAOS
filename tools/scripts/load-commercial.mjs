@@ -82,7 +82,7 @@ export const runCommercialLoadTest = async () => {
     const loginResponse = await fetch(`${baseUrl}/v1/auth/login`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+      body: JSON.stringify({ email: "security@starlighthealth.org" })
     });
     const loginBody = await loginResponse.json();
     if (!loginResponse.ok || typeof loginBody.accessToken !== "string") {

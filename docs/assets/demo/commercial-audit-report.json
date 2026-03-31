@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T20:27:26.567Z",
+  "generatedAt": "2026-03-31T15:41:21.733Z",
   "suite": "commercial-readiness-audit",
   "checks": [
     {
@@ -42,8 +42,8 @@
       "details": {
         "status": "PASS",
         "totalFindings": 0,
-        "filesReviewed": 162,
-        "linesReviewed": 22214
+        "filesReviewed": 167,
+        "linesReviewed": 26529
       }
     },
     {
@@ -54,20 +54,11 @@
         "scorePercent": 100,
         "failedChecks": 0
       }
-    },
-    {
-      "checkId": "enterprise_trust_pack_audit_passed",
-      "passed": true,
-      "details": {
-        "status": "PASS",
-        "scorePercent": 100,
-        "failedChecks": 0
-      }
     }
   ],
   "summary": {
-    "totalChecks": 7,
-    "passedChecks": 7,
+    "totalChecks": 6,
+    "passedChecks": 6,
     "failedChecks": 0,
     "scorePercent": 100,
     "status": "PASS"

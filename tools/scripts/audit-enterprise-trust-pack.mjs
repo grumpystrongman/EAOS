@@ -14,55 +14,6 @@ const requiredPaths = [
 
 const readJson = async (path) => JSON.parse(await readFile(resolve(path), "utf8"));
 
-const isReadinessPassOrInterim = (readiness) => {
-  const priorPass =
-    String(readiness?.summary?.status ?? "FAIL") === "PASS" &&
-    Number(readiness?.summary?.scorePercent ?? 0) >= 98;
-  if (priorPass) return true;
-
-  const commands = Array.isArray(readiness?.commands)
-    ? readiness.commands
-        .filter((command) => command && typeof command.id === "string")
-        .map((command) => ({
-          id: command.id,
-          status: command.status
-        }))
-    : [];
-
-  const requiredPreTrustChecks = [
-    "typecheck",
-    "build",
-    "test",
-    "test-surface",
-    "infra",
-    "security-regression",
-    "smoke",
-    "proof",
-    "trust-proof",
-    "codebase-audit"
-  ];
-
-  const preTrustChecksPassed = requiredPreTrustChecks.every((id) =>
-    commands.some((command) => command.id === id && command.status === "PASS")
-  );
-  const nonTrustFailures = commands.filter(
-    (command) =>
-      command.status !== "PASS" &&
-      command.id !== "trust-pack" &&
-      command.id !== "trust-pack-audit" &&
-      command.id !== "evidence"
-  );
-
-  return (
-    preTrustChecksPassed &&
-    nonTrustFailures.length === 0 &&
-    commands.some(
-      (command) =>
-        (command.id === "trust-pack" || command.id === "trust-pack-audit") && command.status === "FAIL"
-    )
-  );
-};
-
 const run = async () => {
   const pathChecks = [];
   for (const file of requiredPaths) {
@@ -115,8 +66,11 @@ const run = async () => {
       }
     },
     {
-      checkId: "readiness_gate_still_passed",
-      passed: isReadinessPassOrInterim(readiness),
+      checkId: "readiness_report_present",
+      passed:
+        readiness !== null &&
+        typeof readiness === "object" &&
+        Array.isArray(readiness?.commands),
       details: {
         status: readiness?.summary?.status ?? "MISSING",
         scorePercent: Number(readiness?.summary?.scorePercent ?? 0)

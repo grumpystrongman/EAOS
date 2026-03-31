@@ -189,7 +189,7 @@ export const runCommercialProof = async () => {
     });
 
     const auditCheck = await call(baseUrls.gateway, "/v1/audit/events", "GET", {
-      headers: { authorization: `Bearer ${clinicianToken}` }
+      headers: { authorization: `Bearer ${approverToken}` }
     });
     const auditClaim = makeClaim({
       claimId: "audit_evidence_chain",

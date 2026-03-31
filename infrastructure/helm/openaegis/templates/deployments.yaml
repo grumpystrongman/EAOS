@@ -38,6 +38,15 @@ spec:
               value: "{{ .port }}"
             - name: OPENAEGIS_ENFORCE_MTLS
               value: "{{ $.Values.global.enforceMtls }}"
+            - name: OPENAEGIS_TRUST_PROXY_MTLS_HEADERS
+              value: "{{ $.Values.global.trustProxyMtlsHeaders }}"
+            {{- if and (eq .name "auth-service") $.Values.global.authSigningKeySecretName $.Values.global.authSigningKeySecretKey }}
+            - name: OPENAEGIS_AUTH_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.global.authSigningKeySecretName }}
+                  key: {{ $.Values.global.authSigningKeySecretKey }}
+            {{- end }}
           resources:
             {{- toYaml $.Values.global.resources | nindent 12 }}
           readinessProbe:

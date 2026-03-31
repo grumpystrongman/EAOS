@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T20:26:56.224Z",
+  "generatedAt": "2026-03-31T15:40:47.636Z",
   "profile": "commercial-readiness",
   "scope": {
     "product": "OpenAegis",
@@ -25,8 +25,8 @@
       "whyItMatters": "Prevents unsafe autonomous execution on sensitive actions.",
       "howTested": "Run live discharge workflow and assert blocked state with approval ticket.",
       "evidence": {
-        "executionId": "ex-mndn2lc8-596g20",
-        "approvalId": "ap-mndn2lcl-fcw96s",
+        "executionId": "ex-mnesagmy-8fy1l0",
+        "approvalId": "ap-mnesagna-vpfo8p",
         "status": "blocked"
       }
     },
@@ -39,7 +39,7 @@
       "evidence": {
         "approvalStatus": "approved",
         "executionStatusAfterApproval": "completed",
-        "evidenceId": "ev-ex-mndn2lc8-596g20"
+        "evidenceId": "ev-ex-mnesagmy-8fy1l0"
       }
     },
     {
@@ -49,7 +49,7 @@
       "whyItMatters": "Allows post-incident replay and operational predictability.",
       "howTested": "Query graph endpoint and verify stage chain.",
       "evidence": {
-        "graphExecutionId": "gx-mndn2lc8-dxau5z",
+        "graphExecutionId": "gx-mnesagmy-v62eul",
         "stages": [
           "planner",
           "executor",
@@ -65,7 +65,7 @@
       "howTested": "List audit events and verify evidence IDs are present.",
       "evidence": {
         "eventCount": 5,
-        "latestEvidenceId": "ev-mndn2lcv-3zdb2h"
+        "latestEvidenceId": "ev-mnesagnk-awdxmc"
       }
     },
     {
@@ -75,7 +75,7 @@
       "whyItMatters": "Validates enterprise integration depth and controlled connector onboarding.",
       "howTested": "Query published manifests and assert required reference connectors exist.",
       "evidence": {
-        "publishedCount": 9,
+        "publishedCount": 20,
         "sampleToolIds": [
           "connector-ms-fabric-read",
           "connector-powerbi-export",
@@ -104,8 +104,8 @@
       "whyItMatters": "Improves reliability for enterprise automation retries and outage recovery.",
       "howTested": "Submit duplicate tool call with same idempotency key and assert replay semantics.",
       "evidence": {
-        "firstCallId": "tc-mndn2ldq-as2qjk",
-        "replayCallId": "tc-mndn2ldq-as2qjk",
+        "firstCallId": "tc-mnesagof-mho8kz",
+        "replayCallId": "tc-mnesagof-mho8kz",
         "replayed": true
       }
     }
@@ -126,8 +126,8 @@
       "whyItMatters": "Prevents unsafe autonomous execution on sensitive actions.",
       "howTested": "Run live discharge workflow and assert blocked state with approval ticket.",
       "evidence": {
-        "executionId": "ex-mndn2lc8-596g20",
-        "approvalId": "ap-mndn2lcl-fcw96s",
+        "executionId": "ex-mnesagmy-8fy1l0",
+        "approvalId": "ap-mnesagna-vpfo8p",
         "status": "blocked"
       }
     },
@@ -140,7 +140,7 @@
       "evidence": {
         "approvalStatus": "approved",
         "executionStatusAfterApproval": "completed",
-        "evidenceId": "ev-ex-mndn2lc8-596g20"
+        "evidenceId": "ev-ex-mnesagmy-8fy1l0"
       }
     },
     {
@@ -150,7 +150,7 @@
       "whyItMatters": "Allows post-incident replay and operational predictability.",
       "howTested": "Query graph endpoint and verify stage chain.",
       "evidence": {
-        "graphExecutionId": "gx-mndn2lc8-dxau5z",
+        "graphExecutionId": "gx-mnesagmy-v62eul",
         "stages": [
           "planner",
           "executor",
@@ -166,7 +166,7 @@
       "howTested": "List audit events and verify evidence IDs are present.",
       "evidence": {
         "eventCount": 5,
-        "latestEvidenceId": "ev-mndn2lcv-3zdb2h"
+        "latestEvidenceId": "ev-mnesagnk-awdxmc"
       }
     },
     {
@@ -176,7 +176,7 @@
       "whyItMatters": "Validates enterprise integration depth and controlled connector onboarding.",
       "howTested": "Query published manifests and assert required reference connectors exist.",
       "evidence": {
-        "publishedCount": 9,
+        "publishedCount": 20,
         "sampleToolIds": [
           "connector-ms-fabric-read",
           "connector-powerbi-export",
@@ -205,8 +205,8 @@
       "whyItMatters": "Improves reliability for enterprise automation retries and outage recovery.",
       "howTested": "Submit duplicate tool call with same idempotency key and assert replay semantics.",
       "evidence": {
-        "firstCallId": "tc-mndn2ldq-as2qjk",
-        "replayCallId": "tc-mndn2ldq-as2qjk",
+        "firstCallId": "tc-mnesagof-mho8kz",
+        "replayCallId": "tc-mnesagof-mho8kz",
         "replayed": true
       }
     }

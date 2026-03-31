@@ -35,6 +35,13 @@ spec:
               value: "3001"
             - name: OPENAEGIS_ENFORCE_MTLS
               value: "true"
+            - name: OPENAEGIS_TRUST_PROXY_MTLS_HEADERS
+              value: "true"
+            - name: OPENAEGIS_AUTH_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openaegis-auth
+                  key: signingKey
           resources:
             requests:
               cpu: 100m

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T20:27:25.920Z",
+  "generatedAt": "2026-03-31T15:41:22.234Z",
   "suite": "enterprise-trust-pack-audit",
   "checks": [
     {
@@ -9,7 +9,7 @@
         {
           "file": "docs/assets/enterprise-trust-pack/latest/manifest.json",
           "passed": true,
-          "sizeBytes": 4649
+          "sizeBytes": 4359
         },
         {
           "file": "docs/assets/enterprise-trust-pack/latest/EXECUTIVE-BRIEF.md",
@@ -29,12 +29,12 @@
         {
           "file": "docs/assets/demo/readiness-gate-report.json",
           "passed": true,
-          "sizeBytes": 49848
+          "sizeBytes": 49618
         },
         {
           "file": "docs/assets/demo/commercial-audit-report.json",
           "passed": true,
-          "sizeBytes": 1541
+          "sizeBytes": 1343
         },
         {
           "file": "docs/assets/demo/security-regression-report.json",
@@ -76,7 +76,7 @@
       }
     },
     {
-      "checkId": "readiness_gate_still_passed",
+      "checkId": "readiness_report_present",
       "passed": true,
       "details": {
         "status": "PASS",

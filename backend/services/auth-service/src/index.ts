@@ -54,9 +54,17 @@ interface AuthState {
 }
 
 const issuer = process.env.OPENAEGIS_AUTH_ISSUER ?? `http://127.0.0.1:${descriptor.listeningPort}`;
-const signingKey = process.env.OPENAEGIS_AUTH_SIGNING_KEY ?? "dev-auth-signing-key-change-me";
+const defaultSigningKey = "dev-auth-signing-key-change-me";
+const signingKey = process.env.OPENAEGIS_AUTH_SIGNING_KEY ?? defaultSigningKey;
+const strictProductionKeys = process.env.NODE_ENV === "production" && process.env.OPENAEGIS_ALLOW_DEV_SIGNING_KEY !== "true";
+if (strictProductionKeys && signingKey === defaultSigningKey) {
+  throw new Error("OPENAEGIS_AUTH_SIGNING_KEY is required in production");
+}
 const stateFile = resolve(process.cwd(), ".volumes", "auth-service-state.json");
 const limiter = new InMemoryRateLimiter(80, 60_000);
+const tokenIssueRoles = ["security_admin", "platform_admin", "service_account", "token_issuer"];
+const tokenIntrospectionRoles = ["token_introspect", "security_admin", "platform_admin", "service_account"];
+const tokenRevokeRoles = ["security_admin", "platform_admin", "service_account"];
 
 const defaultUsers: ServiceUser[] = [
   {
@@ -193,7 +201,18 @@ const mintToken = (input: {
   };
 };
 
-const handleTokenIssue = async (body: JsonMap, response: ServerResponse, requestId: string) => {
+const hasAnyRole = (roles: string[], required: readonly string[]): boolean =>
+  required.some((role) => roles.includes(role));
+
+const canManageTenantScopedToken = (actor: { tenantId: string | undefined; roles: string[] }, targetTenantId: string): boolean =>
+  hasAnyRole(actor.roles, ["platform_admin", "service_account"]) || actor.tenantId === targetTenantId;
+
+const handleTokenIssue = async (
+  body: JsonMap,
+  response: ServerResponse,
+  requestId: string,
+  caller: { tenantId: string | undefined; roles: string[] }
+) => {
   const insecureCustomMintEnabled = process.env.OPENAEGIS_ENABLE_INSECURE_CUSTOM_TOKEN_MINT === "true";
   const email = toString(body.email);
   const subject = toString(body.subject);
@@ -226,6 +245,11 @@ const handleTokenIssue = async (body: JsonMap, response: ServerResponse, request
     !resolvedRoles.every((role) => typeof role === "string" && role.trim().length > 0)
   ) {
     sendJson(response, 400, { error: "insufficient_identity_context" }, requestId);
+    return;
+  }
+
+  if (!canManageTenantScopedToken(caller, resolvedTenant)) {
+    sendJson(response, 403, { error: "tenant_scope_mismatch" }, requestId);
     return;
   }
 
@@ -266,7 +290,12 @@ const handleTokenIssue = async (body: JsonMap, response: ServerResponse, request
   );
 };
 
-const handleIntrospect = async (body: JsonMap, response: ServerResponse, requestId: string) => {
+const handleIntrospect = async (
+  body: JsonMap,
+  response: ServerResponse,
+  requestId: string,
+  caller: { tenantId: string | undefined; roles: string[] }
+) => {
   const token = toString(body.token);
   if (!token) {
     sendJson(response, 400, { error: "token_required" }, requestId);
@@ -281,7 +310,11 @@ const handleIntrospect = async (body: JsonMap, response: ServerResponse, request
   const exp = typeof payload.exp === "number" ? payload.exp : 0;
   const state = await loadState();
   const session = jti ? state.sessions.find((item) => item.jti === jti) : undefined;
-  const active = Boolean(session) && !session?.revoked && Date.now() < exp * 1000;
+  const tokenTenantId = session?.tenantId ?? toString(payload.tenant_id);
+  const tenantAllowed =
+    !tokenTenantId ||
+    canManageTenantScopedToken(caller, tokenTenantId);
+  const active = Boolean(session) && !session?.revoked && Date.now() < exp * 1000 && tenantAllowed;
 
   sendJson(
     response,
@@ -302,7 +335,12 @@ const handleIntrospect = async (body: JsonMap, response: ServerResponse, request
   );
 };
 
-const handleRevoke = async (body: JsonMap, response: ServerResponse, requestId: string) => {
+const handleRevoke = async (
+  body: JsonMap,
+  response: ServerResponse,
+  requestId: string,
+  caller: { tenantId: string | undefined; roles: string[] }
+) => {
   const token = toString(body.token);
   if (!token) {
     sendJson(response, 400, { error: "token_required" }, requestId);
@@ -318,6 +356,10 @@ const handleRevoke = async (body: JsonMap, response: ServerResponse, requestId: 
   const session = state.sessions.find((item) => item.jti === jti);
   if (!session) {
     sendJson(response, 200, { revoked: false }, requestId);
+    return;
+  }
+  if (!canManageTenantScopedToken(caller, session.tenantId)) {
+    sendJson(response, 403, { error: "tenant_scope_mismatch" }, requestId);
     return;
   }
   session.revoked = true;
@@ -392,24 +434,41 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
   }
 
   if (method === "POST" && path === "/v1/auth/token") {
+    const secured = enforceSecurity(
+      request,
+      response,
+      { requireActor: true, requireTenant: true, requiredRoles: tokenIssueRoles },
+      context
+    );
+    if (!secured) return;
     const body = await readJson(request);
-    await handleTokenIssue(body, response, context.requestId);
+    await handleTokenIssue(body, response, context.requestId, { tenantId: secured.tenantId, roles: secured.roles });
     return;
   }
 
   if (method === "POST" && path === "/v1/auth/introspect") {
-    const secured = enforceSecurity(request, response, { requireActor: true, requireTenant: true }, context);
+    const secured = enforceSecurity(
+      request,
+      response,
+      { requireActor: true, requireTenant: true, requiredRoles: tokenIntrospectionRoles },
+      context
+    );
     if (!secured) return;
     const body = await readJson(request);
-    await handleIntrospect(body, response, context.requestId);
+    await handleIntrospect(body, response, context.requestId, { tenantId: secured.tenantId, roles: secured.roles });
     return;
   }
 
   if (method === "POST" && path === "/v1/auth/revoke") {
-    const secured = enforceSecurity(request, response, { requireActor: true, requireTenant: true }, context);
+    const secured = enforceSecurity(
+      request,
+      response,
+      { requireActor: true, requireTenant: true, requiredRoles: tokenRevokeRoles },
+      context
+    );
     if (!secured) return;
     const body = await readJson(request);
-    await handleRevoke(body, response, context.requestId);
+    await handleRevoke(body, response, context.requestId, { tenantId: secured.tenantId, roles: secured.roles });
     return;
   }
 

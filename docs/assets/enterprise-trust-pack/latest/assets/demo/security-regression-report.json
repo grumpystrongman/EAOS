@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T20:26:26.445Z",
+  "generatedAt": "2026-03-31T15:40:12.412Z",
   "suite": "security-regression",
   "endpoints": {
     "gateway": "http://127.0.0.1:3970",
@@ -13,7 +13,7 @@
       "details": {
         "status": 404,
         "error": "demo_auth_disabled",
-        "latencyMs": 24
+        "latencyMs": 33
       }
     },
     {
@@ -22,7 +22,7 @@
       "details": {
         "status": 401,
         "error": "missing_or_invalid_auth_token",
-        "latencyMs": 4
+        "latencyMs": 5
       }
     },
     {
@@ -40,8 +40,8 @@
       "passed": true,
       "details": {
         "status": 201,
-        "executionId": "ex-mndn1y9j-qy8han",
-        "latencyMs": 20
+        "executionId": "ex-mnes9pcp-rk683e",
+        "latencyMs": 25
       }
     },
     {
@@ -59,7 +59,7 @@
       "details": {
         "executionStatus": 201,
         "workflowStatus": "blocked",
-        "approvalId": "ap-mndn1ya8-sus7uf",
+        "approvalId": "ap-mnes9pdg-96uhih",
         "deniedStatus": 403,
         "deniedError": "insufficient_role_for_approval_decision"
       }
@@ -116,7 +116,7 @@
       "checkId": "tool_call_lookup_is_tenant_scoped",
       "passed": true,
       "details": {
-        "createdToolCallId": "tc-mndmz1he-peigw7",
+        "createdToolCallId": "tc-mnes1t5v-pumild",
         "status": 404,
         "error": "tool_call_not_found"
       }

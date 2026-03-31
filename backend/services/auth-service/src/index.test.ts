@@ -7,6 +7,12 @@ import { createAppServer } from "./index.ts";
 const port = 3911;
 const baseUrl = `http://127.0.0.1:${port}`;
 let server: ReturnType<typeof createAppServer>;
+const privilegedHeaders = {
+  "content-type": "application/json",
+  "x-tenant-id": "tenant-starlight-health",
+  "x-actor-id": "user-security",
+  "x-roles": "security_admin,token_introspect"
+};
 
 beforeEach(async () => {
   await rm(".volumes/auth-service-state.json", { force: true });
@@ -23,7 +29,7 @@ test.afterEach(async () => {
 test("issues token and introspects active session", async () => {
   const issue = await fetch(`${baseUrl}/v1/auth/token`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: privilegedHeaders,
     body: JSON.stringify({ email: "security@starlighthealth.org" })
   });
   assert.equal(issue.status, 200);
@@ -33,9 +39,7 @@ test("issues token and introspects active session", async () => {
   const introspect = await fetch(`${baseUrl}/v1/auth/introspect`, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      "x-tenant-id": "tenant-starlight-health",
-      "x-actor-id": "user-security"
+      ...privilegedHeaders
     },
     body: JSON.stringify({ token: issued.accessToken })
   });
@@ -48,7 +52,7 @@ test("issues token and introspects active session", async () => {
 test("revokes token and marks introspection inactive", async () => {
   const issue = await fetch(`${baseUrl}/v1/auth/token`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: privilegedHeaders,
     body: JSON.stringify({ email: "clinician@starlighthealth.org" })
   });
   const issued = (await issue.json()) as { accessToken: string };
@@ -56,9 +60,7 @@ test("revokes token and marks introspection inactive", async () => {
   const revoke = await fetch(`${baseUrl}/v1/auth/revoke`, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      "x-tenant-id": "tenant-starlight-health",
-      "x-actor-id": "user-security"
+      ...privilegedHeaders
     },
     body: JSON.stringify({ token: issued.accessToken })
   });
@@ -67,9 +69,7 @@ test("revokes token and marks introspection inactive", async () => {
   const introspect = await fetch(`${baseUrl}/v1/auth/introspect`, {
     method: "POST",
     headers: {
-      "content-type": "application/json",
-      "x-tenant-id": "tenant-starlight-health",
-      "x-actor-id": "user-security"
+      ...privilegedHeaders
     },
     body: JSON.stringify({ token: issued.accessToken })
   });
@@ -80,7 +80,7 @@ test("revokes token and marks introspection inactive", async () => {
 test("requires security context for introspection", async () => {
   const issue = await fetch(`${baseUrl}/v1/auth/token`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: privilegedHeaders,
     body: JSON.stringify({ email: "clinician@starlighthealth.org" })
   });
   const issued = (await issue.json()) as { accessToken: string };
@@ -93,10 +93,32 @@ test("requires security context for introspection", async () => {
   assert.equal(introspect.status, 400);
 });
 
+test("denies introspection for insufficient role", async () => {
+  const issue = await fetch(`${baseUrl}/v1/auth/token`, {
+    method: "POST",
+    headers: privilegedHeaders,
+    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+  });
+  const issued = (await issue.json()) as { accessToken: string };
+
+  const introspect = await fetch(`${baseUrl}/v1/auth/introspect`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-tenant-id": "tenant-starlight-health",
+      "x-actor-id": "user-clinician",
+      "x-roles": "workflow_operator"
+    },
+    body: JSON.stringify({ token: issued.accessToken })
+  });
+
+  assert.equal(introspect.status, 403);
+});
+
 test("rejects custom token minting by default", async () => {
   const response = await fetch(`${baseUrl}/v1/auth/token`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: privilegedHeaders,
     body: JSON.stringify({
       subject: "user-arbitrary",
       tenantId: "tenant-any",
@@ -114,7 +136,12 @@ test("allows custom token minting only when insecure flag is enabled", async () 
   try {
     const response = await fetch(`${baseUrl}/v1/auth/token`, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        "x-tenant-id": "tenant-lab",
+        "x-actor-id": "user-security",
+        "x-roles": "platform_admin"
+      },
       body: JSON.stringify({
         subject: "user-temp",
         tenantId: "tenant-lab",

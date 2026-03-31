@@ -5,15 +5,19 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { createAppServer } from "./index.js";
 
-const baseUrl = "http://127.0.0.1:3900";
+let baseUrl = "http://127.0.0.1:3900";
 let server: ReturnType<typeof createAppServer>;
 
 beforeEach(async () => {
   await rm(".volumes/pilot-state.json", { force: true });
   process.env.OPENAEGIS_ENABLE_INSECURE_DEMO_AUTH = "true";
   server = createAppServer();
-  server.listen(3900);
+  server.listen(0, "127.0.0.1");
   await once(server, "listening");
+  const address = server.address();
+  if (address && typeof address === "object") {
+    baseUrl = `http://127.0.0.1:${address.port}`;
+  }
 });
 
 test.afterEach(async () => {
@@ -90,7 +94,7 @@ test("pilot workflow requires approval in live mode and completes after approval
   assert.equal(graphBody.graphExecution.steps[2]?.status, "completed");
 
   const audit = await fetch(`${baseUrl}/v1/audit/events`, {
-    headers: { authorization: `Bearer ${authBody.accessToken}` }
+    headers: { authorization: `Bearer ${approver.accessToken}` }
   });
   assert.equal(audit.status, 200);
   const auditBody = (await audit.json()) as { events: Array<{ category: string }> };
@@ -328,7 +332,7 @@ test("commercial proof endpoint returns live claim snapshot", async () => {
   const login = await fetch(`${baseUrl}/v1/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
   });
   assert.equal(login.status, 200);
   const authBody = (await login.json()) as { accessToken: string };
@@ -350,7 +354,7 @@ test("commercial readiness endpoint returns claim scorecard", async () => {
   const login = await fetch(`${baseUrl}/v1/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
   });
   const authBody = (await login.json()) as { accessToken: string };
 
@@ -374,7 +378,7 @@ test("commercial claims endpoint returns verification summary", async () => {
   const login = await fetch(`${baseUrl}/v1/auth/login`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+    body: JSON.stringify({ email: "security@starlighthealth.org" })
   });
   const authBody = (await login.json()) as { accessToken: string };
 
@@ -708,6 +712,20 @@ test("gateway supports auth-service token introspection and enforces tenant scop
     });
     assert.equal(authorized.status, 200);
 
+    const clinicianPolicyReadDenied = await fetch(`${baseUrl}/v1/policies/profile`, {
+      headers: { authorization: "Bearer oidc-clinician-good" }
+    });
+    assert.equal(clinicianPolicyReadDenied.status, 403);
+    const clinicianPolicyReadDeniedBody = (await clinicianPolicyReadDenied.json()) as { error: string };
+    assert.equal(clinicianPolicyReadDeniedBody.error, "insufficient_role_for_policy_profile_read");
+
+    const crossTenantPolicyReadDenied = await fetch(`${baseUrl}/v1/policies/profile`, {
+      headers: { authorization: "Bearer oidc-cross-tenant" }
+    });
+    assert.equal(crossTenantPolicyReadDenied.status, 403);
+    const crossTenantPolicyReadDeniedBody = (await crossTenantPolicyReadDenied.json()) as { error: string };
+    assert.equal(crossTenantPolicyReadDeniedBody.error, "tenant_scope_mismatch");
+
     const crossTenantDenied = await fetch(`${baseUrl}/v1/executions`, {
       method: "POST",
       headers: {
@@ -739,7 +757,7 @@ test("gateway supports auth-service token introspection and enforces tenant scop
       })
     });
     assert.equal(approvalExecution.status, 201);
-    const approvalExecutionBody = (await approvalExecution.json()) as { approvalId?: string; status: string };
+    const approvalExecutionBody = (await approvalExecution.json()) as { approvalId?: string; status: string; executionId: string };
     assert.equal(approvalExecutionBody.status, "blocked");
     assert.ok(approvalExecutionBody.approvalId);
 
@@ -764,6 +782,23 @@ test("gateway supports auth-service token introspection and enforces tenant scop
       body: JSON.stringify({ decision: "approve", reason: "authorized approver" })
     });
     assert.equal(sameTenantDecision.status, 200);
+
+    const crossTenantExecutionRead = await fetch(
+      `${baseUrl}/v1/executions/${approvalExecutionBody.executionId}`,
+      {
+        headers: { authorization: "Bearer oidc-cross-tenant" }
+      }
+    );
+    assert.equal(crossTenantExecutionRead.status, 403);
+    const crossTenantExecutionReadBody = (await crossTenantExecutionRead.json()) as { error: string };
+    assert.equal(crossTenantExecutionReadBody.error, "tenant_scope_mismatch");
+
+    const clinicianCommercialReadDenied = await fetch(`${baseUrl}/v1/commercial/readiness`, {
+      headers: { authorization: "Bearer oidc-clinician-good" }
+    });
+    assert.equal(clinicianCommercialReadDenied.status, 403);
+    const clinicianCommercialReadDeniedBody = (await clinicianCommercialReadDenied.json()) as { error: string };
+    assert.equal(clinicianCommercialReadDeniedBody.error, "insufficient_role_for_commercial_readiness");
 
     const inactive = await fetch(`${baseUrl}/v1/policies/profile`, {
       headers: { authorization: "Bearer unknown-token" }
