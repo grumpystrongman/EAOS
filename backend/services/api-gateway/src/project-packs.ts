@@ -447,6 +447,23 @@ const projectPacks: ProjectPackDefinition[] = [
         ]
     }
 ];
+
+const SYNTHETIC_ROWS_PER_TABLE = 96;
+
+const pick = <T,>(values: readonly T[], index: number): T => values[index % values.length]!;
+
+const createSyntheticRows = <T extends Record<string, string | number | boolean>>(
+  count: number,
+  builder: (index: number) => T
+): T[] => Array.from({ length: count }, (_, index) => builder(index));
+
+const syntheticTimestamp = (index: number, dayCycle = 27): string => {
+  const day = (index % dayCycle) + 1;
+  const hour = (index * 3) % 24;
+  const minute = (index * 7) % 60;
+  return `2026-03-${String(day).padStart(2, "0")}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00Z`;
+};
+
 const projectPackExperiences: Record<ProjectPackId, ProjectPackExperience> = {
   "secops-runtime-guard": {
     plainLanguageSummary: "Security team triages threats while OpenAegis enforces approvals and blocks unsafe exfiltration.",
@@ -461,12 +478,64 @@ const projectPackExperiences: Record<ProjectPackId, ProjectPackExperience> = {
           { key: "alert_id", label: "Alert ID" },
           { key: "asset", label: "Asset" },
           { key: "severity", label: "Severity" },
-          { key: "status", label: "Status" }
+          { key: "status", label: "Status" },
+          { key: "detector", label: "Detector" },
+          { key: "event_ts", label: "Event Time" }
         ],
-        rows: [
-          { alert_id: "ALRT-9012", asset: "prod-k8s-node-14", severity: "critical", status: "investigating" },
-          { alert_id: "ALRT-9013", asset: "db-replica-03", severity: "high", status: "blocked" }
-        ]
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          alert_id: `ALRT-${9010 + index}`,
+          asset: `prod-k8s-node-${(index % 32) + 1}`,
+          severity: pick(["critical", "high", "medium"], index),
+          status: pick(["investigating", "blocked", "contained", "closed"], index + 1),
+          detector: pick(["falco", "crowdstrike", "guardduty", "suricata"], index + 2),
+          event_ts: syntheticTimestamp(index)
+        }))
+      },
+      {
+        tableId: "observability-correlation",
+        title: "Observability Correlation Panels",
+        description: "Grafana-derived service health context aligned to active alerts.",
+        source: "Grafana secops.runtime.correlation",
+        classification: "INTERNAL",
+        columns: [
+          { key: "panel_id", label: "Panel ID" },
+          { key: "service", label: "Service" },
+          { key: "error_rate_pct", label: "Error Rate %" },
+          { key: "latency_p95_ms", label: "Latency p95 (ms)" },
+          { key: "unhealthy_pods", label: "Unhealthy Pods" },
+          { key: "snapshot_ts", label: "Snapshot Time" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          panel_id: `GRAF-${200 + index}`,
+          service: pick(["identity-api", "claims-api", "fhir-gateway", "orchestrator", "audit-ledger"], index),
+          error_rate_pct: Number((0.4 + ((index * 1.7) % 9.6)).toFixed(2)),
+          latency_p95_ms: 110 + ((index * 37) % 480),
+          unhealthy_pods: (index * 5) % 6,
+          snapshot_ts: syntheticTimestamp(index + 5)
+        }))
+      },
+      {
+        tableId: "incident-ticket-queue",
+        title: "Incident Ticket Queue",
+        description: "Ticketing feed showing escalation workflow and SLA posture.",
+        source: "Ticketing secops.incident_queue",
+        classification: "CONFIDENTIAL",
+        columns: [
+          { key: "ticket_id", label: "Ticket ID" },
+          { key: "priority", label: "Priority" },
+          { key: "owner", label: "Owner" },
+          { key: "workflow_state", label: "Workflow State" },
+          { key: "sla_hours_remaining", label: "SLA Hours Remaining" },
+          { key: "linked_alert", label: "Linked Alert" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          ticket_id: `SEC-${14000 + index}`,
+          priority: pick(["P1", "P2", "P3"], index),
+          owner: pick(["oncall-secops-a", "oncall-secops-b", "incident-commander"], index + 1),
+          workflow_state: pick(["triage", "approval_wait", "containment", "postmortem"], index + 2),
+          sla_hours_remaining: 2 + ((index * 3) % 24),
+          linked_alert: `ALRT-${9010 + (index % SYNTHETIC_ROWS_PER_TABLE)}`
+        }))
       }
     ],
     policyRules: [
@@ -562,12 +631,62 @@ const projectPackExperiences: Record<ProjectPackId, ProjectPackExperience> = {
           { key: "claim_id", label: "Claim ID" },
           { key: "payer", label: "Payer" },
           { key: "amount", label: "Amount" },
-          { key: "priority", label: "Priority" }
+          { key: "priority", label: "Priority" },
+          { key: "denial_reason", label: "Denial Reason" },
+          { key: "days_open", label: "Days Open" }
         ],
-        rows: [
-          { claim_id: "CLM-884401", payer: "Aetna", amount: 18425, priority: "high" },
-          { claim_id: "CLM-884455", payer: "United", amount: 9720, priority: "medium" }
-        ]
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          claim_id: `CLM-${884000 + index}`,
+          payer: pick(["Aetna", "United", "Cigna", "Humana", "BCBS"], index),
+          amount: 1200 + ((index * 913) % 28750),
+          priority: pick(["critical", "high", "medium"], index + 2),
+          denial_reason: pick(["medical_necessity", "coding_mismatch", "authorization_missing", "timely_filing"], index + 3),
+          days_open: 2 + ((index * 5) % 61)
+        }))
+      },
+      {
+        tableId: "appeal-workflow-runs",
+        title: "Appeal Workflow Runs",
+        description: "Airflow operational history for appeal batch orchestration.",
+        source: "Airflow finops.appeals_workflow_runs",
+        classification: "INTERNAL",
+        columns: [
+          { key: "run_id", label: "Run ID" },
+          { key: "dag_name", label: "DAG Name" },
+          { key: "status", label: "Status" },
+          { key: "duration_min", label: "Duration (min)" },
+          { key: "claim_count", label: "Claim Count" },
+          { key: "run_ts", label: "Run Time" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          run_id: `AF-RUN-${5100 + index}`,
+          dag_name: pick(["appeal-priority-batch", "appeal-writeback", "appeal-reconciliation"], index),
+          status: pick(["success", "success", "success", "failed", "running"], index + 1),
+          duration_min: 4 + ((index * 7) % 38),
+          claim_count: 18 + ((index * 11) % 150),
+          run_ts: syntheticTimestamp(index + 2)
+        }))
+      },
+      {
+        tableId: "payer-performance",
+        title: "Payer Performance Snapshot",
+        description: "Superset financial view used by revenue leads in daily review.",
+        source: "Superset finops.payer_performance",
+        classification: "CONFIDENTIAL",
+        columns: [
+          { key: "payer", label: "Payer" },
+          { key: "denial_rate_pct", label: "Denial Rate %" },
+          { key: "avg_days_to_resolution", label: "Avg Days to Resolution" },
+          { key: "recovered_usd", label: "Recovered USD" },
+          { key: "snapshot_week", label: "Snapshot Week" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          payer: pick(["Aetna", "United", "Cigna", "Humana", "BCBS"], index),
+          denial_rate_pct: Number((4.8 + ((index * 0.41) % 7.2)).toFixed(2)),
+          avg_days_to_resolution: 6 + ((index * 2) % 19),
+          recovered_usd: 45000 + ((index * 3700) % 190000),
+          snapshot_week: `2026-W${String((index % 26) + 1).padStart(2, "0")}`
+        }))
       }
     ],
     policyRules: [
@@ -663,12 +782,64 @@ const projectPackExperiences: Record<ProjectPackId, ProjectPackExperience> = {
           { key: "item", label: "Item" },
           { key: "location", label: "Location" },
           { key: "hours_left", label: "Hours Left" },
-          { key: "clinical_impact", label: "Clinical Impact" }
+          { key: "clinical_impact", label: "Clinical Impact" },
+          { key: "daily_burn_rate", label: "Daily Burn Rate" },
+          { key: "supplier_tier", label: "Supplier Tier" }
         ],
-        rows: [
-          { item: "IV saline 500ml", location: "Hospital North", hours_left: 18, clinical_impact: "high" },
-          { item: "N95 respirators", location: "Hospital East", hours_left: 31, clinical_impact: "medium" }
-        ]
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          item: pick(["IV saline 500ml", "N95 respirators", "heparin vials", "blood tubing sets", "syringe pumps"], index),
+          location: pick(["Hospital North", "Hospital East", "Hospital West", "Hospital Central"], index + 1),
+          hours_left: 8 + ((index * 3) % 96),
+          clinical_impact: pick(["high", "medium", "low"], index + 2),
+          daily_burn_rate: 25 + ((index * 4) % 130),
+          supplier_tier: pick(["tier-1", "tier-2", "tier-3"], index + 3)
+        }))
+      },
+      {
+        tableId: "orchestration-runs",
+        title: "Resilience Orchestration Runs",
+        description: "Dagster execution telemetry for shortage mitigation workflows.",
+        source: "Dagster ops.resilience_runs",
+        classification: "INTERNAL",
+        columns: [
+          { key: "run_id", label: "Run ID" },
+          { key: "job", label: "Job" },
+          { key: "status", label: "Status" },
+          { key: "step_count", label: "Step Count" },
+          { key: "retry_count", label: "Retry Count" },
+          { key: "completed_ts", label: "Completed Time" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          run_id: `DG-RUN-${7000 + index}`,
+          job: pick(["shortage-detection", "supplier-fallback", "order-reconciliation"], index),
+          status: pick(["success", "success", "running", "failed"], index + 1),
+          step_count: 6 + ((index * 2) % 18),
+          retry_count: (index * 3) % 4,
+          completed_ts: syntheticTimestamp(index + 3)
+        }))
+      },
+      {
+        tableId: "mitigation-backlog",
+        title: "Mitigation Backlog",
+        description: "Linear project tasks tracking ownership and SLA for shortages.",
+        source: "Linear ops.mitigation_backlog",
+        classification: "CONFIDENTIAL",
+        columns: [
+          { key: "task_id", label: "Task ID" },
+          { key: "title", label: "Title" },
+          { key: "owner", label: "Owner" },
+          { key: "state", label: "State" },
+          { key: "priority", label: "Priority" },
+          { key: "eta_days", label: "ETA Days" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          task_id: `LIN-SC-${2300 + index}`,
+          title: `${pick(["Replenish", "Expedite", "Substitute", "Reallocate"], index)} ${pick(["IV saline", "N95 stock", "heparin", "tubing"], index + 1)}`,
+          owner: pick(["ops-manager-a", "procurement-b", "supply-lead-c"], index + 2),
+          state: pick(["todo", "in_progress", "blocked", "done"], index + 3),
+          priority: pick(["urgent", "high", "normal"], index + 4),
+          eta_days: 1 + ((index * 2) % 14)
+        }))
       }
     ],
     policyRules: [
@@ -764,12 +935,64 @@ const projectPackExperiences: Record<ProjectPackId, ProjectPackExperience> = {
           { key: "signal_id", label: "Signal ID" },
           { key: "patient", label: "Patient" },
           { key: "signal_type", label: "Signal Type" },
-          { key: "risk_score", label: "Risk Score" }
+          { key: "risk_score", label: "Risk Score" },
+          { key: "facility", label: "Facility" },
+          { key: "event_ts", label: "Event Time" }
         ],
-        rows: [
-          { signal_id: "QS-5521", patient: "patient-2002", signal_type: "post-op infection", risk_score: 91 },
-          { signal_id: "QS-5528", patient: "patient-1001", signal_type: "medication gap", risk_score: 78 }
-        ]
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          signal_id: `QS-${5500 + index}`,
+          patient: `patient-${1000 + ((index * 7) % 9000)}`,
+          signal_type: pick(["post-op infection", "medication gap", "sepsis warning", "fall risk"], index),
+          risk_score: 45 + ((index * 13) % 56),
+          facility: pick(["North campus", "East campus", "Central campus"], index + 1),
+          event_ts: syntheticTimestamp(index + 4)
+        }))
+      },
+      {
+        tableId: "hl7-notification-queue",
+        title: "HL7 Notification Queue",
+        description: "Outbound HL7 interface queue for clinician-reviewed notifications.",
+        source: "HL7 quality.notification_queue",
+        classification: "PHI",
+        columns: [
+          { key: "message_id", label: "Message ID" },
+          { key: "patient", label: "Patient" },
+          { key: "care_team", label: "Care Team" },
+          { key: "status", label: "Status" },
+          { key: "approval_state", label: "Approval State" },
+          { key: "queued_ts", label: "Queued Time" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          message_id: `HL7-${44000 + index}`,
+          patient: `patient-${1200 + ((index * 11) % 8400)}`,
+          care_team: pick(["icu-team-a", "surgery-team-c", "med-team-b", "quality-review"], index + 1),
+          status: pick(["queued", "approved", "sent", "blocked"], index + 2),
+          approval_state: pick(["pending", "approved", "rejected"], index + 3),
+          queued_ts: syntheticTimestamp(index + 6)
+        }))
+      },
+      {
+        tableId: "quality-kpi-snapshot",
+        title: "Quality KPI Snapshot",
+        description: "Metabase-quality trend metrics for committee and executive review.",
+        source: "Metabase quality.kpi_snapshot",
+        classification: "INTERNAL",
+        columns: [
+          { key: "metric", label: "Metric" },
+          { key: "value", label: "Value" },
+          { key: "unit", label: "Unit" },
+          { key: "baseline", label: "Baseline" },
+          { key: "facility", label: "Facility" },
+          { key: "snapshot_week", label: "Snapshot Week" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          metric: pick(["readmission_rate", "care_gap_closure", "infection_rate", "fall_rate"], index),
+          value: Number((2.1 + ((index * 0.29) % 8.4)).toFixed(2)),
+          unit: pick(["percent", "per_1k_days"], index + 1),
+          baseline: Number((3.2 + ((index * 0.17) % 7.1)).toFixed(2)),
+          facility: pick(["North campus", "East campus", "Central campus"], index + 2),
+          snapshot_week: `2026-W${String((index % 26) + 1).padStart(2, "0")}`
+        }))
       }
     ],
     policyRules: [
@@ -865,12 +1088,64 @@ const projectPackExperiences: Record<ProjectPackId, ProjectPackExperience> = {
           { key: "risk_id", label: "Risk ID" },
           { key: "domain", label: "Domain" },
           { key: "impact", label: "Impact" },
-          { key: "owner", label: "Owner" }
+          { key: "owner", label: "Owner" },
+          { key: "risk_score", label: "Risk Score" },
+          { key: "last_reviewed", label: "Last Reviewed" }
         ],
-        rows: [
-          { risk_id: "RISK-77", domain: "Cyber", impact: "high", owner: "CISO" },
-          { risk_id: "RISK-81", domain: "Clinical quality", impact: "high", owner: "CMO" }
-        ]
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          risk_id: `RISK-${70 + index}`,
+          domain: pick(["Cyber", "Clinical quality", "Financial", "Third-party", "Regulatory"], index),
+          impact: pick(["critical", "high", "medium"], index + 1),
+          owner: pick(["CISO", "CMO", "CFO", "COO", "GC"], index + 2),
+          risk_score: 55 + ((index * 9) % 45),
+          last_reviewed: syntheticTimestamp(index + 8)
+        }))
+      },
+      {
+        tableId: "board-kpi-trends",
+        title: "Board KPI Trends",
+        description: "Superset metrics summarizing cross-domain risk and control performance.",
+        source: "Superset governance.board_kpi_trends",
+        classification: "CONFIDENTIAL",
+        columns: [
+          { key: "kpi_id", label: "KPI ID" },
+          { key: "kpi_name", label: "KPI Name" },
+          { key: "current_value", label: "Current Value" },
+          { key: "target_value", label: "Target Value" },
+          { key: "status", label: "Status" },
+          { key: "period", label: "Period" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          kpi_id: `KPI-${300 + index}`,
+          kpi_name: pick(["evidence_coverage", "mean_approval_latency", "open_critical_risks", "blocked_disclosures"], index),
+          current_value: Number((70 + ((index * 1.8) % 31)).toFixed(2)),
+          target_value: pick([90, 95, 98, 100], index + 1),
+          status: pick(["on_track", "watch", "off_track"], index + 2),
+          period: `2026-Q${(index % 4) + 1}`
+        }))
+      },
+      {
+        tableId: "board-publication-log",
+        title: "Board Publication Log",
+        description: "SharePoint publication audit for board packages and approval state.",
+        source: "SharePoint governance.board_publication_log",
+        classification: "CONFIDENTIAL",
+        columns: [
+          { key: "publication_id", label: "Publication ID" },
+          { key: "package_name", label: "Package Name" },
+          { key: "audience", label: "Audience" },
+          { key: "approval_state", label: "Approval State" },
+          { key: "published_by", label: "Published By" },
+          { key: "published_ts", label: "Published Time" }
+        ],
+        rows: createSyntheticRows(SYNTHETIC_ROWS_PER_TABLE, (index) => ({
+          publication_id: `BRD-PUB-${8600 + index}`,
+          package_name: `Board Risk Brief ${String((index % 12) + 1).padStart(2, "0")}/2026`,
+          audience: pick(["board-only", "audit-committee", "leadership-draft"], index),
+          approval_state: pick(["approved", "pending", "rejected"], index + 1),
+          published_by: pick(["exec-assistant-a", "risk-manager-b", "governance-ops"], index + 2),
+          published_ts: syntheticTimestamp(index + 10)
+        }))
       }
     ],
     policyRules: [

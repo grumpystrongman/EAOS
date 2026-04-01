@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T14:31:10.859Z",
+  "generatedAt": "2026-04-01T15:00:28.461Z",
   "suite": "commercial-projects-showcase",
   "summary": {
     "totalProjects": 5,
@@ -34,9 +34,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58si8-fac301",
+            "executionId": "ex-mng6agmw-c2fvvl",
             "executionStatus": "failed",
-            "evidenceId": "ev-ex-mng58si8-fac301"
+            "evidenceId": "ev-ex-mng6agmw-c2fvvl"
           }
         },
         {
@@ -45,7 +45,7 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58siz-3xgldm",
+            "executionId": "ex-mng6agn1-ype0q1",
             "executionStatus": "failed",
             "approvalId": null
           }
@@ -56,7 +56,7 @@
           "passed": true,
           "evidence": {
             "status": 200,
-            "graphExecutionId": "gx-mng58si8-2t4vz4",
+            "graphExecutionId": "gx-mng6agmw-op6f1v",
             "stages": [
               "planner"
             ]
@@ -67,8 +67,8 @@
           "title": "Simulation and live runs contain evidence IDs",
           "passed": true,
           "evidence": {
-            "simulationEvidenceId": "ev-ex-mng58si8-fac301",
-            "liveEvidenceId": "ev-ex-mng58siz-3xgldm"
+            "simulationEvidenceId": "ev-ex-mng6agmw-c2fvvl",
+            "liveEvidenceId": "ev-ex-mng6agn1-ype0q1"
           }
         }
       ]
@@ -98,9 +98,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58sjg-a7cgs0",
+            "executionId": "ex-mng6agn6-yjmv14",
             "executionStatus": "completed",
-            "evidenceId": "ev-ex-mng58sjg-a7cgs0"
+            "evidenceId": "ev-ex-mng6agn6-yjmv14"
           }
         },
         {
@@ -109,9 +109,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58sjq-ubcg7y",
+            "executionId": "ex-mng6agna-ijn8si",
             "executionStatus": "blocked",
-            "approvalId": "ap-mng58sjr-6muvp7",
+            "approvalId": "ap-mng6agnb-yjysq2",
             "approvalCheck": {
               "approvalStatus": "approved",
               "executionStatusAfterApproval": "completed"
@@ -124,7 +124,7 @@
           "passed": true,
           "evidence": {
             "status": 200,
-            "graphExecutionId": "gx-mng58sjg-ecerzz",
+            "graphExecutionId": "gx-mng6agn6-da8ft6",
             "stages": [
               "planner",
               "executor",
@@ -137,8 +137,8 @@
           "title": "Simulation and live runs contain evidence IDs",
           "passed": true,
           "evidence": {
-            "simulationEvidenceId": "ev-ex-mng58sjg-a7cgs0",
-            "liveEvidenceId": "ev-ex-mng58sjq-ubcg7y"
+            "simulationEvidenceId": "ev-ex-mng6agn6-yjmv14",
+            "liveEvidenceId": "ev-ex-mng6agna-ijn8si"
           }
         }
       ]
@@ -168,9 +168,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58ski-wcktgy",
+            "executionId": "ex-mng6agnp-7nigzt",
             "executionStatus": "completed",
-            "evidenceId": "ev-ex-mng58ski-wcktgy"
+            "evidenceId": "ev-ex-mng6agnp-7nigzt"
           }
         },
         {
@@ -179,9 +179,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58skp-lq7j6v",
+            "executionId": "ex-mng6agnu-rwula5",
             "executionStatus": "blocked",
-            "approvalId": "ap-mng58skq-e81afi",
+            "approvalId": "ap-mng6agnu-xvxn8t",
             "approvalCheck": {
               "approvalStatus": "approved",
               "executionStatusAfterApproval": "completed"
@@ -194,7 +194,7 @@
           "passed": true,
           "evidence": {
             "status": 200,
-            "graphExecutionId": "gx-mng58ski-76nus9",
+            "graphExecutionId": "gx-mng6agnp-eap8rq",
             "stages": [
               "planner",
               "executor",
@@ -207,8 +207,8 @@
           "title": "Simulation and live runs contain evidence IDs",
           "passed": true,
           "evidence": {
-            "simulationEvidenceId": "ev-ex-mng58ski-wcktgy",
-            "liveEvidenceId": "ev-ex-mng58skp-lq7j6v"
+            "simulationEvidenceId": "ev-ex-mng6agnp-7nigzt",
+            "liveEvidenceId": "ev-ex-mng6agnu-rwula5"
           }
         }
       ]
@@ -238,9 +238,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58slf-etnmvm",
+            "executionId": "ex-mng6ago8-vxjxy5",
             "executionStatus": "failed",
-            "evidenceId": "ev-ex-mng58slf-etnmvm"
+            "evidenceId": "ev-ex-mng6ago8-vxjxy5"
           }
         },
         {
@@ -249,9 +249,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58slp-tlegim",
+            "executionId": "ex-mng6agof-7fih20",
             "executionStatus": "blocked",
-            "approvalId": "ap-mng58slp-oewqwn",
+            "approvalId": "ap-mng6agof-ec8fji",
             "approvalCheck": {
               "approvalStatus": "approved",
               "executionStatusAfterApproval": "failed"
@@ -264,7 +264,7 @@
           "passed": true,
           "evidence": {
             "status": 200,
-            "graphExecutionId": "gx-mng58slf-xajb2k",
+            "graphExecutionId": "gx-mng6ago8-l09lz4",
             "stages": [
               "planner",
               "executor",
@@ -277,8 +277,8 @@
           "title": "Simulation and live runs contain evidence IDs",
           "passed": true,
           "evidence": {
-            "simulationEvidenceId": "ev-ex-mng58slf-etnmvm",
-            "liveEvidenceId": "ev-ex-mng58slp-tlegim"
+            "simulationEvidenceId": "ev-ex-mng6ago8-vxjxy5",
+            "liveEvidenceId": "ev-ex-mng6agof-7fih20"
           }
         }
       ]
@@ -308,9 +308,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58smk-hk1aet",
+            "executionId": "ex-mng6agou-cz9otc",
             "executionStatus": "completed",
-            "evidenceId": "ev-ex-mng58smk-hk1aet"
+            "evidenceId": "ev-ex-mng6agou-cz9otc"
           }
         },
         {
@@ -319,9 +319,9 @@
           "passed": true,
           "evidence": {
             "status": 201,
-            "executionId": "ex-mng58smu-uwqzng",
+            "executionId": "ex-mng6agp0-o7fkg7",
             "executionStatus": "blocked",
-            "approvalId": "ap-mng58smv-08w6x5",
+            "approvalId": "ap-mng6agp0-nl3mtu",
             "approvalCheck": {
               "approvalStatus": "approved",
               "executionStatusAfterApproval": "completed"
@@ -334,7 +334,7 @@
           "passed": true,
           "evidence": {
             "status": 200,
-            "graphExecutionId": "gx-mng58smk-t1854v",
+            "graphExecutionId": "gx-mng6agou-ede0ci",
             "stages": [
               "planner",
               "executor",
@@ -347,8 +347,8 @@
           "title": "Simulation and live runs contain evidence IDs",
           "passed": true,
           "evidence": {
-            "simulationEvidenceId": "ev-ex-mng58smk-hk1aet",
-            "liveEvidenceId": "ev-ex-mng58smu-uwqzng"
+            "simulationEvidenceId": "ev-ex-mng6agou-cz9otc",
+            "liveEvidenceId": "ev-ex-mng6agp0-o7fkg7"
           }
         }
       ]
