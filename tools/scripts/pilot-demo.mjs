@@ -2,9 +2,11 @@
 import { once } from "node:events";
 import { writeFile, mkdir } from "node:fs/promises";
 import { createAppServer } from "../../backend/services/api-gateway/src/index.ts";
+import { getCompanyProfile } from "./company-profile.mjs";
 
 const port = Number(process.env.OPENAEGIS_DEMO_PORT ?? 3950);
 const baseUrl = `http://127.0.0.1:${port}`;
+const profile = getCompanyProfile();
 
 const call = async (path, method = "GET", token, body) => {
   const headers = { "content-type": "application/json" };
@@ -26,21 +28,21 @@ const runDemo = async () => {
 
   const report = {
     startedAt: new Date().toISOString(),
-    useCase: "Hospital Discharge Readiness Assistant",
+    useCase: profile.useCaseName,
     steps: []
   };
 
   try {
-    const clinician = await call("/v1/auth/login", "POST", undefined, { email: "clinician@starlighthealth.org" });
-    const approver = await call("/v1/auth/login", "POST", undefined, { email: "security@starlighthealth.org" });
+    const clinician = await call("/v1/auth/login", "POST", undefined, { email: profile.clinicianEmail });
+    const approver = await call("/v1/auth/login", "POST", undefined, { email: profile.securityEmail });
 
     report.steps.push({ name: "login_clinician", status: clinician.status, user: clinician.payload.user?.displayName });
     report.steps.push({ name: "login_approver", status: approver.status, user: approver.payload.user?.displayName });
 
     const liveExecution = await call("/v1/executions", "POST", clinician.payload.accessToken, {
       mode: "live",
-      workflowId: "wf-discharge-assistant",
-      patientId: "patient-1001",
+      workflowId: profile.workflowId,
+      patientId: profile.patientId,
       requestFollowupEmail: true
     });
 

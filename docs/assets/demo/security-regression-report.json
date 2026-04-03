@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T14:54:40.785Z",
+  "generatedAt": "2026-04-03T17:18:57.055Z",
   "suite": "security-regression",
   "endpoints": {
     "gateway": "http://127.0.0.1:3970",
@@ -13,7 +13,7 @@
       "details": {
         "status": 404,
         "error": "demo_auth_disabled",
-        "latencyMs": 29
+        "latencyMs": 23
       }
     },
     {
@@ -22,7 +22,7 @@
       "details": {
         "status": 401,
         "error": "missing_or_invalid_auth_token",
-        "latencyMs": 5
+        "latencyMs": 4
       }
     },
     {
@@ -40,8 +40,8 @@
       "passed": true,
       "details": {
         "status": 201,
-        "executionId": "ex-mng630a7-xzjiak",
-        "latencyMs": 23
+        "executionId": "ex-mnj648up-2jb6cf",
+        "latencyMs": 18
       }
     },
     {
@@ -50,7 +50,7 @@
       "details": {
         "status": 403,
         "error": "tenant_scope_mismatch",
-        "latencyMs": 5
+        "latencyMs": 4
       }
     },
     {
@@ -59,7 +59,7 @@
       "details": {
         "executionStatus": 201,
         "workflowStatus": "blocked",
-        "approvalId": "ap-mng630ay-e8rbk9",
+        "approvalId": "ap-mnj648vc-ofvdw3",
         "deniedStatus": 403,
         "deniedError": "insufficient_role_for_approval_decision"
       }
@@ -116,7 +116,7 @@
       "checkId": "tool_call_lookup_is_tenant_scoped",
       "passed": true,
       "details": {
-        "createdToolCallId": "tc-mng630c5-izeg7m",
+        "createdToolCallId": "tc-mnj648wa-cy31kg",
         "status": 404,
         "error": "tool_call_not_found"
       }

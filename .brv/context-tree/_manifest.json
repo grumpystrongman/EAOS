@@ -3,25 +3,13 @@
     {
       "order": 3,
       "path": "_index.md",
-      "tokens": 422,
-      "type": "summary"
-    },
-    {
-      "order": 2,
-      "path": "architecture/_index.md",
-      "tokens": 472,
+      "tokens": 886,
       "type": "summary"
     },
     {
       "order": 1,
-      "path": "architecture/openaegis_overview/_index.md",
-      "tokens": 254,
-      "type": "summary"
-    },
-    {
-      "order": 1,
-      "path": "architecture/openaegis_pilot/_index.md",
-      "tokens": 293,
+      "path": "architecture/admin_console/_index.md",
+      "tokens": 865,
       "type": "summary"
     },
     {
@@ -29,6 +17,18 @@
       "path": "architecture/openaegis_security/_index.md",
       "tokens": 185,
       "type": "summary"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/admin_console/context.md",
+      "tokens": 108,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/admin_console/persona_focused_information_architecture.md",
+      "tokens": 1260,
+      "type": "context"
     },
     {
       "importance": 50,
@@ -47,15 +47,45 @@
       "path": "architecture/openaegis_security/openaegis_security_and_governance.md",
       "tokens": 234,
       "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/openclaw_security_audit/context.md",
+      "tokens": 112,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/pipeline/context.md",
+      "tokens": 82,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/pipeline/pipeline_and_security_verification.md",
+      "tokens": 724,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/sandbox_secops/context.md",
+      "tokens": 96,
+      "type": "context"
+    },
+    {
+      "importance": 50,
+      "path": "architecture/sandbox_secops/redpanda_port_configuration_and_service_probes.md",
+      "tokens": 529,
+      "type": "context"
     }
   ],
-  "generated_at": "2026-03-30T15:25:10.011Z",
+  "generated_at": "2026-04-03T17:26:08.055Z",
   "lane_tokens": {
-    "contexts": 810,
+    "contexts": 3721,
     "stubs": 0,
-    "summaries": 1626
+    "summaries": 1936
   },
-  "source_fingerprint": "93db2776d5d307118c6186d8515aedf21503db0177944135ee0746678d2e4fd6",
-  "total_tokens": 2436,
+  "source_fingerprint": "b07a38f3cd7e214ccbc628a13f56ec8e24cf2ab1bb31ef5b89ef1e5fff320d56",
+  "total_tokens": 5657,
   "version": 1
 }

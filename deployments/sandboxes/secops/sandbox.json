@@ -9,7 +9,7 @@
       "serviceId": "redpanda-admin",
       "name": "Redpanda Admin API",
       "urls": [
-        "http://127.0.0.1:19644/v1/status/ready"
+        "http://127.0.0.1:29644/v1/status/ready"
       ],
       "expectedStatus": 200,
       "timeoutMs": 180000

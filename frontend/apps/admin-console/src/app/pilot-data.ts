@@ -61,17 +61,40 @@ export interface PolicyBlueprint {
   defaultDecision: string;
 }
 
+const readEnv = (key: string, fallback: string): string => {
+  const envSource =
+    (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+  const env = envSource[key];
+  const value = typeof env === "string" ? env.trim() : "";
+  return value.length > 0 ? value : fallback;
+};
+
+export const DEMO_COMPANY_NAME = readEnv("VITE_OPENAEGIS_COMPANY_NAME", "GrumpyMan Distributors");
+export const DEMO_TENANT_ID = readEnv("VITE_OPENAEGIS_TENANT_ID", "tenant-grumpyman-distributors");
+export const DEMO_CLINICIAN_EMAIL = readEnv(
+  "VITE_OPENAEGIS_CLINICIAN_EMAIL",
+  "clinician@grumpyman-distributors.com"
+);
+export const DEMO_SECURITY_EMAIL = readEnv(
+  "VITE_OPENAEGIS_SECURITY_EMAIL",
+  "security@grumpyman-distributors.com"
+);
+export const DEMO_ADMIN_EMAIL = readEnv(
+  "VITE_OPENAEGIS_ADMIN_EMAIL",
+  "admin@grumpyman-distributors.com"
+);
+
 export const DEMO_PERSONAS: DemoPersona[] = [
   {
     key: "clinician",
-    email: "clinician@starlighthealth.org",
+    email: DEMO_CLINICIAN_EMAIL,
     label: "Clinician session",
     role: "workflow_operator",
     description: "Runs the discharge assistant and reviews workflow output."
   },
   {
     key: "security",
-    email: "security@starlighthealth.org",
+    email: DEMO_SECURITY_EMAIL,
     label: "Security reviewer",
     role: "approver",
     description: "Performs approvals, incident review, and audit inspection."
@@ -79,14 +102,14 @@ export const DEMO_PERSONAS: DemoPersona[] = [
 ];
 
 export const PILOT_USE_CASE = {
-  tenantId: "tenant-starlight-health",
-  title: "Discharge Readiness Assistant",
-  subtitle: "A zero-trust workflow for summarizing discharge readiness and escalating sensitive actions.",
+  tenantId: DEMO_TENANT_ID,
+  title: `${DEMO_COMPANY_NAME} Discharge Readiness Assistant`,
+  subtitle: `A zero-trust workflow operated by ${DEMO_COMPANY_NAME} for summarizing discharge readiness and escalating sensitive actions.`,
   patientId: "patient-1001",
   workflowId: "wf-discharge-assistant",
   classification: "EPHI",
   summary:
-    "The agent reads FHIR patient context and care-plan tasks, drafts a discharge summary, and blocks the outbound email step until an approver clears the risk.",
+    `The agent reads FHIR patient context and care-plan tasks, drafts a discharge summary, and blocks the outbound email step until a ${DEMO_COMPANY_NAME} approver clears the risk.`,
   outcome:
     "Simulation can run end-to-end without approval; live mode pauses before the follow-up email and creates an auditable approval record."
 } as const;

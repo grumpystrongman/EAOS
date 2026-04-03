@@ -56,6 +56,33 @@ const sectionMeta: Record<
   }
 };
 
+type WorkspaceMode = "all" | "evaluator" | "operator" | "governance";
+
+const workspaceModeMeta: Record<WorkspaceMode, { label: string; summary: string }> = {
+  all: {
+    label: "All surfaces",
+    summary: "Show every route for broad platform administration."
+  },
+  evaluator: {
+    label: "Evaluator flow",
+    summary: "Demo-first workflow focused on onboarding and proof."
+  },
+  operator: {
+    label: "Operator flow",
+    summary: "Run-time workflow for daily operations and approvals."
+  },
+  governance: {
+    label: "Governance flow",
+    summary: "Security, identity, audit, and policy control workflow."
+  }
+};
+
+const workspaceModeRoutes: Record<Exclude<WorkspaceMode, "all">, Set<string>> = {
+  evaluator: new Set(["/setup", "/guides", "/dashboard", "/commercial", "/projects", "/project-guide", "/sandbox-proof", "/audit"]),
+  operator: new Set(["/setup", "/guides", "/integrations", "/agents", "/workflows", "/simulation", "/approvals", "/incidents", "/audit"]),
+  governance: new Set(["/setup", "/guides", "/identity", "/admin", "/security", "/approvals", "/incidents", "/audit", "/commercial"])
+};
+
 export const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -75,28 +102,33 @@ export const App = () => {
   const boot = usePilotWorkspace((state) => state.boot);
   const setActivePersona = usePilotWorkspace((state) => state.setActivePersona);
   const [showTechnicalContext, setShowTechnicalContext] = useState(false);
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("evaluator");
   const activeSession = activePersona === "clinician" ? clinicianSession : securitySession;
   const activeContext = useMemo(() => toSessionContext(activeSession), [activeSession]);
-  const guidedRoutes = useMemo(() => new Set(["/setup", "/integrations", "/identity"]), []);
+  const guidedRoutes = useMemo(() => new Set(["/setup", "/guides", "/integrations", "/identity"]), []);
+  const activeModeRouteSet = workspaceMode === "all" ? undefined : workspaceModeRoutes[workspaceMode];
   const routeAccess = useMemo(
     () =>
       APP_ROUTES.map((route) => ({
         route,
-        allowed: activeContext ? canAccessRouteWithAssurance(activeContext, route) : route.path === "/setup"
+        allowed: activeContext ? canAccessRouteWithAssurance(activeContext, route) : route.path === "/setup",
+        visibleInMode: activeModeRouteSet ? activeModeRouteSet.has(route.path) : true
       })),
-    [activeContext]
+    [activeContext, activeModeRouteSet]
   );
   const routesBySection = useMemo(() => {
     const order: Array<"foundation" | "operate" | "govern"> = ["foundation", "operate", "govern"];
     return order.map((section) => ({
       section,
       meta: sectionMeta[section],
-      items: routeAccess.filter(({ route }) => route.section === section)
+      items: routeAccess.filter(({ route, visibleInMode }) => route.section === section && visibleInMode),
+      hiddenCount: routeAccess.filter(({ route, visibleInMode }) => route.section === section && !visibleInMode).length
     }));
   }, [routeAccess]);
   const hasRouteAccess = activeContext ? canAccessRouteWithAssurance(activeContext, currentRoute) : currentRoute.path === "/setup";
   const isGuidedRoute = guidedRoutes.has(currentRoute.path);
   const needsStepUpAssurance = Boolean(activeContext && currentRoute.requireStepUpMfa && activeContext.assuranceLevel !== "aal3");
+  const isCurrentRouteInMode = activeModeRouteSet ? activeModeRouteSet.has(currentRoute.path) : true;
 
   useEffect(() => {
     void boot();
@@ -131,10 +163,30 @@ export const App = () => {
           </div>
         </section>
 
+        <section className="sidebar-panel">
+          <div className="sidebar-panel-label">Workspace mode</div>
+          <p>{workspaceModeMeta[workspaceMode].summary}</p>
+          <div className="mode-row">
+            {(Object.keys(workspaceModeMeta) as WorkspaceMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                className={workspaceMode === mode ? "mode-chip active" : "mode-chip"}
+                onClick={() => setWorkspaceMode(mode)}
+              >
+                {workspaceModeMeta[mode].label}
+              </button>
+            ))}
+          </div>
+        </section>
+
         <nav className="sidebar-nav" aria-label="OpenAegis sections">
-          {routesBySection.map(({ section, meta, items }) => (
+          {routesBySection.map(({ section, meta, items, hiddenCount }) => (
             <section key={section} className="nav-section">
-              <div className="nav-section-title">{meta.title}</div>
+              <div className="nav-section-title">
+                {meta.title}
+                {hiddenCount > 0 ? <span className="nav-section-hidden">+{hiddenCount} hidden by mode</span> : null}
+              </div>
               <div className="nav-section-summary">{meta.summary}</div>
               <div className="nav-section-items">
                 {items.map(({ route, allowed }) =>
@@ -155,6 +207,25 @@ export const App = () => {
             </section>
           ))}
         </nav>
+
+        <section className="sidebar-panel">
+          <div className="sidebar-panel-label">Always-visible guides</div>
+          <div className="stack">
+            <div>
+              <strong>Evaluator demo guide</strong>
+              <p>Fast onboarding for evaluators: setup, simulation, proof, and evidence.</p>
+            </div>
+            <div>
+              <strong>Operator user guide</strong>
+              <p>Daily runbook for operators: integrations, workflow run, approval, and audit.</p>
+            </div>
+          </div>
+          <div className="sidebar-actions">
+            <Link className="subtle-link" to="/guides">
+              Open guides
+            </Link>
+          </div>
+        </section>
 
         <section className="sidebar-panel compact">
           <div className="sidebar-panel-label">Connected personas</div>
@@ -200,6 +271,7 @@ export const App = () => {
           </div>
           <div className="topbar-meta">
             <Badge tone="info">Active: {activePersona}</Badge>
+            <Badge tone="default">Mode: {workspaceModeMeta[workspaceMode].label}</Badge>
             <Badge tone={currentRoute.requireStepUpMfa ? "warning" : "success"}>
               {currentRoute.requireStepUpMfa ? "Step-up MFA route" : "Standard route"}
             </Badge>
@@ -215,9 +287,14 @@ export const App = () => {
 
         {error ? <div className="banner error">Sync error: {error}</div> : null}
         {isSyncing ? <div className="banner info">Refreshing pilot data and evidence chain...</div> : null}
+        {!isCurrentRouteInMode ? (
+          <div className="banner info">
+            This route is outside the selected workspace mode. Switch mode to "All surfaces" to browse the full catalog.
+          </div>
+        ) : null}
 
         <PageHeader
-          eyebrow={isGuidedRoute ? "OpenAegis Onboarding" : "OpenAegis Pilot Console"}
+          eyebrow={isGuidedRoute ? "OpenAegis Onboarding" : workspaceModeMeta[workspaceMode].label}
           title={isGuidedRoute ? currentRoute.title : PILOT_USE_CASE.title}
           subtitle={
             isGuidedRoute

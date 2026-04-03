@@ -211,6 +211,25 @@ button:hover.danger {
   margin: 0.8rem 0;
 }
 
+.mode-row {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.7rem;
+}
+
+.mode-chip {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+  color: #dce9f7;
+  text-align: left;
+}
+
+.mode-chip.active {
+  border-color: rgba(104, 191, 255, 0.6);
+  background: rgba(73, 138, 255, 0.2);
+  color: white;
+}
+
 .persona-chip {
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.07);
@@ -247,10 +266,20 @@ button:hover.danger {
 }
 
 .nav-section-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(234, 243, 255, 0.85);
+}
+
+.nav-section-hidden {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.72rem;
+  color: rgba(234, 243, 255, 0.64);
 }
 
 .nav-section-summary {

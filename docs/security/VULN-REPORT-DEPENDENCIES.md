@@ -1,18 +1,19 @@
 # Dependency and Secrets Risk Scan
 
-Generated at: 2026-04-01T14:53:30.591Z
+Generated at: 2026-04-03T17:18:59.962Z
 Repository root: `C:/Users/grump/EAOS`
 
 ## Scope
-- Full dependency-tree audit
-- Production-only dependency audit
+- `npm audit` against the full dependency tree
+- `npm audit --omit=dev` for production-only dependency risk
 - Workspace manifest lifecycle hooks, lockfile install scripts, and accepted transitive install-script packages
 - Executable scripts and Dockerfiles that call `npm install` with default lifecycle execution
 - Hardcoded secret-like literals and credential patterns
 
 ## Executed Commands
 ```text
-npm run vuln:dependencies
+npm audit --json
+npm audit --omit=dev --json
 ```
 
 ## Output Summary
@@ -44,7 +45,8 @@ npm run vuln:dependencies
 - No hardcoded secret-like literals were found in the scanned source and config files.
 
 ## Machine-Readable Output
-Run `npm run vuln:dependencies` to emit the JSON report on stdout and refresh this markdown artifact.
+The JSON report is emitted on stdout by `node tools/scripts/vuln-scan-dependencies.mjs` and includes the command results, findings, and summary counts.
 
 ## Status
 Overall scan result: **PASS**
+

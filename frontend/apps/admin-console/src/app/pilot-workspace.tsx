@@ -21,6 +21,7 @@ import { isDemoIdentitiesEnabled } from "./security-guards.js";
 import { workspacePersistSnapshot } from "./workspace-persistence.js";
 import {
   DEMO_PERSONAS,
+  DEMO_ADMIN_EMAIL,
   PILOT_USE_CASE,
   AGENT_BLUEPRINTS,
   CONNECTOR_BLUEPRINTS,
@@ -336,7 +337,7 @@ const defaultDirectoryUsers = (): DirectoryUser[] => [
   {
     userId: "user-platform-owner",
     displayName: "Platform Owner",
-    email: "owner@starlighthealth.org",
+    email: DEMO_ADMIN_EMAIL,
     tenantId: PILOT_USE_CASE.tenantId,
     assuranceLevel: "aal3",
     roles: ["platform_admin", "security_admin", "auditor"],

@@ -57,10 +57,20 @@ interface JsonMap {
   [key: string]: unknown;
 }
 
+const DEFAULT_COMPANY_NAME = process.env.OPENAEGIS_COMPANY_NAME?.trim() || "GrumpyMan Distributors";
+const DEFAULT_TENANT_ID = process.env.OPENAEGIS_TENANT_ID?.trim() || "tenant-grumpyman-distributors";
+const DEFAULT_POLICY_PROFILE_NAME = `${DEFAULT_COMPANY_NAME} Safe Baseline`;
+
 const roleToPrivileges: Record<string, string[]> = {
   clinician: ["workflow_operator", "analyst"],
   security: ["security_admin", "approver", "auditor", "platform_admin"],
-  admin: ["platform_admin", "security_admin", "auditor", "workflow_operator", "approver", "analyst"]
+  admin: ["platform_admin", "security_admin", "auditor", "workflow_operator", "approver", "analyst"],
+  platform_admin: ["platform_admin"],
+  security_admin: ["security_admin"],
+  auditor: ["auditor"],
+  workflow_operator: ["workflow_operator"],
+  approver: ["approver"],
+  analyst: ["analyst"]
 };
 
 const approvalViewRoles = ["approver", "security_admin", "auditor", "platform_admin"] as const;
@@ -81,12 +91,18 @@ const gatewaySecurityStateFile = resolve(process.cwd(), ".volumes", "api-gateway
 const roleToAssurance: Record<string, "aal1" | "aal2" | "aal3"> = {
   clinician: "aal2",
   security: "aal3",
-  admin: "aal3"
+  admin: "aal3",
+  platform_admin: "aal3",
+  security_admin: "aal3",
+  auditor: "aal3",
+  workflow_operator: "aal2",
+  approver: "aal3",
+  analyst: "aal2"
 };
 
-const resolveUserRole = (user: { role?: string; roles?: string[] }): "clinician" | "security" | "admin" => {
+const resolveUserRole = (user: { role?: string; roles?: string[] }): string => {
   if (typeof user.role === "string") {
-    if (user.role === "security" || user.role === "admin" || user.role === "clinician") return user.role;
+    if (user.role in roleToPrivileges) return user.role;
   }
 
   if (Array.isArray(user.roles)) {
@@ -1153,7 +1169,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       sendJson(response, 404, { error: "project_pack_not_found" });
       return;
     }
-    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1189,7 +1205,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       sendJson(response, 404, { error: "project_pack_not_found" });
       return;
     }
-    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1231,7 +1247,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       return;
     }
     const body = await readJson(request);
-    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1239,7 +1255,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     }
     const preview = await previewPolicyProfile({
       tenantId: tenantScope.tenantId,
-      profileName: toString(body.profileName, "Hospital Safe Baseline"),
+      profileName: toString(body.profileName, DEFAULT_POLICY_PROFILE_NAME),
       draftControls: parseDraftControls(body)
     });
     sendJson(response, 200, preview);
@@ -1252,7 +1268,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     }
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure and easy to operate.");
-    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1317,7 +1333,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     }
     const body = await readJson(request);
     const operatorGoal = toString(body.operatorGoal, "Keep the policy secure while reducing operator confusion.");
-    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1375,7 +1391,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       return;
     }
     const body = await readJson(request);
-    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1388,7 +1404,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const result = await savePolicyProfile({
       actorId,
       tenantId: tenantScope.tenantId,
-      profileName: toString(body.profileName, "Hospital Safe Baseline"),
+      profileName: toString(body.profileName, DEFAULT_POLICY_PROFILE_NAME),
       changeSummary: toString(body.changeSummary, "Policy profile updated from Security Console."),
       draftControls: parseDraftControls(body),
       ...(breakGlassRaw
@@ -1429,7 +1445,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
       return;
     }
     const body = await readJson(request);
-    const requestedTenant = toString(body.tenantId, "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });
@@ -1501,7 +1517,7 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
     const body = await readJson(request);
     const mode = pathname.endsWith("/simulate") ? "simulate" : "execute";
     const toolId = pathname.split("/")[3] ?? "unknown-tool";
-    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? "tenant-starlight-health");
+    const requestedTenant = toString(body.tenantId, authSession.tenantId ?? DEFAULT_TENANT_ID);
     const idempotencyKey =
       typeof request.headers["idempotency-key"] === "string" && request.headers["idempotency-key"].trim().length > 0
         ? request.headers["idempotency-key"].trim()
@@ -1630,7 +1646,8 @@ export const requestHandler = async (request: IncomingMessage, response: ServerR
 
   if (method === "POST" && pathname === "/v1/executions") {
     const body = await readJson(request);
-    const requestedTenant = typeof body.tenantId === "string" ? body.tenantId : "tenant-starlight-health";
+    const requestedTenant =
+      typeof body.tenantId === "string" ? body.tenantId : authSession.tenantId ?? DEFAULT_TENANT_ID;
     const tenantScope = resolveTenantOrReject(authSession, requestedTenant);
     if (!tenantScope.allowed) {
       sendJson(response, 403, { error: "tenant_scope_mismatch" });

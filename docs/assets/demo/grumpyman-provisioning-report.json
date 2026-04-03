@@ -1,0 +1,173 @@
+{
+  "generatedAt": "2026-04-03T13:49:52.007Z",
+  "company": "GrumpyMan Distributors",
+  "tenantId": "tenant-grumpyman-distributors",
+  "endpoints": {
+    "gateway": "http://127.0.0.1:4310",
+    "toolRegistry": "http://127.0.0.1:4311"
+  },
+  "auth": {
+    "clinicianEmail": "clinician@grumpyman-distributors.com",
+    "securityEmail": "security@grumpyman-distributors.com",
+    "adminEmail": "admin@grumpyman-distributors.com"
+  },
+  "checks": [
+    {
+      "checkId": "gateway_admin_login",
+      "passed": true,
+      "details": {
+        "attempted": [
+          "admin@grumpyman-distributors.com",
+          "security@grumpyman-distributors.com"
+        ],
+        "status": 200
+      }
+    },
+    {
+      "checkId": "tool_registry_catalog_loaded",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "manifestCount": 30
+      }
+    }
+  ],
+  "provisionedConnections": [
+    {
+      "manifestToolId": "connector-databricks-workspace",
+      "displayName": "GrumpyMan Distributors Databricks",
+      "instanceId": "plugin-inst-100643e3-5245-480e-9037-ffa927ae2c16",
+      "authMethod": "api_key",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-databricks-workspace using api_key"
+      }
+    },
+    {
+      "manifestToolId": "connector-fabric-automation",
+      "displayName": "GrumpyMan Distributors Fabric",
+      "instanceId": "plugin-inst-c6120256-a0e3-4651-a4e1-fcb85b586a6f",
+      "authMethod": "service_principal",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-fabric-automation using service_principal"
+      }
+    },
+    {
+      "manifestToolId": "connector-aws-infrastructure",
+      "displayName": "GrumpyMan Distributors AWS",
+      "instanceId": "plugin-inst-9f4ceb5f-d488-4905-b79f-b7d0b3455723",
+      "authMethod": "service_principal",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-aws-infrastructure using service_principal"
+      }
+    },
+    {
+      "manifestToolId": "connector-jira-workflow",
+      "displayName": "GrumpyMan Distributors Jira",
+      "instanceId": "plugin-inst-eaa7d855-f4e1-4e69-9d25-96ae7e688295",
+      "authMethod": "oauth2",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": 200,
+        "testStatus": 200,
+        "testMessage": "Validated connector-jira-workflow using oauth2"
+      }
+    },
+    {
+      "manifestToolId": "connector-confluence-knowledge",
+      "displayName": "GrumpyMan Distributors Confluence",
+      "instanceId": "plugin-inst-e9047eaf-1c9b-4cd9-8f3f-5f29625e8620",
+      "authMethod": "oauth2",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": 200,
+        "testStatus": 200,
+        "testMessage": "Validated connector-confluence-knowledge using oauth2"
+      }
+    },
+    {
+      "manifestToolId": "connector-linear-project",
+      "displayName": "GrumpyMan Distributors Linear",
+      "instanceId": "plugin-inst-1fa300f8-0a0a-4b43-a839-78a361d4ded3",
+      "authMethod": "api_key",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-linear-project using api_key"
+      }
+    },
+    {
+      "manifestToolId": "connector-openai-responses",
+      "displayName": "GrumpyMan Distributors OpenAI",
+      "instanceId": "plugin-inst-5ae9b6f4-9dbb-45fb-96c4-bae12235cd6b",
+      "authMethod": "api_key",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-openai-responses using api_key"
+      }
+    },
+    {
+      "manifestToolId": "connector-anthropic-claude",
+      "displayName": "GrumpyMan Distributors Anthropic",
+      "instanceId": "plugin-inst-b04e9888-acc5-495f-b419-f1b1aeba1bdc",
+      "authMethod": "api_key",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-anthropic-claude using api_key"
+      }
+    },
+    {
+      "manifestToolId": "connector-google-gemini",
+      "displayName": "GrumpyMan Distributors Gemini",
+      "instanceId": "plugin-inst-a7e00e4b-6203-4ee0-8f91-b47931376d49",
+      "authMethod": "service_principal",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-google-gemini using service_principal"
+      }
+    },
+    {
+      "manifestToolId": "connector-azure-openai",
+      "displayName": "GrumpyMan Distributors Azure OpenAI",
+      "instanceId": "plugin-inst-9e6009e5-41a8-45a3-92d5-e269e31e068c",
+      "authMethod": "api_key",
+      "status": "healthy",
+      "details": {
+        "createStatus": 201,
+        "authorizeStatus": null,
+        "testStatus": 200,
+        "testMessage": "Validated connector-azure-openai using api_key"
+      }
+    }
+  ],
+  "summary": {
+    "totalConnections": 10,
+    "healthyConnections": 10,
+    "failedConnections": 0,
+    "status": "PASS"
+  }
+}

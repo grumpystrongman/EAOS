@@ -8,6 +8,7 @@ import { AdminConsolePage } from "./app/pages/admin-console-page.js";
 import { AuditExplorerPage } from "./app/pages/audit-explorer-page.js";
 import { CommercialReadinessPage } from "./app/pages/commercial-readiness-page.js";
 import { DashboardPage } from "./app/pages/dashboard-page.js";
+import { GuidesPage } from "./app/pages/guides-page.js";
 import { IdentityAccessPage } from "./app/pages/identity-access-page.js";
 import { IncidentReviewPage } from "./app/pages/incident-review-page.js";
 import { IntegrationHubPage } from "./app/pages/integration-hub-page.js";
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/setup" replace /> },
       { path: "setup", element: <SetupCenterPage /> },
+      { path: "guides", element: <GuidesPage /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "commercial", element: <CommercialReadinessPage /> },
       { path: "projects", element: <ProjectPacksPage /> },

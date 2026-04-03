@@ -1,0 +1,1430 @@
+{
+  "generatedAt": "2026-04-03T13:49:52.966Z",
+  "startedAt": "2026-04-03T13:49:52.718Z",
+  "suite": "seed-commercial-connections",
+  "company": {
+    "name": "GrumpyMan Distributors",
+    "tenantId": "tenant-grumpyman-distributors",
+    "baseDomain": "enterprise.grumpyman-distributors.com"
+  },
+  "summary": {
+    "targetConnectorCount": 26,
+    "passed": 26,
+    "failed": 0,
+    "status": "PASS"
+  },
+  "createdInstances": [
+    "plugin-inst-d9ec6ecd-7309-41ab-9c31-43951a496c64",
+    "plugin-inst-b8d70ac3-9d58-4eba-8743-5e8522097f9b",
+    "plugin-inst-f7164975-a83c-4f52-8f6a-1025646aad01",
+    "plugin-inst-5fb4e4da-c5e3-4b5f-9e9c-36a8c54ce747",
+    "plugin-inst-55f1ee6a-3edf-43ae-8439-7fae7154d1be",
+    "plugin-inst-7e0e426f-a868-4f5c-a7fa-db4e18c10bce",
+    "plugin-inst-c4972f1e-c4d5-4414-9dc2-4381e76264d5",
+    "plugin-inst-cd24c22d-27af-460f-b551-7508a16a6eba",
+    "plugin-inst-ccd70c08-9d85-4cca-8014-04f4d9e7354e",
+    "plugin-inst-cb692a11-cdf1-4e8b-b7b0-6113068d8276",
+    "plugin-inst-d38178a9-2b5a-4b80-985b-c703ef213931",
+    "plugin-inst-d0d38753-eee7-4440-a14f-2df3d5c02f8d",
+    "plugin-inst-e91ba18b-b0bb-446c-b325-0497e53871c3",
+    "plugin-inst-0626d6fc-9b02-4eb4-80d4-9f6d39d5adef",
+    "plugin-inst-c207ae18-a2a4-4084-9232-4db5a6b743ec",
+    "plugin-inst-02b2fe25-103d-4f46-a07b-0e4850c1fa9c"
+  ],
+  "processed": [
+    {
+      "manifestToolId": "connector-ms-fabric-read",
+      "connectorType": "microsoft-fabric",
+      "instanceId": "plugin-inst-d9ec6ecd-7309-41ab-9c31-43951a496c64",
+      "creationStatus": "created",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-d9ec6ecd-7309-41ab-9c31-43951a496c64",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-ms-fabric-read",
+            "displayName": "GrumpyMan Distributors Microsoft Fabric Reader",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-microsoft-fabric-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://microsoft-fabric.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/microsoft-fabric",
+              "region": "us-east-1",
+              "workspaceId": "microsoft-fabric-workspace",
+              "projectKey": "GM-microsoft-fabric",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.766Z",
+            "updatedAt": "2026-04-03T13:49:52.774Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.774Z"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-d9ec6ecd-7309-41ab-9c31-43951a496c64",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-ms-fabric-read",
+            "displayName": "GrumpyMan Distributors Microsoft Fabric Reader",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-microsoft-fabric-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://microsoft-fabric.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/microsoft-fabric",
+              "region": "us-east-1",
+              "workspaceId": "microsoft-fabric-workspace",
+              "projectKey": "GM-microsoft-fabric",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.766Z",
+            "updatedAt": "2026-04-03T13:49:52.779Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-ms-fabric-read/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.774Z",
+            "lastTestAt": "2026-04-03T13:49:52.779Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-ms-fabric-read using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-powerbi-export",
+      "connectorType": "power-bi",
+      "instanceId": "plugin-inst-b8d70ac3-9d58-4eba-8743-5e8522097f9b",
+      "creationStatus": "created",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-b8d70ac3-9d58-4eba-8743-5e8522097f9b",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-powerbi-export",
+            "displayName": "GrumpyMan Distributors Power BI Export",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-power-bi-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://power-bi.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/power-bi",
+              "region": "us-east-1",
+              "workspaceId": "power-bi-workspace",
+              "projectKey": "GM-power-bi",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.785Z",
+            "updatedAt": "2026-04-03T13:49:52.791Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.791Z"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-b8d70ac3-9d58-4eba-8743-5e8522097f9b",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-powerbi-export",
+            "displayName": "GrumpyMan Distributors Power BI Export",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-power-bi-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://power-bi.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/power-bi",
+              "region": "us-east-1",
+              "workspaceId": "power-bi-workspace",
+              "projectKey": "GM-power-bi",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.785Z",
+            "updatedAt": "2026-04-03T13:49:52.795Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-powerbi-export/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.791Z",
+            "lastTestAt": "2026-04-03T13:49:52.795Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-powerbi-export using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-sharepoint-docs",
+      "connectorType": "sharepoint",
+      "instanceId": "plugin-inst-f7164975-a83c-4f52-8f6a-1025646aad01",
+      "creationStatus": "created",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-f7164975-a83c-4f52-8f6a-1025646aad01",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-sharepoint-docs",
+            "displayName": "GrumpyMan Distributors SharePoint Governance Connector",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-sharepoint-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://sharepoint.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/sharepoint",
+              "region": "us-east-1",
+              "workspaceId": "sharepoint-workspace",
+              "projectKey": "GM-sharepoint",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.801Z",
+            "updatedAt": "2026-04-03T13:49:52.806Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.806Z"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-f7164975-a83c-4f52-8f6a-1025646aad01",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-sharepoint-docs",
+            "displayName": "GrumpyMan Distributors SharePoint Governance Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-sharepoint-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://sharepoint.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/sharepoint",
+              "region": "us-east-1",
+              "workspaceId": "sharepoint-workspace",
+              "projectKey": "GM-sharepoint",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.801Z",
+            "updatedAt": "2026-04-03T13:49:52.810Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-sharepoint-docs/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.806Z",
+            "lastTestAt": "2026-04-03T13:49:52.810Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-sharepoint-docs using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-ticketing-ops",
+      "connectorType": "ticketing",
+      "instanceId": "plugin-inst-5fb4e4da-c5e3-4b5f-9e9c-36a8c54ce747",
+      "creationStatus": "created",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-5fb4e4da-c5e3-4b5f-9e9c-36a8c54ce747",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-ticketing-ops",
+            "displayName": "GrumpyMan Distributors Incident Ticketing Connector",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-ticketing-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://ticketing.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/ticketing",
+              "region": "us-east-1",
+              "workspaceId": "ticketing-workspace",
+              "projectKey": "GM-ticketing",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.815Z",
+            "updatedAt": "2026-04-03T13:49:52.819Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.819Z"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-5fb4e4da-c5e3-4b5f-9e9c-36a8c54ce747",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-ticketing-ops",
+            "displayName": "GrumpyMan Distributors Incident Ticketing Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-ticketing-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://ticketing.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/ticketing",
+              "region": "us-east-1",
+              "workspaceId": "ticketing-workspace",
+              "projectKey": "GM-ticketing",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.815Z",
+            "updatedAt": "2026-04-03T13:49:52.823Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-ticketing-ops/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.819Z",
+            "lastTestAt": "2026-04-03T13:49:52.823Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-ticketing-ops using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-linear-project",
+      "connectorType": "project",
+      "instanceId": "plugin-inst-1fa300f8-0a0a-4b43-a839-78a361d4ded3",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-1fa300f8-0a0a-4b43-a839-78a361d4ded3",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-linear-project",
+            "displayName": "GrumpyMan Distributors Linear",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman/linear/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://api.linear.app"
+            },
+            "createdAt": "2026-04-03T13:49:52.135Z",
+            "updatedAt": "2026-04-03T13:49:52.826Z",
+            "lastTestAt": "2026-04-03T13:49:52.826Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-linear-project using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-aws-infrastructure",
+      "connectorType": "aws",
+      "instanceId": "plugin-inst-9f4ceb5f-d488-4905-b79f-b7d0b3455723",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "service_principal",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-9f4ceb5f-d488-4905-b79f-b7d0b3455723",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-aws-infrastructure",
+            "displayName": "GrumpyMan Distributors AWS",
+            "status": "healthy",
+            "auth": {
+              "method": "service_principal",
+              "principalId": "arn:aws:iam::281149750626:role/OpenAegisRuntimeRole",
+              "refs": {
+                "clientSecretRef": "vault://grumpyman/aws/runtime-secret"
+              }
+            },
+            "config": {
+              "region": "us-east-1"
+            },
+            "createdAt": "2026-04-03T13:49:52.089Z",
+            "updatedAt": "2026-04-03T13:49:52.830Z",
+            "lastTestAt": "2026-04-03T13:49:52.830Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-aws-infrastructure using service_principal"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-databricks-workspace",
+      "connectorType": "databricks",
+      "instanceId": "plugin-inst-100643e3-5245-480e-9037-ffa927ae2c16",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-100643e3-5245-480e-9037-ffa927ae2c16",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-databricks-workspace",
+            "displayName": "GrumpyMan Distributors Databricks",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman/databricks/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://adb-4528719301248981.11.azuredatabricks.net",
+              "workspaceId": "gm-dist-lakehouse"
+            },
+            "createdAt": "2026-04-03T13:49:52.064Z",
+            "updatedAt": "2026-04-03T13:49:52.835Z",
+            "lastTestAt": "2026-04-03T13:49:52.835Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-databricks-workspace using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-fabric-automation",
+      "connectorType": "fabric",
+      "instanceId": "plugin-inst-c6120256-a0e3-4651-a4e1-fcb85b586a6f",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "service_principal",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-c6120256-a0e3-4651-a4e1-fcb85b586a6f",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-fabric-automation",
+            "displayName": "GrumpyMan Distributors Fabric",
+            "status": "healthy",
+            "auth": {
+              "method": "service_principal",
+              "clientId": "6d9140b1-0c93-4454-ad53-8c6cb8cb57a8",
+              "tenantId": "d5304b89-e654-4f37-9220-0b7be40fbc77",
+              "refs": {
+                "clientSecretRef": "vault://grumpyman/fabric/client-secret"
+              }
+            },
+            "config": {
+              "baseUrl": "https://api.fabric.microsoft.com",
+              "workspaceId": "grumpyman-fabric-workspace"
+            },
+            "createdAt": "2026-04-03T13:49:52.078Z",
+            "updatedAt": "2026-04-03T13:49:52.840Z",
+            "lastTestAt": "2026-04-03T13:49:52.840Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-fabric-automation using service_principal"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-jira-workflow",
+      "connectorType": "jira",
+      "instanceId": "plugin-inst-eaa7d855-f4e1-4e69-9d25-96ae7e688295",
+      "creationStatus": "existing",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-eaa7d855-f4e1-4e69-9d25-96ae7e688295",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-jira-workflow",
+            "displayName": "GrumpyMan Distributors Jira",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2"
+            },
+            "config": {
+              "baseUrl": "https://grumpyman.atlassian.net",
+              "projectKey": "OPS"
+            },
+            "createdAt": "2026-04-03T13:49:52.101Z",
+            "updatedAt": "2026-04-03T13:49:52.845Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.845Z",
+            "lastTestAt": "2026-04-03T13:49:52.112Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-jira-workflow using oauth2"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-eaa7d855-f4e1-4e69-9d25-96ae7e688295",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-jira-workflow",
+            "displayName": "GrumpyMan Distributors Jira",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2"
+            },
+            "config": {
+              "baseUrl": "https://grumpyman.atlassian.net",
+              "projectKey": "OPS"
+            },
+            "createdAt": "2026-04-03T13:49:52.101Z",
+            "updatedAt": "2026-04-03T13:49:52.848Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-jira-workflow/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.845Z",
+            "lastTestAt": "2026-04-03T13:49:52.848Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-jira-workflow using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-confluence-knowledge",
+      "connectorType": "confluence",
+      "instanceId": "plugin-inst-e9047eaf-1c9b-4cd9-8f3f-5f29625e8620",
+      "creationStatus": "existing",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-e9047eaf-1c9b-4cd9-8f3f-5f29625e8620",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-confluence-knowledge",
+            "displayName": "GrumpyMan Distributors Confluence",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2"
+            },
+            "config": {
+              "baseUrl": "https://grumpyman.atlassian.net/wiki"
+            },
+            "createdAt": "2026-04-03T13:49:52.118Z",
+            "updatedAt": "2026-04-03T13:49:52.852Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.852Z",
+            "lastTestAt": "2026-04-03T13:49:52.128Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-confluence-knowledge using oauth2"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-e9047eaf-1c9b-4cd9-8f3f-5f29625e8620",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-confluence-knowledge",
+            "displayName": "GrumpyMan Distributors Confluence",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2"
+            },
+            "config": {
+              "baseUrl": "https://grumpyman.atlassian.net/wiki"
+            },
+            "createdAt": "2026-04-03T13:49:52.118Z",
+            "updatedAt": "2026-04-03T13:49:52.855Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-confluence-knowledge/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.852Z",
+            "lastTestAt": "2026-04-03T13:49:52.855Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-confluence-knowledge using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-openai-responses",
+      "connectorType": "openai",
+      "instanceId": "plugin-inst-5ae9b6f4-9dbb-45fb-96c4-bae12235cd6b",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-5ae9b6f4-9dbb-45fb-96c4-bae12235cd6b",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-openai-responses",
+            "displayName": "GrumpyMan Distributors OpenAI",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman/openai/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://api.openai.com",
+              "model": "gpt-5.4"
+            },
+            "createdAt": "2026-04-03T13:49:52.145Z",
+            "updatedAt": "2026-04-03T13:49:52.858Z",
+            "lastTestAt": "2026-04-03T13:49:52.858Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-openai-responses using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-openai-embeddings",
+      "connectorType": "openai",
+      "instanceId": "plugin-inst-55f1ee6a-3edf-43ae-8439-7fae7154d1be",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-55f1ee6a-3edf-43ae-8439-7fae7154d1be",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-openai-embeddings",
+            "displayName": "GrumpyMan Distributors OpenAI Embeddings Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-openai-embeddings/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://openai.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/openai",
+              "region": "us-east-1",
+              "workspaceId": "openai-workspace",
+              "projectKey": "GM-openai",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.863Z",
+            "updatedAt": "2026-04-03T13:49:52.866Z",
+            "lastTestAt": "2026-04-03T13:49:52.866Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-openai-embeddings using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-anthropic-claude",
+      "connectorType": "anthropic",
+      "instanceId": "plugin-inst-b04e9888-acc5-495f-b419-f1b1aeba1bdc",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-b04e9888-acc5-495f-b419-f1b1aeba1bdc",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-anthropic-claude",
+            "displayName": "GrumpyMan Distributors Anthropic",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman/anthropic/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://api.anthropic.com",
+              "model": "claude-3-7-sonnet"
+            },
+            "createdAt": "2026-04-03T13:49:52.155Z",
+            "updatedAt": "2026-04-03T13:49:52.869Z",
+            "lastTestAt": "2026-04-03T13:49:52.869Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-anthropic-claude using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-google-gemini",
+      "connectorType": "google",
+      "instanceId": "plugin-inst-a7e00e4b-6203-4ee0-8f91-b47931376d49",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "service_principal",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-a7e00e4b-6203-4ee0-8f91-b47931376d49",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-google-gemini",
+            "displayName": "GrumpyMan Distributors Gemini",
+            "status": "healthy",
+            "auth": {
+              "method": "service_principal",
+              "clientId": "gm-openaegis-service",
+              "refs": {
+                "clientSecretRef": "vault://grumpyman/google/client-secret"
+              }
+            },
+            "config": {
+              "baseUrl": "https://generativelanguage.googleapis.com",
+              "model": "gemini-2.5-pro"
+            },
+            "createdAt": "2026-04-03T13:49:52.167Z",
+            "updatedAt": "2026-04-03T13:49:52.872Z",
+            "lastTestAt": "2026-04-03T13:49:52.872Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-google-gemini using service_principal"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-azure-openai",
+      "connectorType": "azure-openai",
+      "instanceId": "plugin-inst-9e6009e5-41a8-45a3-92d5-e269e31e068c",
+      "creationStatus": "existing",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-9e6009e5-41a8-45a3-92d5-e269e31e068c",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "user-admin",
+            "manifestToolId": "connector-azure-openai",
+            "displayName": "GrumpyMan Distributors Azure OpenAI",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman/azure-openai/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://grumpyman-openai.openai.azure.com",
+              "apiVersion": "2025-03-01-preview",
+              "model": "gpt-4.1"
+            },
+            "createdAt": "2026-04-03T13:49:52.174Z",
+            "updatedAt": "2026-04-03T13:49:52.876Z",
+            "lastTestAt": "2026-04-03T13:49:52.876Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-azure-openai using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-airbyte-sync",
+      "connectorType": "airbyte",
+      "instanceId": "plugin-inst-7e0e426f-a868-4f5c-a7fa-db4e18c10bce",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-7e0e426f-a868-4f5c-a7fa-db4e18c10bce",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-airbyte-sync",
+            "displayName": "GrumpyMan Distributors Airbyte Sync Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-airbyte-sync/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://airbyte.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/airbyte",
+              "region": "us-east-1",
+              "workspaceId": "airbyte-workspace",
+              "projectKey": "GM-airbyte",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.880Z",
+            "updatedAt": "2026-04-03T13:49:52.883Z",
+            "lastTestAt": "2026-04-03T13:49:52.883Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-airbyte-sync using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-airflow-ops",
+      "connectorType": "airflow",
+      "instanceId": "plugin-inst-c4972f1e-c4d5-4414-9dc2-4381e76264d5",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-c4972f1e-c4d5-4414-9dc2-4381e76264d5",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-airflow-ops",
+            "displayName": "GrumpyMan Distributors Airflow Operations Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-airflow-ops/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://airflow.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/airflow",
+              "region": "us-east-1",
+              "workspaceId": "airflow-workspace",
+              "projectKey": "GM-airflow",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.887Z",
+            "updatedAt": "2026-04-03T13:49:52.891Z",
+            "lastTestAt": "2026-04-03T13:49:52.891Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-airflow-ops using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-trino-query",
+      "connectorType": "trino",
+      "instanceId": "plugin-inst-cd24c22d-27af-460f-b551-7508a16a6eba",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "key_pair",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-cd24c22d-27af-460f-b551-7508a16a6eba",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-trino-query",
+            "displayName": "GrumpyMan Distributors Trino Query Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "key_pair",
+              "refs": {
+                "privateKeyRef": "vault://grumpyman-distributors/commercial/connector-trino-query/private-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://trino.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/trino",
+              "region": "us-east-1",
+              "workspaceId": "trino-workspace",
+              "projectKey": "GM-trino",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.895Z",
+            "updatedAt": "2026-04-03T13:49:52.898Z",
+            "lastTestAt": "2026-04-03T13:49:52.898Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-trino-query using key_pair"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-superset-insights",
+      "connectorType": "superset",
+      "instanceId": "plugin-inst-ccd70c08-9d85-4cca-8014-04f4d9e7354e",
+      "creationStatus": "created",
+      "authorizationStatus": "ok",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "oauth2",
+      "details": {
+        "authorization": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-ccd70c08-9d85-4cca-8014-04f4d9e7354e",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-superset-insights",
+            "displayName": "GrumpyMan Distributors Superset Insights Connector",
+            "status": "authorized",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-superset-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://superset.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/superset",
+              "region": "us-east-1",
+              "workspaceId": "superset-workspace",
+              "projectKey": "GM-superset",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.902Z",
+            "updatedAt": "2026-04-03T13:49:52.906Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.906Z"
+          }
+        },
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-ccd70c08-9d85-4cca-8014-04f4d9e7354e",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-superset-insights",
+            "displayName": "GrumpyMan Distributors Superset Insights Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "oauth2",
+              "clientId": "oauth-superset-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors"
+            },
+            "config": {
+              "baseUrl": "https://superset.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/superset",
+              "region": "us-east-1",
+              "workspaceId": "superset-workspace",
+              "projectKey": "GM-superset",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.902Z",
+            "updatedAt": "2026-04-03T13:49:52.911Z",
+            "brokerRefs": {
+              "authorizationBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/authorization",
+              "tokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/token",
+              "refreshTokenBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/refresh",
+              "callbackBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/callback",
+              "codeBrokerRef": "broker://grumpyman-distributors/commercial/connector-superset-insights/code"
+            },
+            "lastAuthorizedAt": "2026-04-03T13:49:52.906Z",
+            "lastTestAt": "2026-04-03T13:49:52.911Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-superset-insights using oauth2"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-metabase-analytics",
+      "connectorType": "metabase",
+      "instanceId": "plugin-inst-cb692a11-cdf1-4e8b-b7b0-6113068d8276",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-cb692a11-cdf1-4e8b-b7b0-6113068d8276",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-metabase-analytics",
+            "displayName": "GrumpyMan Distributors Metabase Analytics Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-metabase-analytics/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://metabase.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/metabase",
+              "region": "us-east-1",
+              "workspaceId": "metabase-workspace",
+              "projectKey": "GM-metabase",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.915Z",
+            "updatedAt": "2026-04-03T13:49:52.919Z",
+            "lastTestAt": "2026-04-03T13:49:52.919Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-metabase-analytics using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-grafana-observability",
+      "connectorType": "grafana",
+      "instanceId": "plugin-inst-d38178a9-2b5a-4b80-985b-c703ef213931",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-d38178a9-2b5a-4b80-985b-c703ef213931",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-grafana-observability",
+            "displayName": "GrumpyMan Distributors Grafana Observability Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-grafana-observability/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://grafana.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/grafana",
+              "region": "us-east-1",
+              "workspaceId": "grafana-workspace",
+              "projectKey": "GM-grafana",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.923Z",
+            "updatedAt": "2026-04-03T13:49:52.928Z",
+            "lastTestAt": "2026-04-03T13:49:52.928Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-grafana-observability using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-kafka-streams",
+      "connectorType": "kafka",
+      "instanceId": "plugin-inst-d0d38753-eee7-4440-a14f-2df3d5c02f8d",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "key_pair",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-d0d38753-eee7-4440-a14f-2df3d5c02f8d",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-kafka-streams",
+            "displayName": "GrumpyMan Distributors Kafka Streams Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "key_pair",
+              "refs": {
+                "privateKeyRef": "vault://grumpyman-distributors/commercial/connector-kafka-streams/private-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://kafka.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/kafka",
+              "region": "us-east-1",
+              "workspaceId": "kafka-workspace",
+              "projectKey": "GM-kafka",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.932Z",
+            "updatedAt": "2026-04-03T13:49:52.935Z",
+            "lastTestAt": "2026-04-03T13:49:52.935Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-kafka-streams using key_pair"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-nifi-flow",
+      "connectorType": "nifi",
+      "instanceId": "plugin-inst-e91ba18b-b0bb-446c-b325-0497e53871c3",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "key_pair",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-e91ba18b-b0bb-446c-b325-0497e53871c3",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-nifi-flow",
+            "displayName": "GrumpyMan Distributors NiFi Flow Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "key_pair",
+              "refs": {
+                "privateKeyRef": "vault://grumpyman-distributors/commercial/connector-nifi-flow/private-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://nifi.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/nifi",
+              "region": "us-east-1",
+              "workspaceId": "nifi-workspace",
+              "projectKey": "GM-nifi",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.940Z",
+            "updatedAt": "2026-04-03T13:49:52.943Z",
+            "lastTestAt": "2026-04-03T13:49:52.943Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-nifi-flow using key_pair"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-dagster-orchestration",
+      "connectorType": "dagster",
+      "instanceId": "plugin-inst-0626d6fc-9b02-4eb4-80d4-9f6d39d5adef",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-0626d6fc-9b02-4eb4-80d4-9f6d39d5adef",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-dagster-orchestration",
+            "displayName": "GrumpyMan Distributors Dagster Orchestration Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-dagster-orchestration/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://dagster.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/dagster",
+              "region": "us-east-1",
+              "workspaceId": "dagster-workspace",
+              "projectKey": "GM-dagster",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.946Z",
+            "updatedAt": "2026-04-03T13:49:52.950Z",
+            "lastTestAt": "2026-04-03T13:49:52.950Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-dagster-orchestration using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-n8n-workflows",
+      "connectorType": "n8n",
+      "instanceId": "plugin-inst-c207ae18-a2a4-4084-9232-4db5a6b743ec",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "api_key",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-c207ae18-a2a4-4084-9232-4db5a6b743ec",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-n8n-workflows",
+            "displayName": "GrumpyMan Distributors n8n Workflows Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "api_key",
+              "refs": {
+                "apiKeyRef": "vault://grumpyman-distributors/commercial/connector-n8n-workflows/api-key"
+              }
+            },
+            "config": {
+              "baseUrl": "https://n8n.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/n8n",
+              "region": "us-east-1",
+              "workspaceId": "n8n-workspace",
+              "projectKey": "GM-n8n",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.953Z",
+            "updatedAt": "2026-04-03T13:49:52.956Z",
+            "lastTestAt": "2026-04-03T13:49:52.956Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-n8n-workflows using api_key"
+          }
+        }
+      }
+    },
+    {
+      "manifestToolId": "connector-aws-bedrock-claude",
+      "connectorType": "aws",
+      "instanceId": "plugin-inst-02b2fe25-103d-4f46-a07b-0e4850c1fa9c",
+      "creationStatus": "created",
+      "authorizationStatus": "skipped",
+      "testStatus": "ok",
+      "status": "healthy",
+      "authMethod": "service_principal",
+      "details": {
+        "authorization": "auth_method_not_oauth2",
+        "test": {
+          "status": 200,
+          "body": {
+            "instanceId": "plugin-inst-02b2fe25-103d-4f46-a07b-0e4850c1fa9c",
+            "tenantId": "tenant-grumpyman-distributors",
+            "createdBy": "seed-commercial-connections",
+            "manifestToolId": "connector-aws-bedrock-claude",
+            "displayName": "GrumpyMan Distributors AWS Bedrock Claude Connector",
+            "status": "healthy",
+            "auth": {
+              "method": "service_principal",
+              "clientId": "spn-aws-tenant-grumpyman-distributors",
+              "tenantId": "tenant-grumpyman-distributors",
+              "principalId": "principal-aws-tenant-grumpyman-distributors",
+              "refs": {
+                "clientSecretRef": "vault://grumpyman-distributors/commercial/connector-aws-bedrock-claude/client-secret"
+              }
+            },
+            "config": {
+              "baseUrl": "https://aws.enterprise.grumpyman-distributors.com",
+              "endpoint": "https://api.enterprise.grumpyman-distributors.com/aws",
+              "region": "us-east-1",
+              "workspaceId": "aws-workspace",
+              "projectKey": "GM-aws",
+              "model": "production-safe",
+              "organizationId": "tenant-grumpyman-distributors",
+              "apiVersion": "2026-04-01"
+            },
+            "createdAt": "2026-04-03T13:49:52.959Z",
+            "updatedAt": "2026-04-03T13:49:52.962Z",
+            "lastTestAt": "2026-04-03T13:49:52.962Z",
+            "lastTestStatus": "passed",
+            "lastTestMessage": "Validated connector-aws-bedrock-claude using service_principal"
+          }
+        }
+      }
+    }
+  ]
+}

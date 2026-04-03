@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import { once } from "node:events";
 import { createAppServer } from "../../backend/services/api-gateway/src/index.ts";
+import { getCompanyProfile } from "./company-profile.mjs";
 
 const port = Number(process.env.OPENAEGIS_SMOKE_PORT ?? 3901);
+const profile = getCompanyProfile();
 
 const request = async (path, options = {}) => {
   const response = await fetch(`http://127.0.0.1:${port}${path}`, options);
@@ -20,7 +22,7 @@ const run = async () => {
     const login = await request("/v1/auth/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: "clinician@starlighthealth.org" })
+      body: JSON.stringify({ email: profile.clinicianEmail })
     });
 
     if (login.status !== 200) throw new Error("login failed");
@@ -33,8 +35,8 @@ const run = async () => {
       },
       body: JSON.stringify({
         mode: "live",
-        workflowId: "wf-discharge-assistant",
-        patientId: "patient-1001",
+        workflowId: profile.workflowId,
+        patientId: profile.patientId,
         requestFollowupEmail: true
       })
     });
@@ -46,7 +48,7 @@ const run = async () => {
     const approver = await request("/v1/auth/login", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email: "security@starlighthealth.org" })
+      body: JSON.stringify({ email: profile.securityEmail })
     });
 
     const decision = await request(`/v1/approvals/${execute.body.approvalId}/decide`, {

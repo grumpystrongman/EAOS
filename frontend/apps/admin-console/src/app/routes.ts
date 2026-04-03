@@ -21,6 +21,14 @@ export const APP_ROUTES: AppRoute[] = [
     requiredRoles: []
   },
   {
+    path: "/guides",
+    title: "Guides",
+    summary: "Always-visible evaluator and operator guides with governance decision ownership.",
+    accent: "teal",
+    section: "foundation",
+    requiredRoles: []
+  },
+  {
     path: "/dashboard",
     title: "Business KPI Dashboard",
     summary: "Executive outcome view for the discharge assistant pilot.",

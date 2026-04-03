@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { createAppServer as createGatewayServer } from "../../dist/services/api-gateway/src/index.js";
 import { createAppServer as createToolRegistryServer } from "../../dist/services/tool-registry/src/index.js";
 import { createAppServer as createToolExecutionServer } from "../../dist/services/tool-execution-service/src/index.js";
+import { getCompanyProfile } from "./company-profile.mjs";
 
 const ports = {
   gateway: Number(process.env.OPENAEGIS_PROOF_GATEWAY_PORT ?? 3920),
@@ -17,6 +18,7 @@ const baseUrls = {
   toolRegistry: `http://127.0.0.1:${ports.toolRegistry}`,
   toolExecution: `http://127.0.0.1:${ports.toolExecution}`
 };
+const profile = getCompanyProfile();
 
 const call = async (baseUrl, path, method = "GET", options = {}) => {
   const headers = { "content-type": "application/json", ...(options.headers ?? {}) };
@@ -64,7 +66,7 @@ export const runCommercialProof = async () => {
     profile: "commercial-readiness",
     scope: {
       product: "OpenAegis",
-      scenario: "Hospital Discharge Readiness Assistant",
+      scenario: profile.useCaseName,
       environment: "local-pilot"
     },
     commands: [
@@ -88,10 +90,10 @@ export const runCommercialProof = async () => {
 
   try {
     const clinicianLogin = await call(baseUrls.gateway, "/v1/auth/login", "POST", {
-      body: { email: "clinician@starlighthealth.org" }
+      body: { email: profile.clinicianEmail }
     });
     const approverLogin = await call(baseUrls.gateway, "/v1/auth/login", "POST", {
-      body: { email: "security@starlighthealth.org" }
+      body: { email: profile.securityEmail }
     });
 
     if (clinicianLogin.status !== 200 || approverLogin.status !== 200) {
@@ -105,8 +107,8 @@ export const runCommercialProof = async () => {
       headers: { authorization: `Bearer ${clinicianToken}` },
       body: {
         mode: "live",
-        workflowId: "wf-discharge-assistant",
-        patientId: "patient-1001",
+        workflowId: profile.workflowId,
+        patientId: profile.patientId,
         requestFollowupEmail: true
       }
     });
@@ -227,7 +229,7 @@ export const runCommercialProof = async () => {
     const guardedToolCall = await call(baseUrls.toolExecution, "/v1/tool-calls", "POST", {
       headers: {
         "x-actor-id": "user-workflow",
-        "x-tenant-id": "tenant-starlight-health",
+        "x-tenant-id": profile.tenantId,
         "x-roles": "workflow_operator",
         "idempotency-key": "proof-email-guard-001"
       },
@@ -256,7 +258,7 @@ export const runCommercialProof = async () => {
 
     const idemHeaders = {
       "x-actor-id": "user-security",
-      "x-tenant-id": "tenant-starlight-health",
+      "x-tenant-id": profile.tenantId,
       "x-roles": "security_admin",
       "idempotency-key": "proof-linear-001"
     };

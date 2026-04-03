@@ -7,32 +7,37 @@ import {
   hasFreshPreviewHash,
   isDemoIdentitiesEnabled
 } from "./security-guards.js";
+import { PILOT_USE_CASE } from "./pilot-data.js";
 import type { SessionContext } from "../shared/auth/session.js";
+
+const DEFAULT_TENANT_ID = PILOT_USE_CASE.tenantId;
+const CROSS_TENANT_ID =
+  DEFAULT_TENANT_ID === "tenant-other-hospital" ? "tenant-different-organization" : "tenant-other-hospital";
 
 const securitySession: SessionContext = {
   userId: "user-security",
-  tenantId: "tenant-starlight-health",
+  tenantId: DEFAULT_TENANT_ID,
   roles: ["security_admin", "approver", "auditor"],
   assuranceLevel: "aal3"
 };
 
 const analystSession: SessionContext = {
   userId: "user-analyst",
-  tenantId: "tenant-starlight-health",
+  tenantId: DEFAULT_TENANT_ID,
   roles: ["analyst"],
   assuranceLevel: "aal2"
 };
 
 const privilegedAal2Session: SessionContext = {
   userId: "user-privileged-aal2",
-  tenantId: "tenant-starlight-health",
+  tenantId: DEFAULT_TENANT_ID,
   roles: ["platform_admin", "security_admin"],
   assuranceLevel: "aal2"
 };
 
 const crossTenantPrivilegedSession: SessionContext = {
   userId: "user-foreign-admin",
-  tenantId: "tenant-other-hospital",
+  tenantId: CROSS_TENANT_ID,
   roles: ["platform_admin", "security_admin"],
   assuranceLevel: "aal3"
 };

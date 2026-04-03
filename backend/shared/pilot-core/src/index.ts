@@ -358,11 +358,109 @@ interface ReviewResult {
 const STATE_FILE = resolve(process.cwd(), ".volumes", "pilot-state.json");
 const DEFAULT_GRAPH_ID = "discharge-assistant";
 const DEFAULT_WORKFLOW_ID = "wf-discharge-assistant";
+const LEGACY_TENANT_ID = "tenant-starlight-health";
+const DEFAULT_COMPANY_NAME = process.env.OPENAEGIS_COMPANY_NAME?.trim() || "GrumpyMan Distributors";
+const DEFAULT_TENANT_ID = process.env.OPENAEGIS_TENANT_ID?.trim() || "tenant-grumpyman-distributors";
+const DEFAULT_COMPANY_DOMAIN = process.env.OPENAEGIS_COMPANY_DOMAIN?.trim() || "grumpyman-distributors.com";
+const DEFAULT_CLINICIAN_EMAIL = process.env.OPENAEGIS_CLINICIAN_EMAIL?.trim() || `clinician@${DEFAULT_COMPANY_DOMAIN}`;
+const DEFAULT_SECURITY_EMAIL = process.env.OPENAEGIS_SECURITY_EMAIL?.trim() || `security@${DEFAULT_COMPANY_DOMAIN}`;
+const DEFAULT_ADMIN_EMAIL = process.env.OPENAEGIS_ADMIN_EMAIL?.trim() || `admin@${DEFAULT_COMPANY_DOMAIN}`;
+const DEFAULT_PLATFORM_ADMIN_EMAIL = process.env.OPENAEGIS_PLATFORM_ADMIN_EMAIL?.trim() || DEFAULT_ADMIN_EMAIL;
+const DEFAULT_SECURITY_ADMIN_EMAIL = process.env.OPENAEGIS_SECURITY_ADMIN_EMAIL?.trim() || DEFAULT_SECURITY_EMAIL;
+const DEFAULT_AUDITOR_EMAIL = process.env.OPENAEGIS_AUDITOR_EMAIL?.trim() || `auditor@${DEFAULT_COMPANY_DOMAIN}`;
+const DEFAULT_WORKFLOW_OPERATOR_EMAIL = process.env.OPENAEGIS_WORKFLOW_OPERATOR_EMAIL?.trim() || `operator@${DEFAULT_COMPANY_DOMAIN}`;
+const DEFAULT_APPROVER_EMAIL = process.env.OPENAEGIS_APPROVER_EMAIL?.trim() || `approver@${DEFAULT_COMPANY_DOMAIN}`;
+const DEFAULT_ANALYST_EMAIL = process.env.OPENAEGIS_ANALYST_EMAIL?.trim() || `analyst@${DEFAULT_COMPANY_DOMAIN}`;
+const LEGACY_CLINICIAN_EMAIL = "clinician@starlighthealth.org";
+const LEGACY_SECURITY_EMAIL = "security@starlighthealth.org";
+const LEGACY_ADMIN_EMAIL = "admin@starlighthealth.org";
+const DEFAULT_POLICY_PROFILE_NAME = `${DEFAULT_COMPANY_NAME} Safe Baseline`;
 
 const defaultUsers: ServiceUser[] = [
-  { userId: "user-clinician", email: "clinician@starlighthealth.org", displayName: "Dr. Mira Patel", role: "clinician", tenantId: "tenant-starlight-health" },
-  { userId: "user-security", email: "security@starlighthealth.org", displayName: "Jordan Lee", role: "security", tenantId: "tenant-starlight-health" },
-  { userId: "user-admin", email: "admin@starlighthealth.org", displayName: "Operations Admin", role: "admin", tenantId: "tenant-starlight-health" }
+  {
+    userId: "user-clinician",
+    email: DEFAULT_CLINICIAN_EMAIL,
+    displayName: "Dr. Mira Patel",
+    role: "clinician",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-security",
+    email: DEFAULT_SECURITY_EMAIL,
+    displayName: "Jordan Lee",
+    role: "security",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-admin",
+    email: DEFAULT_ADMIN_EMAIL,
+    displayName: "Operations Admin",
+    role: "admin",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-platform-admin",
+    email: DEFAULT_PLATFORM_ADMIN_EMAIL,
+    displayName: "Platform Administrator",
+    role: "platform_admin",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-security-admin",
+    email: DEFAULT_SECURITY_ADMIN_EMAIL,
+    displayName: "Security Administrator",
+    role: "security_admin",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-auditor",
+    email: DEFAULT_AUDITOR_EMAIL,
+    displayName: "Audit Officer",
+    role: "auditor",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-workflow-operator",
+    email: DEFAULT_WORKFLOW_OPERATOR_EMAIL,
+    displayName: "Workflow Operator",
+    role: "workflow_operator",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-approver",
+    email: DEFAULT_APPROVER_EMAIL,
+    displayName: "Approval Reviewer",
+    role: "approver",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-analyst",
+    email: DEFAULT_ANALYST_EMAIL,
+    displayName: "Business Analyst",
+    role: "analyst",
+    tenantId: DEFAULT_TENANT_ID
+  },
+  {
+    userId: "user-clinician-legacy",
+    email: LEGACY_CLINICIAN_EMAIL,
+    displayName: "Dr. Mira Patel",
+    role: "clinician",
+    tenantId: LEGACY_TENANT_ID
+  },
+  {
+    userId: "user-security-legacy",
+    email: LEGACY_SECURITY_EMAIL,
+    displayName: "Jordan Lee",
+    role: "security",
+    tenantId: LEGACY_TENANT_ID
+  },
+  {
+    userId: "user-admin-legacy",
+    email: LEGACY_ADMIN_EMAIL,
+    displayName: "Operations Admin",
+    role: "admin",
+    tenantId: LEGACY_TENANT_ID
+  }
 ];
 
 const defaultPatients: FhirPatient[] = [
@@ -399,6 +497,8 @@ const stableSerialize = (value: unknown): string => {
 const hashRecord = (value: unknown): string => createHash("sha256").update(stableSerialize(value)).digest("hex");
 const now = () => new Date().toISOString();
 const createId = (prefix: string): string => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+const tenantObjectRef = (tenantId: string, executionId: string, artifact: string) =>
+  `obj://${tenantId}/executions/${executionId}/${artifact}`;
 
 export const defaultPolicyControls = (): PolicyProfileControls => ({
   enforceSecretDeny: true,
@@ -409,10 +509,10 @@ export const defaultPolicyControls = (): PolicyProfileControls => ({
   maxToolCallsPerExecution: 8
 });
 
-export const createDefaultPolicyProfile = (tenantId = "tenant-starlight-health"): PolicyProfile => ({
+export const createDefaultPolicyProfile = (tenantId = DEFAULT_TENANT_ID): PolicyProfile => ({
   profileId: "policy-profile-default",
   tenantId,
-  profileName: "Hospital Safe Baseline",
+  profileName: DEFAULT_POLICY_PROFILE_NAME,
   profileVersion: 1,
   controls: defaultPolicyControls(),
   changeSummary: "Initial secure baseline policy profile.",
@@ -1499,7 +1599,7 @@ const finalizeApprovedExecution = (state: PilotState, input: {
         action: "EXECUTE",
         status: "completed",
         classification: "PII",
-        resultRef: `obj://tenant-starlight-health/executions/${input.execution.executionId}/followup-email.json`
+        resultRef: tenantObjectRef(input.tenantId, input.execution.executionId, "followup-email.json")
       });
       state.toolCalls.push(emailToolCall);
       input.execution.toolCalls.push(emailToolCall.toolCallId);
@@ -1654,9 +1754,9 @@ const startWorkflowExecutionInternal = async (input: WorkflowStartInput): Promis
       input.zeroRetentionRequested ||
       (policyControls.restrictExternalProvidersToZeroRetention && isPhiLike(input.classification))
   });
-  const fhirToolCall = createToolCall({ executionId, toolId: "fhir.read-patient", action: "READ", status: "completed", classification: input.classification, resultRef: `obj://tenant-starlight-health/executions/${executionId}/fhir-patient.json` });
-  const sqlToolCall = createToolCall({ executionId, toolId: "sql.read-care-plan", action: "READ", status: "completed", classification: input.classification, resultRef: `obj://tenant-starlight-health/executions/${executionId}/care-plan.json` });
-  const modelToolCall = createToolCall({ executionId, toolId: "model.generate-discharge-summary", action: "EXECUTE", status: "completed", classification: input.classification, resultRef: `obj://tenant-starlight-health/executions/${executionId}/summary.json` });
+  const fhirToolCall = createToolCall({ executionId, toolId: "fhir.read-patient", action: "READ", status: "completed", classification: input.classification, resultRef: tenantObjectRef(input.tenantId, executionId, "fhir-patient.json") });
+  const sqlToolCall = createToolCall({ executionId, toolId: "sql.read-care-plan", action: "READ", status: "completed", classification: input.classification, resultRef: tenantObjectRef(input.tenantId, executionId, "care-plan.json") });
+  const modelToolCall = createToolCall({ executionId, toolId: "model.generate-discharge-summary", action: "EXECUTE", status: "completed", classification: input.classification, resultRef: tenantObjectRef(input.tenantId, executionId, "summary.json") });
   state.toolCalls.push(fhirToolCall, sqlToolCall, modelToolCall);
   execution.toolCalls.push(fhirToolCall.toolCallId, sqlToolCall.toolCallId, modelToolCall.toolCallId);
   const output = buildDischargeSummary(patient, carePlan);

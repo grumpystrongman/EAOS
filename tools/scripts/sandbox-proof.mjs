@@ -16,9 +16,11 @@ import {
   waitForHttpProbe,
   writeJsonReport
 } from "./sandbox-lib.mjs";
+import { getCompanyProfile } from "./company-profile.mjs";
 
 const port = Number(process.env.OPENAEGIS_SANDBOX_PROOF_PORT ?? 3970);
 const baseUrl = `http://127.0.0.1:${port}`;
+const profile = getCompanyProfile();
 
 const request = async (path, options = {}) => {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -44,9 +46,9 @@ const hasExecutionShape = (execution, workflowId) =>
 
 const authenticate = async () => {
   const [clinician, security, admin] = await Promise.all([
-    request("/v1/auth/login", { method: "POST", body: { email: "clinician@starlighthealth.org" } }),
-    request("/v1/auth/login", { method: "POST", body: { email: "security@starlighthealth.org" } }),
-    request("/v1/auth/login", { method: "POST", body: { email: "admin@starlighthealth.org" } })
+    request("/v1/auth/login", { method: "POST", body: { email: profile.clinicianEmail } }),
+    request("/v1/auth/login", { method: "POST", body: { email: profile.securityEmail } }),
+    request("/v1/auth/login", { method: "POST", body: { email: profile.adminEmail } })
   ]);
 
   if (clinician.status !== 200 || security.status !== 200 || admin.status !== 200) {

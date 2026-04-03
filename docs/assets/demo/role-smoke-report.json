@@ -1,0 +1,210 @@
+{
+  "generatedAt": "2026-04-03T17:19:01.412Z",
+  "startedAt": "2026-04-03T17:19:01.286Z",
+  "suite": "role-smoke-human-operator",
+  "company": {
+    "name": "GrumpyMan Distributors",
+    "tenantId": "tenant-grumpyman-distributors"
+  },
+  "roleMapping": {
+    "platform_admin": {
+      "emailUsed": "admin@grumpyman-distributors.com",
+      "userId": "user-admin",
+      "roles": [
+        "platform_admin",
+        "security_admin",
+        "auditor",
+        "workflow_operator",
+        "approver",
+        "analyst"
+      ]
+    },
+    "security_admin": {
+      "emailUsed": "security@grumpyman-distributors.com",
+      "userId": "user-security",
+      "roles": [
+        "security_admin",
+        "approver",
+        "auditor",
+        "platform_admin"
+      ]
+    },
+    "auditor": {
+      "emailUsed": "auditor@grumpyman-distributors.com",
+      "userId": "user-auditor",
+      "roles": [
+        "auditor"
+      ]
+    },
+    "workflow_operator": {
+      "emailUsed": "operator@grumpyman-distributors.com",
+      "userId": "user-workflow-operator",
+      "roles": [
+        "workflow_operator"
+      ]
+    },
+    "approver": {
+      "emailUsed": "approver@grumpyman-distributors.com",
+      "userId": "user-approver",
+      "roles": [
+        "approver"
+      ]
+    },
+    "analyst": {
+      "emailUsed": "analyst@grumpyman-distributors.com",
+      "userId": "user-analyst",
+      "roles": [
+        "analyst"
+      ]
+    }
+  },
+  "checks": [
+    {
+      "checkId": "login_platform_admin",
+      "passed": true,
+      "details": {
+        "role": "platform_admin",
+        "emailUsed": "admin@grumpyman-distributors.com",
+        "userId": "user-admin",
+        "tenantId": "tenant-grumpyman-distributors"
+      }
+    },
+    {
+      "checkId": "login_security_admin",
+      "passed": true,
+      "details": {
+        "role": "security_admin",
+        "emailUsed": "security@grumpyman-distributors.com",
+        "userId": "user-security",
+        "tenantId": "tenant-grumpyman-distributors"
+      }
+    },
+    {
+      "checkId": "login_auditor",
+      "passed": true,
+      "details": {
+        "role": "auditor",
+        "emailUsed": "auditor@grumpyman-distributors.com",
+        "userId": "user-auditor",
+        "tenantId": "tenant-grumpyman-distributors"
+      }
+    },
+    {
+      "checkId": "login_workflow_operator",
+      "passed": true,
+      "details": {
+        "role": "workflow_operator",
+        "emailUsed": "operator@grumpyman-distributors.com",
+        "userId": "user-workflow-operator",
+        "tenantId": "tenant-grumpyman-distributors"
+      }
+    },
+    {
+      "checkId": "login_approver",
+      "passed": true,
+      "details": {
+        "role": "approver",
+        "emailUsed": "approver@grumpyman-distributors.com",
+        "userId": "user-approver",
+        "tenantId": "tenant-grumpyman-distributors"
+      }
+    },
+    {
+      "checkId": "login_analyst",
+      "passed": true,
+      "details": {
+        "role": "analyst",
+        "emailUsed": "analyst@grumpyman-distributors.com",
+        "userId": "user-analyst",
+        "tenantId": "tenant-grumpyman-distributors"
+      }
+    },
+    {
+      "checkId": "workflow_operator_simulation_run",
+      "passed": true,
+      "details": {
+        "status": 201,
+        "executionStatus": "completed"
+      }
+    },
+    {
+      "checkId": "workflow_operator_live_run_creates_approval",
+      "passed": true,
+      "details": {
+        "status": 201,
+        "executionStatus": "blocked",
+        "approvalId": "ap-mnj64c8q-29srmr"
+      }
+    },
+    {
+      "checkId": "approver_approves_live_execution",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "result": "approved"
+      }
+    },
+    {
+      "checkId": "workflow_execution_completed_post_approval",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "executionStatus": "completed"
+      }
+    },
+    {
+      "checkId": "analyst_incident_access_denied_expected",
+      "passed": true,
+      "details": {
+        "status": 403,
+        "error": "insufficient_role_for_incident_list"
+      }
+    },
+    {
+      "checkId": "auditor_reads_audit_events",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "eventCount": 12
+      }
+    },
+    {
+      "checkId": "security_admin_policy_preview",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "valid": false
+      }
+    },
+    {
+      "checkId": "security_admin_policy_save",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "breakGlassUsed": false
+      }
+    },
+    {
+      "checkId": "platform_admin_commercial_readiness",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "score": 50
+      }
+    },
+    {
+      "checkId": "security_admin_incident_read",
+      "passed": true,
+      "details": {
+        "status": 200,
+        "incidentCount": 0
+      }
+    }
+  ],
+  "summary": {
+    "totalChecks": 16,
+    "passedChecks": 16,
+    "failedChecks": 0,
+    "status": "PASS"
+  }
+}

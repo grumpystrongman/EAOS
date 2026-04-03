@@ -4,6 +4,7 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { createAppServer as createGatewayServer } from "../../dist/services/api-gateway/src/index.js";
 import { createAppServer as createToolRegistryServer } from "../../dist/services/tool-registry/src/index.js";
+import { getCompanyProfile } from "./company-profile.mjs";
 
 const ports = {
   gateway: Number(process.env.OPENAEGIS_SHOWCASE_GATEWAY_PORT ?? 3930),
@@ -14,6 +15,7 @@ const baseUrls = {
   gateway: `http://127.0.0.1:${ports.gateway}`,
   toolRegistry: `http://127.0.0.1:${ports.toolRegistry}`
 };
+const profile = getCompanyProfile();
 
 const call = async (baseUrl, path, method = "GET", options = {}) => {
   const headers = { "content-type": "application/json", ...(options.headers ?? {}) };
@@ -62,10 +64,10 @@ export const runCommercialProjectsShowcase = async () => {
 
   try {
     const clinicianLogin = await call(baseUrls.gateway, "/v1/auth/login", "POST", {
-      body: { email: "clinician@starlighthealth.org" }
+      body: { email: profile.clinicianEmail }
     });
     const securityLogin = await call(baseUrls.gateway, "/v1/auth/login", "POST", {
-      body: { email: "security@starlighthealth.org" }
+      body: { email: profile.securityEmail }
     });
     if (clinicianLogin.status !== 200 || securityLogin.status !== 200) {
       throw new Error("unable_to_authenticate_demo_users");

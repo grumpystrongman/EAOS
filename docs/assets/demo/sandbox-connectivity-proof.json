@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T18:15:43.095Z",
+  "generatedAt": "2026-04-03T17:19:31.503Z",
   "reportPath": "C:\\Users\\grump\\EAOS\\docs\\assets\\demo\\sandbox-connectivity-proof.json",
   "docker": {
     "cliAvailable": true,
@@ -86,7 +86,7 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/board/compose.yaml -p openaegis-sandbox-board config --quiet",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 227,
+        "elapsedMs": 203,
         "stdout": "",
         "stderr": ""
       },
@@ -94,23 +94,23 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/board/compose.yaml -p openaegis-sandbox-board up -d --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 811,
+        "elapsedMs": 801,
         "stdout": "",
-        "stderr": "Network openaegis-sandbox-board_default  Creating\n Network openaegis-sandbox-board_default  Created\n Volume \"openaegis-sandbox-board_metabase_data\"  Creating\n Volume \"openaegis-sandbox-board_metabase_data\"  Created\n Volume \"openaegis-sandbox-board_opensearch_data\"  Creating\n Volume \"openaegis-sandbox-board_opensearch_data\"  Created\n Container openaegis-sandbox-board-opensearch-1  Creating\n Container openaegis-sandbox-board-metabase-1  Creating\n Container openaegis-sandbox-board-trino-1  Creating\n Container openaegis-sandbox-board-trino-1  Created\n Container openaegis-sandbox-board-opensearch-1  Created\n Container openaegis-sandbox-board-metabase-1  Created\n Container openaegis-sandbox-board-trino-1  Starting\n Container openaegis-sandbox-board-metabase-1  Starting\n Container openaegis-sandbox-board-opensearch-1  Starting\n Container openaegis-sandbox-board-opensearch-1  Started\n Container openaegis-sandbox-board-trino-1  Started\n Container openaegis-sandbox-board-metabase-1  Started"
+        "stderr": "Network openaegis-sandbox-board_default  Creating\n Network openaegis-sandbox-board_default  Created\n Volume \"openaegis-sandbox-board_opensearch_data\"  Creating\n Volume \"openaegis-sandbox-board_opensearch_data\"  Created\n Volume \"openaegis-sandbox-board_metabase_data\"  Creating\n Volume \"openaegis-sandbox-board_metabase_data\"  Created\n Container openaegis-sandbox-board-opensearch-1  Creating\n Container openaegis-sandbox-board-metabase-1  Creating\n Container openaegis-sandbox-board-trino-1  Creating\n Container openaegis-sandbox-board-metabase-1  Created\n Container openaegis-sandbox-board-trino-1  Created\n Container openaegis-sandbox-board-opensearch-1  Created\n Container openaegis-sandbox-board-metabase-1  Starting\n Container openaegis-sandbox-board-opensearch-1  Starting\n Container openaegis-sandbox-board-trino-1  Starting\n Container openaegis-sandbox-board-opensearch-1  Started\n Container openaegis-sandbox-board-trino-1  Started\n Container openaegis-sandbox-board-metabase-1  Started"
       },
       "composePs": {
         "ok": true,
         "exitCode": 0,
-        "stdout": "NAME                                   IMAGE                                 COMMAND                  SERVICE      CREATED                  STATUS                                     PORTS\nopenaegis-sandbox-board-metabase-1     metabase/metabase:v0.56.3             \"/app/run_metabase.sh\"   metabase     Less than a second ago   Up Less than a second                      0.0.0.0:13004->3000/tcp, [::]:13004->3000/tcp\nopenaegis-sandbox-board-opensearch-1   opensearchproject/opensearch:2.19.0   \"./opensearch-docker…\"   opensearch   Less than a second ago   Up Less than a second                      9300/tcp, 9600/tcp, 9650/tcp, 0.0.0.0:19201->9200/tcp, [::]:19201->9200/tcp\nopenaegis-sandbox-board-trino-1        trinodb/trino:469                     \"/usr/lib/trino/bin/…\"   trino        Less than a second ago   Up Less than a second (health: starting)   0.0.0.0:18085->8080/tcp, [::]:18085->8080/tcp",
+        "stdout": "NAME                                   IMAGE                                 COMMAND                  SERVICE      CREATED        STATUS                                     PORTS\nopenaegis-sandbox-board-metabase-1     metabase/metabase:v0.56.3             \"/app/run_metabase.sh\"   metabase     1 second ago   Up Less than a second                      0.0.0.0:13004->3000/tcp, [::]:13004->3000/tcp\nopenaegis-sandbox-board-opensearch-1   opensearchproject/opensearch:2.19.0   \"./opensearch-docker…\"   opensearch   1 second ago   Up Less than a second                      9300/tcp, 9600/tcp, 9650/tcp, 0.0.0.0:19201->9200/tcp, [::]:19201->9200/tcp\nopenaegis-sandbox-board-trino-1        trinodb/trino:469                     \"/usr/lib/trino/bin/…\"   trino        1 second ago   Up Less than a second (health: starting)   0.0.0.0:18085->8080/tcp, [::]:18085->8080/tcp",
         "stderr": ""
       },
       "composeDown": {
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/board/compose.yaml -p openaegis-sandbox-board down -v --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 3586,
+        "elapsedMs": 3670,
         "stdout": "",
-        "stderr": "Container openaegis-sandbox-board-trino-1  Stopping\n Container openaegis-sandbox-board-metabase-1  Stopping\n Container openaegis-sandbox-board-opensearch-1  Stopping\n Container openaegis-sandbox-board-trino-1  Stopped\n Container openaegis-sandbox-board-trino-1  Removing\n Container openaegis-sandbox-board-trino-1  Removed\n Container openaegis-sandbox-board-opensearch-1  Stopped\n Container openaegis-sandbox-board-opensearch-1  Removing\n Container openaegis-sandbox-board-opensearch-1  Removed\n Container openaegis-sandbox-board-metabase-1  Stopped\n Container openaegis-sandbox-board-metabase-1  Removing\n Container openaegis-sandbox-board-metabase-1  Removed\n Volume openaegis-sandbox-board_metabase_data  Removing\n Volume openaegis-sandbox-board_opensearch_data  Removing\n Network openaegis-sandbox-board_default  Removing\n Volume openaegis-sandbox-board_metabase_data  Removed\n Volume openaegis-sandbox-board_opensearch_data  Removed\n Network openaegis-sandbox-board_default  Removed"
+        "stderr": "Container openaegis-sandbox-board-metabase-1  Stopping\n Container openaegis-sandbox-board-opensearch-1  Stopping\n Container openaegis-sandbox-board-trino-1  Stopping\n Container openaegis-sandbox-board-trino-1  Stopped\n Container openaegis-sandbox-board-trino-1  Removing\n Container openaegis-sandbox-board-trino-1  Removed\n Container openaegis-sandbox-board-opensearch-1  Stopped\n Container openaegis-sandbox-board-opensearch-1  Removing\n Container openaegis-sandbox-board-opensearch-1  Removed\n Container openaegis-sandbox-board-metabase-1  Stopped\n Container openaegis-sandbox-board-metabase-1  Removing\n Container openaegis-sandbox-board-metabase-1  Removed\n Volume openaegis-sandbox-board_metabase_data  Removing\n Volume openaegis-sandbox-board_opensearch_data  Removing\n Network openaegis-sandbox-board_default  Removing\n Volume openaegis-sandbox-board_metabase_data  Removed\n Volume openaegis-sandbox-board_opensearch_data  Removed\n Network openaegis-sandbox-board_default  Removed"
       },
       "serviceProbes": [
         {
@@ -119,8 +119,8 @@
           "passed": true,
           "url": "http://127.0.0.1:18085/v1/info",
           "httpStatus": 200,
-          "elapsedMs": 16576,
-          "bodyPreview": "{\"nodeVersion\":{\"version\":\"469\"},\"environment\":\"sandbox\",\"coordinator\":true,\"starting\":true,\"uptime\":\"3.83s\"}",
+          "elapsedMs": 16196,
+          "bodyPreview": "{\"nodeVersion\":{\"version\":\"469\"},\"environment\":\"sandbox\",\"coordinator\":true,\"starting\":true,\"uptime\":\"3.74s\"}",
           "error": null
         },
         {
@@ -129,7 +129,7 @@
           "passed": true,
           "url": "http://127.0.0.1:13004/api/health",
           "httpStatus": 200,
-          "elapsedMs": 32156,
+          "elapsedMs": 27646,
           "bodyPreview": "{\"status\":\"ok\"}",
           "error": null
         },
@@ -139,8 +139,8 @@
           "passed": true,
           "url": "http://127.0.0.1:19201/_cluster/health",
           "httpStatus": 200,
-          "elapsedMs": 345,
-          "bodyPreview": "{\"cluster_name\":\"docker-cluster\",\"status\":\"green\",\"timed_out\":false,\"number_of_nodes\":1,\"number_of_data_nodes\":1,\"discovered_master\":true,\"discovered_cluster_manager\":true,\"active_primary_shards\":3,\"active_shards\":3,\"relocating_shards\":0,\"initializing_shards\":0,\"unassigned_shards\":0,\"delayed_unassigned_shards\":0,\"number_of_pending_tasks\":0,\"number_of_in_flight_fetch\":0,\"task_max_waiting_in_queue_millis\":0,\"active_shards_percent_as_number\":100.0}",
+          "elapsedMs": 322,
+          "bodyPreview": "{\"cluster_name\":\"docker-cluster\",\"status\":\"green\",\"timed_out\":false,\"number_of_nodes\":1,\"number_of_data_nodes\":1,\"discovered_master\":true,\"discovered_cluster_manager\":true,\"active_primary_shards\":2,\"active_shards\":2,\"relocating_shards\":0,\"initializing_shards\":0,\"unassigned_shards\":0,\"delayed_unassigned_shards\":0,\"number_of_pending_tasks\":0,\"number_of_in_flight_fetch\":0,\"task_max_waiting_in_queue_millis\":0,\"active_shards_percent_as_number\":100.0}",
           "error": null
         }
       ],
@@ -188,7 +188,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngdan47-rgjyhj",
+              "executionId": "ex-mnj65yyh-31sgme",
               "workflowId": "wf-board-risk-cockpit",
               "executionStatus": "completed"
             }
@@ -198,7 +198,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngdan4j-xdvas5",
+              "executionId": "ex-mnj65yyt-49ebei",
               "executionStatus": "completed",
               "approvalId": null
             }
@@ -216,7 +216,7 @@
             }
           }
         ],
-        "executionId": "ex-mngdan4j-xdvas5",
+        "executionId": "ex-mnj65yyt-49ebei",
         "workflowId": "wf-board-risk-cockpit"
       },
       "passed": true
@@ -230,7 +230,7 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/clinical/compose.yaml -p openaegis-sandbox-clinical config --quiet",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 197,
+        "elapsedMs": 201,
         "stdout": "",
         "stderr": ""
       },
@@ -238,7 +238,7 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/clinical/compose.yaml -p openaegis-sandbox-clinical up -d --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 728,
+        "elapsedMs": 740,
         "stdout": "",
         "stderr": "Network openaegis-sandbox-clinical_default  Creating\n Network openaegis-sandbox-clinical_default  Created\n Volume \"openaegis-sandbox-clinical_metabase_data\"  Creating\n Volume \"openaegis-sandbox-clinical_metabase_data\"  Created\n Volume \"openaegis-sandbox-clinical_opensearch_data\"  Creating\n Volume \"openaegis-sandbox-clinical_opensearch_data\"  Created\n Container openaegis-sandbox-clinical-metabase-1  Creating\n Container openaegis-sandbox-clinical-opensearch-1  Creating\n Container openaegis-sandbox-clinical-hapi-1  Creating\n Container openaegis-sandbox-clinical-metabase-1  Created\n Container openaegis-sandbox-clinical-opensearch-1  Created\n Container openaegis-sandbox-clinical-hapi-1  Created\n Container openaegis-sandbox-clinical-opensearch-1  Starting\n Container openaegis-sandbox-clinical-hapi-1  Starting\n Container openaegis-sandbox-clinical-metabase-1  Starting\n Container openaegis-sandbox-clinical-metabase-1  Started\n Container openaegis-sandbox-clinical-opensearch-1  Started\n Container openaegis-sandbox-clinical-hapi-1  Started"
       },
@@ -252,9 +252,9 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/clinical/compose.yaml -p openaegis-sandbox-clinical down -v --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 3593,
+        "elapsedMs": 3676,
         "stdout": "",
-        "stderr": "Container openaegis-sandbox-clinical-opensearch-1  Stopping\n Container openaegis-sandbox-clinical-hapi-1  Stopping\n Container openaegis-sandbox-clinical-metabase-1  Stopping\n Container openaegis-sandbox-clinical-opensearch-1  Stopped\n Container openaegis-sandbox-clinical-opensearch-1  Removing\n Container openaegis-sandbox-clinical-opensearch-1  Removed\n Container openaegis-sandbox-clinical-hapi-1  Stopped\n Container openaegis-sandbox-clinical-hapi-1  Removing\n Container openaegis-sandbox-clinical-hapi-1  Removed\n Container openaegis-sandbox-clinical-metabase-1  Stopped\n Container openaegis-sandbox-clinical-metabase-1  Removing\n Container openaegis-sandbox-clinical-metabase-1  Removed\n Volume openaegis-sandbox-clinical_metabase_data  Removing\n Volume openaegis-sandbox-clinical_opensearch_data  Removing\n Network openaegis-sandbox-clinical_default  Removing\n Volume openaegis-sandbox-clinical_opensearch_data  Removed\n Volume openaegis-sandbox-clinical_metabase_data  Removed\n Network openaegis-sandbox-clinical_default  Removed"
+        "stderr": "Container openaegis-sandbox-clinical-hapi-1  Stopping\n Container openaegis-sandbox-clinical-metabase-1  Stopping\n Container openaegis-sandbox-clinical-opensearch-1  Stopping\n Container openaegis-sandbox-clinical-opensearch-1  Stopped\n Container openaegis-sandbox-clinical-opensearch-1  Removing\n Container openaegis-sandbox-clinical-opensearch-1  Removed\n Container openaegis-sandbox-clinical-hapi-1  Stopped\n Container openaegis-sandbox-clinical-hapi-1  Removing\n Container openaegis-sandbox-clinical-hapi-1  Removed\n Container openaegis-sandbox-clinical-metabase-1  Stopped\n Container openaegis-sandbox-clinical-metabase-1  Removing\n Container openaegis-sandbox-clinical-metabase-1  Removed\n Volume openaegis-sandbox-clinical_opensearch_data  Removing\n Volume openaegis-sandbox-clinical_metabase_data  Removing\n Network openaegis-sandbox-clinical_default  Removing\n Volume openaegis-sandbox-clinical_opensearch_data  Removed\n Volume openaegis-sandbox-clinical_metabase_data  Removed\n Network openaegis-sandbox-clinical_default  Removed"
       },
       "serviceProbes": [
         {
@@ -263,8 +263,8 @@
           "passed": true,
           "url": "http://127.0.0.1:18084/actuator/health",
           "httpStatus": 200,
-          "elapsedMs": 71168,
-          "bodyPreview": "{\"status\":\"UP\",\"groups\":[\"liveness\",\"readiness\"],\"components\":{\"db\":{\"status\":\"UP\",\"details\":{\"database\":\"H2\",\"validationQuery\":\"isValid()\"}},\"diskSpace\":{\"status\":\"UP\",\"details\":{\"total\":1081101176832,\"free\":994954653696,\"threshold\":10485760,\"path\":\"/app/.\",\"exists\":true}},\"livenessState\":{\"status\":\"UP\"},\"ping\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"},\"ssl\":{\"status\":\"UP\",\"details\":{\"validChains\":[],\"invalidChains\":[]}}}}",
+          "elapsedMs": 59136,
+          "bodyPreview": "{\"status\":\"UP\",\"groups\":[\"liveness\",\"readiness\"],\"components\":{\"db\":{\"status\":\"UP\",\"details\":{\"database\":\"H2\",\"validationQuery\":\"isValid()\"}},\"diskSpace\":{\"status\":\"UP\",\"details\":{\"total\":1081101176832,\"free\":990690811904,\"threshold\":10485760,\"path\":\"/app/.\",\"exists\":true}},\"livenessState\":{\"status\":\"UP\"},\"ping\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"},\"ssl\":{\"status\":\"UP\",\"details\":{\"validChains\":[],\"invalidChains\":[]}}}}",
           "error": null
         },
         {
@@ -273,7 +273,7 @@
           "passed": true,
           "url": "http://127.0.0.1:13003/api/health",
           "httpStatus": 200,
-          "elapsedMs": 429,
+          "elapsedMs": 350,
           "bodyPreview": "{\"status\":\"ok\"}",
           "error": null
         },
@@ -283,7 +283,7 @@
           "passed": true,
           "url": "http://127.0.0.1:19200/_cluster/health",
           "httpStatus": 200,
-          "elapsedMs": 422,
+          "elapsedMs": 300,
           "bodyPreview": "{\"cluster_name\":\"docker-cluster\",\"status\":\"green\",\"timed_out\":false,\"number_of_nodes\":1,\"number_of_data_nodes\":1,\"discovered_master\":true,\"discovered_cluster_manager\":true,\"active_primary_shards\":3,\"active_shards\":3,\"relocating_shards\":0,\"initializing_shards\":0,\"unassigned_shards\":0,\"delayed_unassigned_shards\":0,\"number_of_pending_tasks\":0,\"number_of_in_flight_fetch\":0,\"task_max_waiting_in_queue_millis\":0,\"active_shards_percent_as_number\":100.0}",
           "error": null
         }
@@ -332,7 +332,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngdcafv-kuf47l",
+              "executionId": "ex-mnj67cvx-4rjc4m",
               "workflowId": "wf-clinical-quality-signal",
               "executionStatus": "failed"
             }
@@ -342,7 +342,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngdcag8-txbjzl",
+              "executionId": "ex-mnj67cw4-8l42fo",
               "executionStatus": "failed",
               "approvalId": null
             }
@@ -360,7 +360,7 @@
             }
           }
         ],
-        "executionId": "ex-mngdcag8-txbjzl",
+        "executionId": "ex-mnj67cw4-8l42fo",
         "workflowId": "wf-clinical-quality-signal"
       },
       "passed": true
@@ -374,7 +374,7 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/revenue/compose.yaml -p openaegis-sandbox-revenue config --quiet",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 205,
+        "elapsedMs": 236,
         "stdout": "",
         "stderr": ""
       },
@@ -382,23 +382,23 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/revenue/compose.yaml -p openaegis-sandbox-revenue up -d --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 700,
+        "elapsedMs": 840,
         "stdout": "",
-        "stderr": "Network openaegis-sandbox-revenue_default  Creating\n Network openaegis-sandbox-revenue_default  Created\n Volume \"openaegis-sandbox-revenue_metabase_data\"  Creating\n Volume \"openaegis-sandbox-revenue_metabase_data\"  Created\n Volume \"openaegis-sandbox-revenue_airflow_home\"  Creating\n Volume \"openaegis-sandbox-revenue_airflow_home\"  Created\n Container openaegis-sandbox-revenue-metabase-1  Creating\n Container openaegis-sandbox-revenue-airflow-1  Creating\n Container openaegis-sandbox-revenue-trino-1  Creating\n Container openaegis-sandbox-revenue-airflow-1  Created\n Container openaegis-sandbox-revenue-trino-1  Created\n Container openaegis-sandbox-revenue-metabase-1  Created\n Container openaegis-sandbox-revenue-airflow-1  Starting\n Container openaegis-sandbox-revenue-metabase-1  Starting\n Container openaegis-sandbox-revenue-trino-1  Starting\n Container openaegis-sandbox-revenue-metabase-1  Started\n Container openaegis-sandbox-revenue-airflow-1  Started\n Container openaegis-sandbox-revenue-trino-1  Started"
+        "stderr": "Network openaegis-sandbox-revenue_default  Creating\n Network openaegis-sandbox-revenue_default  Created\n Volume \"openaegis-sandbox-revenue_airflow_home\"  Creating\n Volume \"openaegis-sandbox-revenue_airflow_home\"  Created\n Volume \"openaegis-sandbox-revenue_metabase_data\"  Creating\n Volume \"openaegis-sandbox-revenue_metabase_data\"  Created\n Container openaegis-sandbox-revenue-trino-1  Creating\n Container openaegis-sandbox-revenue-metabase-1  Creating\n Container openaegis-sandbox-revenue-airflow-1  Creating\n Container openaegis-sandbox-revenue-airflow-1  Created\n Container openaegis-sandbox-revenue-metabase-1  Created\n Container openaegis-sandbox-revenue-trino-1  Created\n Container openaegis-sandbox-revenue-trino-1  Starting\n Container openaegis-sandbox-revenue-airflow-1  Starting\n Container openaegis-sandbox-revenue-metabase-1  Starting\n Container openaegis-sandbox-revenue-metabase-1  Started\n Container openaegis-sandbox-revenue-airflow-1  Started\n Container openaegis-sandbox-revenue-trino-1  Started"
       },
       "composePs": {
         "ok": true,
         "exitCode": 0,
-        "stdout": "NAME                                   IMAGE                              COMMAND                  SERVICE    CREATED        STATUS                                     PORTS\nopenaegis-sandbox-revenue-airflow-1    apache/airflow:2.10.5-python3.11   \"/usr/bin/dumb-init …\"   airflow    1 second ago   Up Less than a second                      0.0.0.0:18081->8080/tcp, [::]:18081->8080/tcp\nopenaegis-sandbox-revenue-metabase-1   metabase/metabase:v0.56.3          \"/app/run_metabase.sh\"   metabase   1 second ago   Up Less than a second                      0.0.0.0:13001->3000/tcp, [::]:13001->3000/tcp\nopenaegis-sandbox-revenue-trino-1      trinodb/trino:469                  \"/usr/lib/trino/bin/…\"   trino      1 second ago   Up Less than a second (health: starting)   0.0.0.0:18080->8080/tcp, [::]:18080->8080/tcp",
+        "stdout": "NAME                                   IMAGE                              COMMAND                  SERVICE    CREATED                  STATUS                                     PORTS\nopenaegis-sandbox-revenue-airflow-1    apache/airflow:2.10.5-python3.11   \"/usr/bin/dumb-init …\"   airflow    Less than a second ago   Up Less than a second                      0.0.0.0:18081->8080/tcp, [::]:18081->8080/tcp\nopenaegis-sandbox-revenue-metabase-1   metabase/metabase:v0.56.3          \"/app/run_metabase.sh\"   metabase   Less than a second ago   Up Less than a second                      0.0.0.0:13001->3000/tcp, [::]:13001->3000/tcp\nopenaegis-sandbox-revenue-trino-1      trinodb/trino:469                  \"/usr/lib/trino/bin/…\"   trino      Less than a second ago   Up Less than a second (health: starting)   0.0.0.0:18080->8080/tcp, [::]:18080->8080/tcp",
         "stderr": ""
       },
       "composeDown": {
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/revenue/compose.yaml -p openaegis-sandbox-revenue down -v --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 3779,
+        "elapsedMs": 3599,
         "stdout": "",
-        "stderr": "Container openaegis-sandbox-revenue-metabase-1  Stopping\n Container openaegis-sandbox-revenue-airflow-1  Stopping\n Container openaegis-sandbox-revenue-trino-1  Stopping\n Container openaegis-sandbox-revenue-airflow-1  Stopped\n Container openaegis-sandbox-revenue-airflow-1  Removing\n Container openaegis-sandbox-revenue-trino-1  Stopped\n Container openaegis-sandbox-revenue-trino-1  Removing\n Container openaegis-sandbox-revenue-trino-1  Removed\n Container openaegis-sandbox-revenue-airflow-1  Removed\n Container openaegis-sandbox-revenue-metabase-1  Stopped\n Container openaegis-sandbox-revenue-metabase-1  Removing\n Container openaegis-sandbox-revenue-metabase-1  Removed\n Volume openaegis-sandbox-revenue_airflow_home  Removing\n Volume openaegis-sandbox-revenue_metabase_data  Removing\n Network openaegis-sandbox-revenue_default  Removing\n Volume openaegis-sandbox-revenue_airflow_home  Removed\n Volume openaegis-sandbox-revenue_metabase_data  Removed\n Network openaegis-sandbox-revenue_default  Removed"
+        "stderr": "Container openaegis-sandbox-revenue-airflow-1  Stopping\n Container openaegis-sandbox-revenue-trino-1  Stopping\n Container openaegis-sandbox-revenue-metabase-1  Stopping\n Container openaegis-sandbox-revenue-airflow-1  Stopped\n Container openaegis-sandbox-revenue-airflow-1  Removing\n Container openaegis-sandbox-revenue-trino-1  Stopped\n Container openaegis-sandbox-revenue-trino-1  Removing\n Container openaegis-sandbox-revenue-trino-1  Removed\n Container openaegis-sandbox-revenue-airflow-1  Removed\n Container openaegis-sandbox-revenue-metabase-1  Stopped\n Container openaegis-sandbox-revenue-metabase-1  Removing\n Container openaegis-sandbox-revenue-metabase-1  Removed\n Volume openaegis-sandbox-revenue_metabase_data  Removing\n Volume openaegis-sandbox-revenue_airflow_home  Removing\n Network openaegis-sandbox-revenue_default  Removing\n Volume openaegis-sandbox-revenue_metabase_data  Removed\n Volume openaegis-sandbox-revenue_airflow_home  Removed\n Network openaegis-sandbox-revenue_default  Removed"
       },
       "serviceProbes": [
         {
@@ -407,8 +407,8 @@
           "passed": true,
           "url": "http://127.0.0.1:18080/v1/info",
           "httpStatus": 200,
-          "elapsedMs": 12828,
-          "bodyPreview": "{\"nodeVersion\":{\"version\":\"469\"},\"environment\":\"sandbox\",\"coordinator\":true,\"starting\":true,\"uptime\":\"1.52s\"}",
+          "elapsedMs": 12907,
+          "bodyPreview": "{\"nodeVersion\":{\"version\":\"469\"},\"environment\":\"sandbox\",\"coordinator\":true,\"starting\":true,\"uptime\":\"4.07s\"}",
           "error": null
         },
         {
@@ -417,8 +417,8 @@
           "passed": true,
           "url": "http://127.0.0.1:18081/health",
           "httpStatus": 200,
-          "elapsedMs": 42874,
-          "bodyPreview": "{\"dag_processor\": {\"latest_dag_processor_heartbeat\": null, \"status\": null}, \"metadatabase\": {\"status\": \"healthy\"}, \"scheduler\": {\"latest_scheduler_heartbeat\": \"2026-04-01T18:18:47.525735+00:00\", \"status\": \"healthy\"}, \"triggerer\": {\"latest_triggerer_heartbeat\": \"2026-04-01T18:18:50.315418+00:00\", \"status\": \"healthy\"}}",
+          "elapsedMs": 37333,
+          "bodyPreview": "{\"dag_processor\": {\"latest_dag_processor_heartbeat\": null, \"status\": null}, \"metadatabase\": {\"status\": \"healthy\"}, \"scheduler\": {\"latest_scheduler_heartbeat\": \"2026-04-03T17:22:15.543634+00:00\", \"status\": \"healthy\"}, \"triggerer\": {\"latest_triggerer_heartbeat\": \"2026-04-03T17:22:17.462187+00:00\", \"status\": \"healthy\"}}",
           "error": null
         },
         {
@@ -427,7 +427,7 @@
           "passed": true,
           "url": "http://127.0.0.1:13001/api/health",
           "httpStatus": 200,
-          "elapsedMs": 322,
+          "elapsedMs": 260,
           "bodyPreview": "{\"status\":\"ok\"}",
           "error": null
         }
@@ -476,7 +476,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngddldq-kyc9cl",
+              "executionId": "ex-mnj68jrm-q54eh3",
               "workflowId": "wf-revenue-cycle-copilot",
               "executionStatus": "completed"
             }
@@ -486,7 +486,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngddle7-62r5qm",
+              "executionId": "ex-mnj68jrr-2t7u3p",
               "executionStatus": "completed",
               "approvalId": null
             }
@@ -504,7 +504,7 @@
             }
           }
         ],
-        "executionId": "ex-mngddle7-62r5qm",
+        "executionId": "ex-mnj68jrr-2t7u3p",
         "workflowId": "wf-revenue-cycle-copilot"
       },
       "passed": true
@@ -518,7 +518,7 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/secops/compose.yaml -p openaegis-sandbox-secops config --quiet",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 246,
+        "elapsedMs": 221,
         "stdout": "",
         "stderr": ""
       },
@@ -526,32 +526,32 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/secops/compose.yaml -p openaegis-sandbox-secops up -d --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 1278,
+        "elapsedMs": 1156,
         "stdout": "",
-        "stderr": "Network openaegis-sandbox-secops_default  Creating\n Network openaegis-sandbox-secops_default  Created\n Volume \"openaegis-sandbox-secops_grafana_data\"  Creating\n Volume \"openaegis-sandbox-secops_grafana_data\"  Created\n Volume \"openaegis-sandbox-secops_redpanda_data\"  Creating\n Volume \"openaegis-sandbox-secops_redpanda_data\"  Created\n Volume \"openaegis-sandbox-secops_prometheus_data\"  Creating\n Volume \"openaegis-sandbox-secops_prometheus_data\"  Created\n Container openaegis-sandbox-secops-prometheus-1  Creating\n Container openaegis-sandbox-secops-opa-1  Creating\n Container openaegis-sandbox-secops-redpanda-1  Creating\n Container openaegis-sandbox-secops-prometheus-1  Created\n Container openaegis-sandbox-secops-grafana-1  Creating\n Container openaegis-sandbox-secops-redpanda-1  Created\n Container openaegis-sandbox-secops-opa-1  Created\n Container openaegis-sandbox-secops-grafana-1  Created\n Container openaegis-sandbox-secops-prometheus-1  Starting\n Container openaegis-sandbox-secops-opa-1  Starting\n Container openaegis-sandbox-secops-redpanda-1  Starting\n Container openaegis-sandbox-secops-redpanda-1  Started\n Container openaegis-sandbox-secops-opa-1  Started\n Container openaegis-sandb..."
+        "stderr": "Network openaegis-sandbox-secops_default  Creating\n Network openaegis-sandbox-secops_default  Created\n Volume \"openaegis-sandbox-secops_redpanda_data\"  Creating\n Volume \"openaegis-sandbox-secops_redpanda_data\"  Created\n Volume \"openaegis-sandbox-secops_prometheus_data\"  Creating\n Volume \"openaegis-sandbox-secops_prometheus_data\"  Created\n Volume \"openaegis-sandbox-secops_grafana_data\"  Creating\n Volume \"openaegis-sandbox-secops_grafana_data\"  Created\n Container openaegis-sandbox-secops-prometheus-1  Creating\n Container openaegis-sandbox-secops-opa-1  Creating\n Container openaegis-sandbox-secops-redpanda-1  Creating\n Container openaegis-sandbox-secops-redpanda-1  Created\n Container openaegis-sandbox-secops-prometheus-1  Created\n Container openaegis-sandbox-secops-grafana-1  Creating\n Container openaegis-sandbox-secops-opa-1  Created\n Container openaegis-sandbox-secops-grafana-1  Created\n Container openaegis-sandbox-secops-opa-1  Starting\n Container openaegis-sandbox-secops-redpanda-1  Starting\n Container openaegis-sandbox-secops-prometheus-1  Starting\n Container openaegis-sandbox-secops-redpanda-1  Started\n Container openaegis-sandbox-secops-opa-1  Started\n Container openaegis-sandb..."
       },
       "composePs": {
         "ok": true,
         "exitCode": 0,
-        "stdout": "NAME                                    IMAGE                                               COMMAND                  SERVICE      CREATED         STATUS                  PORTS\nopenaegis-sandbox-secops-grafana-1      grafana/grafana-oss:11.5.1                          \"/run.sh\"                grafana      2 seconds ago   Up Less than a second   0.0.0.0:13000->3000/tcp, [::]:13000->3000/tcp\nopenaegis-sandbox-secops-opa-1          openpolicyagent/opa:0.70.0                          \"/opa run --server -…\"   opa          2 seconds ago   Up Less than a second   0.0.0.0:18181->8181/tcp, [::]:18181->8181/tcp\nopenaegis-sandbox-secops-prometheus-1   prom/prometheus:v2.55.1                             \"/bin/prometheus --c…\"   prometheus   2 seconds ago   Up Less than a second   0.0.0.0:19090->9090/tcp, [::]:19090->9090/tcp\nopenaegis-sandbox-secops-redpanda-1     docker.redpanda.com/redpandadata/redpanda:v25.1.2   \"/entrypoint.sh redp…\"   redpanda     2 seconds ago   Up Less than a second   8081-8082/tcp, 9092/tcp, 0.0.0.0:19092->19092/tcp, [::]:19092->19092/tcp, 0.0.0.0:19644->9644/tcp, [::]:19644->9644/tcp",
+        "stdout": "NAME                                    IMAGE                                               COMMAND                  SERVICE      CREATED        STATUS                  PORTS\nopenaegis-sandbox-secops-grafana-1      grafana/grafana-oss:11.5.1                          \"/run.sh\"                grafana      1 second ago   Up Less than a second   0.0.0.0:13000->3000/tcp, [::]:13000->3000/tcp\nopenaegis-sandbox-secops-opa-1          openpolicyagent/opa:0.70.0                          \"/opa run --server -…\"   opa          1 second ago   Up Less than a second   0.0.0.0:18181->8181/tcp, [::]:18181->8181/tcp\nopenaegis-sandbox-secops-prometheus-1   prom/prometheus:v2.55.1                             \"/bin/prometheus --c…\"   prometheus   1 second ago   Up Less than a second   0.0.0.0:19090->9090/tcp, [::]:19090->9090/tcp\nopenaegis-sandbox-secops-redpanda-1     docker.redpanda.com/redpandadata/redpanda:v25.1.2   \"/entrypoint.sh redp…\"   redpanda     1 second ago   Up Less than a second   8081-8082/tcp, 9092/tcp, 0.0.0.0:29092->29092/tcp, [::]:29092->29092/tcp, 0.0.0.0:29644->9644/tcp, [::]:29644->9644/tcp",
         "stderr": ""
       },
       "composeDown": {
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/secops/compose.yaml -p openaegis-sandbox-secops down -v --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 1524,
+        "elapsedMs": 1479,
         "stdout": "",
-        "stderr": "Container openaegis-sandbox-secops-redpanda-1  Stopping\n Container openaegis-sandbox-secops-grafana-1  Stopping\n Container openaegis-sandbox-secops-opa-1  Stopping\n Container openaegis-sandbox-secops-opa-1  Stopped\n Container openaegis-sandbox-secops-opa-1  Removing\n Container openaegis-sandbox-secops-opa-1  Removed\n Container openaegis-sandbox-secops-grafana-1  Stopped\n Container openaegis-sandbox-secops-grafana-1  Removing\n Container openaegis-sandbox-secops-grafana-1  Removed\n Container openaegis-sandbox-secops-prometheus-1  Stopping\n Container openaegis-sandbox-secops-redpanda-1  Stopped\n Container openaegis-sandbox-secops-redpanda-1  Removing\n Container openaegis-sandbox-secops-redpanda-1  Removed\n Container openaegis-sandbox-secops-prometheus-1  Stopped\n Container openaegis-sandbox-secops-prometheus-1  Removing\n Container openaegis-sandbox-secops-prometheus-1  Removed\n Volume openaegis-sandbox-secops_grafana_data  Removing\n Volume openaegis-sandbox-secops_redpanda_data  Removing\n Volume openaegis-sandbox-secops_prometheus_data  Removing\n Network openaegis-sandbox-secops_default  Removing\n Volume openaegis-sandbox-secops_grafana_data  Removed\n Volume openaegis-sandbox-secops_r..."
+        "stderr": "Container openaegis-sandbox-secops-grafana-1  Stopping\n Container openaegis-sandbox-secops-opa-1  Stopping\n Container openaegis-sandbox-secops-redpanda-1  Stopping\n Container openaegis-sandbox-secops-opa-1  Stopped\n Container openaegis-sandbox-secops-opa-1  Removing\n Container openaegis-sandbox-secops-opa-1  Removed\n Container openaegis-sandbox-secops-grafana-1  Stopped\n Container openaegis-sandbox-secops-grafana-1  Removing\n Container openaegis-sandbox-secops-grafana-1  Removed\n Container openaegis-sandbox-secops-prometheus-1  Stopping\n Container openaegis-sandbox-secops-redpanda-1  Stopped\n Container openaegis-sandbox-secops-redpanda-1  Removing\n Container openaegis-sandbox-secops-redpanda-1  Removed\n Container openaegis-sandbox-secops-prometheus-1  Stopped\n Container openaegis-sandbox-secops-prometheus-1  Removing\n Container openaegis-sandbox-secops-prometheus-1  Removed\n Volume openaegis-sandbox-secops_prometheus_data  Removing\n Volume openaegis-sandbox-secops_redpanda_data  Removing\n Volume openaegis-sandbox-secops_grafana_data  Removing\n Network openaegis-sandbox-secops_default  Removing\n Volume openaegis-sandbox-secops_prometheus_data  Removed\n Volume openaegis-sandbox-secop..."
       },
       "serviceProbes": [
         {
           "serviceId": "redpanda-admin",
           "name": "Redpanda Admin API",
           "passed": true,
-          "url": "http://127.0.0.1:19644/v1/status/ready",
+          "url": "http://127.0.0.1:29644/v1/status/ready",
           "httpStatus": 200,
-          "elapsedMs": 203,
+          "elapsedMs": 3357,
           "bodyPreview": "{\"status\":\"ready\"}",
           "error": null
         },
@@ -561,7 +561,7 @@
           "passed": true,
           "url": "http://127.0.0.1:19090/-/ready",
           "httpStatus": 200,
-          "elapsedMs": 194,
+          "elapsedMs": 173,
           "bodyPreview": "Prometheus Server is Ready.",
           "error": null
         },
@@ -571,7 +571,7 @@
           "passed": true,
           "url": "http://127.0.0.1:13000/api/health",
           "httpStatus": 200,
-          "elapsedMs": 6583,
+          "elapsedMs": 3294,
           "bodyPreview": "{\n  \"database\": \"ok\",\n  \"version\": \"11.5.1\",\n  \"commit\": \"c6c701cf5be984b088b9d51690b474ab63ca86ff\"\n}",
           "error": null
         },
@@ -581,7 +581,7 @@
           "passed": true,
           "url": "http://127.0.0.1:18181/health?plugins",
           "httpStatus": 200,
-          "elapsedMs": 199,
+          "elapsedMs": 155,
           "bodyPreview": "{}",
           "error": null
         }
@@ -630,7 +630,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngddva1-ht3ozr",
+              "executionId": "ex-mnj68t7k-j1tn8v",
               "workflowId": "wf-secops-runtime-guard",
               "executionStatus": "failed"
             }
@@ -640,7 +640,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngddva7-90u0c3",
+              "executionId": "ex-mnj68t7q-nd0x7v",
               "executionStatus": "failed",
               "approvalId": null
             }
@@ -658,7 +658,7 @@
             }
           }
         ],
-        "executionId": "ex-mngddva7-90u0c3",
+        "executionId": "ex-mnj68t7q-nd0x7v",
         "workflowId": "wf-secops-runtime-guard"
       },
       "passed": true
@@ -672,7 +672,7 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/supply/compose.yaml -p openaegis-sandbox-supply config --quiet",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 248,
+        "elapsedMs": 211,
         "stdout": "",
         "stderr": ""
       },
@@ -680,23 +680,23 @@
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/supply/compose.yaml -p openaegis-sandbox-supply up -d --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 889,
+        "elapsedMs": 733,
         "stdout": "",
-        "stderr": "Network openaegis-sandbox-supply_default  Creating\n Network openaegis-sandbox-supply_default  Created\n Volume \"openaegis-sandbox-supply_airflow_home\"  Creating\n Volume \"openaegis-sandbox-supply_airflow_home\"  Created\n Volume \"openaegis-sandbox-supply_minio_data\"  Creating\n Volume \"openaegis-sandbox-supply_minio_data\"  Created\n Volume \"openaegis-sandbox-supply_grafana_data\"  Creating\n Volume \"openaegis-sandbox-supply_grafana_data\"  Created\n Container openaegis-sandbox-supply-minio-1  Creating\n Container openaegis-sandbox-supply-grafana-1  Creating\n Container openaegis-sandbox-supply-trino-1  Creating\n Container openaegis-sandbox-supply-airflow-1  Creating\n Container openaegis-sandbox-supply-trino-1  Created\n Container openaegis-sandbox-supply-airflow-1  Created\n Container openaegis-sandbox-supply-minio-1  Created\n Container openaegis-sandbox-supply-grafana-1  Created\n Container openaegis-sandbox-supply-trino-1  Starting\n Container openaegis-sandbox-supply-airflow-1  Starting\n Container openaegis-sandbox-supply-minio-1  Starting\n Container openaegis-sandbox-supply-grafana-1  Starting\n Container openaegis-sandbox-supply-minio-1  Started\n Container openaegis-sandbox-supply-grafana-1  S..."
+        "stderr": "Network openaegis-sandbox-supply_default  Creating\n Network openaegis-sandbox-supply_default  Created\n Volume \"openaegis-sandbox-supply_airflow_home\"  Creating\n Volume \"openaegis-sandbox-supply_airflow_home\"  Created\n Volume \"openaegis-sandbox-supply_minio_data\"  Creating\n Volume \"openaegis-sandbox-supply_minio_data\"  Created\n Volume \"openaegis-sandbox-supply_grafana_data\"  Creating\n Volume \"openaegis-sandbox-supply_grafana_data\"  Created\n Container openaegis-sandbox-supply-grafana-1  Creating\n Container openaegis-sandbox-supply-trino-1  Creating\n Container openaegis-sandbox-supply-airflow-1  Creating\n Container openaegis-sandbox-supply-minio-1  Creating\n Container openaegis-sandbox-supply-grafana-1  Created\n Container openaegis-sandbox-supply-trino-1  Created\n Container openaegis-sandbox-supply-minio-1  Created\n Container openaegis-sandbox-supply-airflow-1  Created\n Container openaegis-sandbox-supply-grafana-1  Starting\n Container openaegis-sandbox-supply-trino-1  Starting\n Container openaegis-sandbox-supply-airflow-1  Starting\n Container openaegis-sandbox-supply-minio-1  Starting\n Container openaegis-sandbox-supply-minio-1  Started\n Container openaegis-sandbox-supply-grafana-1  S..."
       },
       "composePs": {
         "ok": true,
         "exitCode": 0,
-        "stdout": "NAME                                 IMAGE                                      COMMAND                  SERVICE   CREATED         STATUS                            PORTS\nopenaegis-sandbox-supply-airflow-1   apache/airflow:2.10.5-python3.11           \"/usr/bin/dumb-init …\"   airflow   2 seconds ago   Up 2 seconds                      0.0.0.0:18083->8080/tcp, [::]:18083->8080/tcp\nopenaegis-sandbox-supply-grafana-1   grafana/grafana-oss:11.5.1                 \"/run.sh\"                grafana   2 seconds ago   Up 2 seconds                      0.0.0.0:13002->3000/tcp, [::]:13002->3000/tcp\nopenaegis-sandbox-supply-minio-1     minio/minio:RELEASE.2025-03-12T18-04-18Z   \"/usr/bin/docker-ent…\"   minio     2 seconds ago   Up 2 seconds                      0.0.0.0:19000->9000/tcp, [::]:19000->9000/tcp, 0.0.0.0:19001->9001/tcp, [::]:19001->9001/tcp\nopenaegis-sandbox-supply-trino-1     trinodb/trino:469                          \"/usr/lib/trino/bin/…\"   trino     2 seconds ago   Up 2 seconds (health: starting)   0.0.0.0:18082->8080/tcp, [::]:18082->8080/tcp",
+        "stdout": "NAME                                 IMAGE                                      COMMAND                  SERVICE   CREATED        STATUS                                     PORTS\nopenaegis-sandbox-supply-airflow-1   apache/airflow:2.10.5-python3.11           \"/usr/bin/dumb-init …\"   airflow   1 second ago   Up Less than a second                      0.0.0.0:18083->8080/tcp, [::]:18083->8080/tcp\nopenaegis-sandbox-supply-grafana-1   grafana/grafana-oss:11.5.1                 \"/run.sh\"                grafana   1 second ago   Up Less than a second                      0.0.0.0:13002->3000/tcp, [::]:13002->3000/tcp\nopenaegis-sandbox-supply-minio-1     minio/minio:RELEASE.2025-03-12T18-04-18Z   \"/usr/bin/docker-ent…\"   minio     1 second ago   Up Less than a second                      0.0.0.0:19000->9000/tcp, [::]:19000->9000/tcp, 0.0.0.0:19001->9001/tcp, [::]:19001->9001/tcp\nopenaegis-sandbox-supply-trino-1     trinodb/trino:469                          \"/usr/lib/trino/bin/…\"   trino     1 second ago   Up Less than a second (health: starting)   0.0.0.0:18082->8080/tcp, [::]:18082->8080/tcp",
         "stderr": ""
       },
       "composeDown": {
         "command": "wsl:Ubuntu docker compose -f /mnt/c/Users/grump/EAOS/deployments/sandboxes/supply/compose.yaml -p openaegis-sandbox-supply down -v --remove-orphans",
         "ok": true,
         "exitCode": 0,
-        "elapsedMs": 1729,
+        "elapsedMs": 1640,
         "stdout": "",
-        "stderr": "Container openaegis-sandbox-supply-minio-1  Stopping\n Container openaegis-sandbox-supply-trino-1  Stopping\n Container openaegis-sandbox-supply-grafana-1  Stopping\n Container openaegis-sandbox-supply-airflow-1  Stopping\n Container openaegis-sandbox-supply-minio-1  Stopped\n Container openaegis-sandbox-supply-minio-1  Removing\n Container openaegis-sandbox-supply-grafana-1  Stopped\n Container openaegis-sandbox-supply-grafana-1  Removing\n Container openaegis-sandbox-supply-grafana-1  Removed\n Container openaegis-sandbox-supply-minio-1  Removed\n Container openaegis-sandbox-supply-airflow-1  Stopped\n Container openaegis-sandbox-supply-airflow-1  Removing\n Container openaegis-sandbox-supply-trino-1  Stopped\n Container openaegis-sandbox-supply-trino-1  Removing\n Container openaegis-sandbox-supply-trino-1  Removed\n Container openaegis-sandbox-supply-airflow-1  Removed\n Volume openaegis-sandbox-supply_grafana_data  Removing\n Volume openaegis-sandbox-supply_airflow_home  Removing\n Volume openaegis-sandbox-supply_minio_data  Removing\n Network openaegis-sandbox-supply_default  Removing\n Volume openaegis-sandbox-supply_grafana_data  Removed\n Volume openaegis-sandbox-supply_airflow_home  Removed\n ..."
+        "stderr": "Container openaegis-sandbox-supply-minio-1  Stopping\n Container openaegis-sandbox-supply-grafana-1  Stopping\n Container openaegis-sandbox-supply-trino-1  Stopping\n Container openaegis-sandbox-supply-airflow-1  Stopping\n Container openaegis-sandbox-supply-minio-1  Stopped\n Container openaegis-sandbox-supply-minio-1  Removing\n Container openaegis-sandbox-supply-minio-1  Removed\n Container openaegis-sandbox-supply-grafana-1  Stopped\n Container openaegis-sandbox-supply-grafana-1  Removing\n Container openaegis-sandbox-supply-grafana-1  Removed\n Container openaegis-sandbox-supply-airflow-1  Stopped\n Container openaegis-sandbox-supply-airflow-1  Removing\n Container openaegis-sandbox-supply-trino-1  Stopped\n Container openaegis-sandbox-supply-trino-1  Removing\n Container openaegis-sandbox-supply-trino-1  Removed\n Container openaegis-sandbox-supply-airflow-1  Removed\n Volume openaegis-sandbox-supply_grafana_data  Removing\n Volume openaegis-sandbox-supply_minio_data  Removing\n Volume openaegis-sandbox-supply_airflow_home  Removing\n Network openaegis-sandbox-supply_default  Removing\n Volume openaegis-sandbox-supply_grafana_data  Removed\n Volume openaegis-sandbox-supply_minio_data  Removed\n Vo..."
       },
       "serviceProbes": [
         {
@@ -705,8 +705,8 @@
           "passed": true,
           "url": "http://127.0.0.1:18082/v1/info",
           "httpStatus": 200,
-          "elapsedMs": 13194,
-          "bodyPreview": "{\"nodeVersion\":{\"version\":\"469\"},\"environment\":\"sandbox\",\"coordinator\":true,\"starting\":true,\"uptime\":\"3.15s\"}",
+          "elapsedMs": 8888,
+          "bodyPreview": "{\"nodeVersion\":{\"version\":\"469\"},\"environment\":\"sandbox\",\"coordinator\":true,\"starting\":true,\"uptime\":\"1.16s\"}",
           "error": null
         },
         {
@@ -715,8 +715,8 @@
           "passed": true,
           "url": "http://127.0.0.1:18083/health",
           "httpStatus": 200,
-          "elapsedMs": 31269,
-          "bodyPreview": "{\"dag_processor\": {\"latest_dag_processor_heartbeat\": null, \"status\": null}, \"metadatabase\": {\"status\": \"healthy\"}, \"scheduler\": {\"latest_scheduler_heartbeat\": \"2026-04-01T18:19:47.353683+00:00\", \"status\": \"healthy\"}, \"triggerer\": {\"latest_triggerer_heartbeat\": \"2026-04-01T18:19:47.956456+00:00\", \"status\": \"healthy\"}}",
+          "elapsedMs": 26766,
+          "bodyPreview": "{\"dag_processor\": {\"latest_dag_processor_heartbeat\": null, \"status\": null}, \"metadatabase\": {\"status\": \"healthy\"}, \"scheduler\": {\"latest_scheduler_heartbeat\": \"2026-04-03T17:23:06.416932+00:00\", \"status\": \"healthy\"}, \"triggerer\": {\"latest_triggerer_heartbeat\": \"2026-04-03T17:23:06.285520+00:00\", \"status\": \"healthy\"}}",
           "error": null
         },
         {
@@ -725,7 +725,7 @@
           "passed": true,
           "url": "http://127.0.0.1:19000/minio/health/live",
           "httpStatus": 200,
-          "elapsedMs": 202,
+          "elapsedMs": 141,
           "bodyPreview": "",
           "error": null
         },
@@ -735,7 +735,7 @@
           "passed": true,
           "url": "http://127.0.0.1:13002/api/health",
           "httpStatus": 200,
-          "elapsedMs": 185,
+          "elapsedMs": 132,
           "bodyPreview": "{\n  \"database\": \"ok\",\n  \"version\": \"11.5.1\",\n  \"commit\": \"c6c701cf5be984b088b9d51690b474ab63ca86ff\"\n}",
           "error": null
         }
@@ -784,7 +784,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngdew6w-csja1g",
+              "executionId": "ex-mnj69n13-qhrcml",
               "workflowId": "wf-supply-chain-resilience",
               "executionStatus": "completed"
             }
@@ -794,7 +794,7 @@
             "status": 201,
             "passed": true,
             "details": {
-              "executionId": "ex-mngdew73-59t3s4",
+              "executionId": "ex-mnj69n17-18gos3",
               "executionStatus": "completed",
               "approvalId": null
             }
@@ -812,7 +812,7 @@
             }
           }
         ],
-        "executionId": "ex-mngdew73-59t3s4",
+        "executionId": "ex-mnj69n17-18gos3",
         "workflowId": "wf-supply-chain-resilience"
       },
       "passed": true

@@ -14,12 +14,14 @@
     "build": "npm run --workspaces build",
     "test": "npm run --workspaces test",
     "test:commercial": "npm run build && node --test --test-concurrency=1 tests/commercial/commercial-proof.test.mjs tests/commercial/trust-layer-proof.test.mjs tests/commercial/readiness-gate-score.test.mjs tests/commercial/project-packs-showcase.test.mjs",
-    "lint": "npm run --workspaces lint",
+    "lint": "npm run --workspaces --if-present lint",
     "validate:infra": "node tools/scripts/validate-infra.mjs",
     "validate:test-surface": "node tools/scripts/validate-test-surface.mjs",
     "typecheck": "npm run --workspaces typecheck",
     "smoke:pilot": "node tools/scripts/smoke-pilot.mjs",
+    "smoke:roles": "node tools/scripts/smoke-roles-human-operator.mjs",
     "run:tool-registry": "npm run --workspace @openaegis/tool-registry build && node tools/scripts/run-tool-registry.mjs",
+    "seed:commercial-connections": "node tools/scripts/seed-commercial-connections.mjs",
     "proof:commercial": "npm run build && node tools/scripts/commercial-proof.mjs",
     "showcase:projects": "npm run build && node tools/scripts/commercial-projects-showcase.mjs",
     "proof:trust-layer": "npm run build && node tools/scripts/prove-trust-layer.mjs",
@@ -46,7 +48,8 @@
     "sandbox:up": "node tools/scripts/sandbox-compose.mjs up",
     "sandbox:down": "node tools/scripts/sandbox-compose.mjs down",
     "sandbox:ps": "node tools/scripts/sandbox-compose.mjs ps",
-    "sandbox:proof": "npm run build && node tools/scripts/sandbox-proof.mjs"
+    "sandbox:proof": "npm run build && node tools/scripts/sandbox-proof.mjs",
+    "oversight:review": "node tools/scripts/oversight-review.mjs"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

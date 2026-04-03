@@ -103,6 +103,9 @@ export const SetupCenterPage = () => {
             <button type="button" className="success" onClick={() => void runWorkflow("live")} disabled={!clinicianSession || isSyncing}>
               Run live workflow
             </button>
+            <Link className="subtle-link" to="/guides">
+              Open role guides
+            </Link>
           </div>
         </Panel>
 
